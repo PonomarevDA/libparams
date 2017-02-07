@@ -282,23 +282,11 @@ int main(void)
 						  f_inv =  (f_inv*29.0+time*5.0)/30.0;
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
-						  /*if(f_inv< 0.001)
-							 t0  = HAL_GetTick();
-						  if(f_inv> 1)
-						  	t0  = HAL_GetTick();*/
 						  count=-1;
 						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 					  }
-				  }/*else{
-					  if(fadc>fn && count>10) {
-						  //f_inv =  (f_inv+time*3)/2;
-						  //f_inv =  1/(f*POLES*STATES);
-						  count=-1;
-						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-					  }
-				  }*/
+				  }
 			  }
 			  oldPh = old_phase;
 		  }else{
@@ -319,21 +307,6 @@ int main(void)
 	  fpot = ((float)adc2 +fpot*199.0)/200.0;
 	  TIM3->CCR1 = 250+(uint32_t)round(fpot/15.0);
 	  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
-
-	  //uint32_t dt = HAL_GetTick()-oldTime;
-	  /*if(HAL_GetTick()!=oldTime){
-		  oldTime = HAL_GetTick();
-		  phase++;
-
-	  }*/
-	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	 // HAL_Delay(100);
-	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	 // HAL_Delay(100);
-	 // f = 4;
-
-	  //TIM3->CCR1 = 400;//500+490*sinf( ((float)HAL_GetTick())/100 );
-
   }
   /* USER CODE END 3 */
 

@@ -79,6 +79,7 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN PFP */
+void init(void);
 void PlaySound(float f_,int delay);
 int ReadAnalogADC1( int ch );
 int ReadAnalogADC2( int ch );
@@ -190,54 +191,11 @@ int main(void)
   MX_ADC2_Init();
 
   /* USER CODE BEGIN 2 */
-  //TIMER3 16 khz PWM
-  HAL_TIM_Base_MspInit(&htim3);
-  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
-  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_2);
-  HAL_TIM_Base_Start_IT(&htim3);
-  HAL_NVIC_EnableIRQ(TIM3_IRQn);
-
-  dt = (float)(htim3.Init.Prescaler+1)*(float)(htim3.Init.Period)/64000000.0;
-  //
-  /*HAL_TIM_Base_MspInit(&htim4);
-  //HAL_TIM_Base_Start_IT(&htim4);
-  HAL_TIM_IC_Start(&htim4,TIM_CHANNEL_1);
-  HAL_NVIC_EnableIRQ(TIM4_IRQn);*/
-
-  //ADC1
-  HAL_ADC_MspInit(&hadc1);
-  adc1ch[0].Channel = ADC_CHANNEL_11;//B
-  adc1ch[0].Rank = 1;
-  adc1ch[0].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-
-  adc1ch[1].Channel = ADC_CHANNEL_10;//C
-  adc1ch[1].Rank = 1;
-  adc1ch[1].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-
-  adc1ch[2].Channel = ADC_CHANNEL_1;//A
-  adc1ch[2].Rank = 1;
-  adc1ch[2].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-
-  adc1ch[3].Channel = ADC_CHANNEL_4;//CNT
-  adc1ch[3].Rank = 1;
-  adc1ch[3].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-
-  adc1ch[4].Channel = ADC_CHANNEL_0;//pot
-  adc1ch[4].Rank = 1;
-  adc1ch[4].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  //adc2
-  HAL_ADC_MspInit(&hadc2);
-  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+  init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  /*PlaySound(100,100);
-  PlaySound(3,100);
-  PlaySound(100,100);
-  PlaySound(3,100);
-  PlaySound(100,100);
-  PlaySound(1,100);*/
   while (1)
   {
   /* USER CODE END WHILE */
@@ -285,9 +243,7 @@ int main(void)
 		  f_inv =  1/(f*POLES*STATES);
 	  }
 
-	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 	  n  = ReadAnalogADC1(3);
-	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	  fn = ((float)n +fn*299.0)/300.0;
 
 	  adc2 = ReadAnalogADC1(4);
@@ -567,6 +523,53 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void init(void){
+	  //TIMER3 16 khz PWM
+	  HAL_TIM_Base_MspInit(&htim3);
+	  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
+	  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_2);
+	  HAL_TIM_Base_Start_IT(&htim3);
+	  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+
+	  dt = (float)(htim3.Init.Prescaler+1)*(float)(htim3.Init.Period)/64000000.0;
+	  //
+	  /*HAL_TIM_Base_MspInit(&htim4);
+	  //HAL_TIM_Base_Start_IT(&htim4);
+	  HAL_TIM_IC_Start(&htim4,TIM_CHANNEL_1);
+	  HAL_NVIC_EnableIRQ(TIM4_IRQn);*/
+
+	  //ADC1
+	  HAL_ADC_MspInit(&hadc1);
+	  adc1ch[0].Channel = ADC_CHANNEL_11;//B
+	  adc1ch[0].Rank = 1;
+	  adc1ch[0].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+
+	  adc1ch[1].Channel = ADC_CHANNEL_10;//C
+	  adc1ch[1].Rank = 1;
+	  adc1ch[1].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+
+	  adc1ch[2].Channel = ADC_CHANNEL_1;//A
+	  adc1ch[2].Rank = 1;
+	  adc1ch[2].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+
+	  adc1ch[3].Channel = ADC_CHANNEL_4;//CNT
+	  adc1ch[3].Rank = 1;
+	  adc1ch[3].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+
+	  adc1ch[4].Channel = ADC_CHANNEL_0;//pot
+	  adc1ch[4].Rank = 1;
+	  adc1ch[4].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+	  //adc2
+	  HAL_ADC_MspInit(&hadc2);
+	  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+
+	  /*PlaySound(100,100);
+	  PlaySound(3,100);
+	  PlaySound(100,100);
+	  PlaySound(3,100);
+	  PlaySound(100,100);
+	  PlaySound(1,100);*/
+}
 void PlaySound(float f_,int delay){
 	f=f_;
 	f_inv =  1/(f*POLES*STATES);

@@ -48,7 +48,6 @@ TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 float time=0;
-float period=0;
 float dt=0;
 float f=2;
 float f_inv = 0;
@@ -104,20 +103,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance==TIM3) //check if the interrupt comes from TIM3
 	{
 		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-
-		//f=1.5+(float)HAL_GetTick()/100.0;//+1.0/exp( 1.0/(((float)HAL_GetTick())/1000.0) );
-		//if(f>5) f=5;
-		//TIM3->CCR1 = 300-f*10;
 		time+=dt;
-		period = time;
 		if( time>=f_inv ){
-			//period = time;
 			time=0;
-
 			phase++;
 			if(phase>=6)
 				phase=0;
-
 			switch(phase){
 							case 0:SetControlHIGH(0,0,1,0,0,1);break;
 							case 1:SetControlHIGH(0,1,1,0,0,0);break;
@@ -126,6 +117,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 							case 4:SetControlHIGH(1,0,0,1,0,0);break;
 							case 5:SetControlHIGH(1,0,0,0,0,1);break;
 						}
+			  switch(phase){
+				case 0:ch=2;break;
+				case 1:ch=1;break;
+				case 2:ch=0;break;
+				case 3:ch=2;break;
+				case 4:ch=1;break;
+				case 5:ch=0;break;
+			  }
 			//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 		}
 		switch(phase){
@@ -136,7 +135,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						case 4:SetControlLOW(1,0,0,1,0,0);break;
 						case 5:SetControlLOW(1,0,0,0,0,1);break;
 					}
-
 	}
 	if (htim->Instance==TIM4) //check if the interrupt comes from TIM3
 	{
@@ -192,7 +190,6 @@ int main(void)
   MX_ADC2_Init();
 
   /* USER CODE BEGIN 2 */
-
   //TIMER3 16 khz PWM
   HAL_TIM_Base_MspInit(&htim3);
   HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
@@ -251,26 +248,16 @@ int main(void)
 		  if(HAL_GetTick()-t0>1000){
 			  int old_phase = phase;
 
-			  switch(old_phase){
-				case 0:ch=2;break;
-				case 1:ch=1;break;
-				case 2:ch=0;break;
-				case 3:ch=2;break;
-				case 4:ch=1;break;
-				case 5:ch=0;break;
-			  }
-
 			  if(oldPh>old_phase){
 				  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 				  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 				  count=0;
-				  //period=0;
-				  adc = ReadAnalogADC1(ch);
+				  adc = ReadAnalogADC2(ch);
 				  fadc = (float)adc;
 				  //adc = ReadAnalogADC1(ch);
 			  }else if(count>=0){
 				  count++;
-				  adc = ReadAnalogADC1(ch);
+				  adc = ReadAnalogADC2(ch);
 				  fadc = (float)adc;//((float)adc +fadc*1.0)/2.0;
 				  //n  = (ReadAnalogADC1(3) + n*19)/20;
 				  //adc = (ReadAnalogADC1(ch) +adc*19)/20;
@@ -298,13 +285,14 @@ int main(void)
 		  f_inv =  1/(f*POLES*STATES);
 	  }
 
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 	  n  = ReadAnalogADC1(3);
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	  fn = ((float)n +fn*299.0)/300.0;
 
-	  adc2 = ReadAnalogADC2(4);
+	  adc2 = ReadAnalogADC1(4);
 	  fpot = ((float)adc2 +fpot*199.0)/200.0;
+
 	  TIM3->CCR1 = 250+(uint32_t)round(fpot/15.0);
 	  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
   }

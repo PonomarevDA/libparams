@@ -54,7 +54,6 @@ float f_inv = 0;
 #define POLES 11.0
 #define STATES 6.0
 int phase = 0;
-int oldPh = 0;
 int count = 0;
 int ch = 3;
 
@@ -104,10 +103,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance==TIM3) //check if the interrupt comes from TIM3
 	{
 		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		time+=dt;
+		/*time+=dt;
 		if( time>=f_inv ){
-			time=0;
-			phase++;
+			time=0;*/
+			/*phase++;
 			if(phase>=6)
 				phase=0;
 			switch(phase){
@@ -126,8 +125,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				case 4:ch=1;break;
 				case 5:ch=0;break;
 			  }
+			  count=0;*/
 			//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-		}
+		//}
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		switch(phase){
 						case 0:SetControlLOW(0,0,1,0,0,1);break;
 						case 1:SetControlLOW(0,1,1,0,0,0);break;
@@ -140,7 +141,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance==TIM4) //check if the interrupt comes from TIM3
 	{
 		//HAL_GPIO_TogglePin(AH_GPIO_Port, AH_Pin);
-		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		phase++;
+					if(phase>=6)
+						phase=0;
+					switch(phase){
+									case 0:SetControlHIGH(0,0,1,0,0,1);break;
+									case 1:SetControlHIGH(0,1,1,0,0,0);break;
+									case 2:SetControlHIGH(0,1,0,0,1,0);break;
+									case 3:SetControlHIGH(0,0,0,1,1,0);break;
+									case 4:SetControlHIGH(1,0,0,1,0,0);break;
+									case 5:SetControlHIGH(1,0,0,0,0,1);break;
+								}
+					  switch(phase){
+						case 0:ch=2;break;
+						case 1:ch=1;break;
+						case 2:ch=0;break;
+						case 3:ch=2;break;
+						case 4:ch=1;break;
+						case 5:ch=0;break;
+					  }
+					  count=0;
 	}
 }
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
@@ -148,6 +168,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
 	{
 		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_1){
 			ResetControlLOW();
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		}
 		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_2){
 			//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
@@ -192,6 +213,13 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   init();
+
+  f=4;
+  f_inv =  1/(f*POLES*STATES);
+  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
+  TIM3->CCR1 = 300;
+  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -201,30 +229,30 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  float f0 = 3;
+
+
+	  float f0 = 4;
+
+	  f=4;//+(float)(HAL_GetTick()-t0)/300.0;
+	  //if(f>=f0)
+		 // f=f0;
+	  f_inv =  1/(f*POLES*STATES);
+
+
 	  if(f>=f0) {
-		  if(HAL_GetTick()-t0>1000){
+		  if(HAL_GetTick()-t0>3000){
 			  int old_phase = phase;
 
-			  if(oldPh>old_phase){
-				  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-				  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-				  count=0;
-				  adc = ReadAnalogADC2(ch);
-				  fadc = (float)adc;
-				  //adc = ReadAnalogADC1(ch);
-			  }else if(count>=0){
+			  if(count>=0){
 				  count++;
-				  adc = ReadAnalogADC2(ch);
-				  fadc = (float)adc;//((float)adc +fadc*1.0)/2.0;
-				  //n  = (ReadAnalogADC1(3) + n*19)/20;
-				  //adc = (ReadAnalogADC1(ch) +adc*19)/20;
 			  }
-
+			  adc = ReadAnalogADC2(ch);
+			  fadc = (float)adc;
 			  if(old_phase==phase && count>=0){
 				  if(old_phase==0 || old_phase==2 || old_phase==4){
 					  if(fadc<fn) {
-						  f_inv =  (f_inv*29.0+time*5.0)/30.0;
+						  f_inv =  (f_inv*39.0+time*6.0)/40.0;
+						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
 						  count=-1;
@@ -233,24 +261,25 @@ int main(void)
 					  }
 				  }
 			  }
-			  oldPh = old_phase;
-		  }else{
-			  f=f0;
 		  }
 
 	  }else{
-		  f=1.5+(float)(HAL_GetTick()-t0)/300.0;
-		  f_inv =  1/(f*POLES*STATES);
+		  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
+		  /*f=1.5+(float)(HAL_GetTick()-t0)/300.0;
+		  f_inv =  1/(f*POLES*STATES);*/
 	  }
 
-	  n  = ReadAnalogADC1(3);
-	  fn = ((float)n +fn*299.0)/300.0;
+	  if(phase==1 || phase==3 || phase==5){
+		  n  = ReadAnalogADC1(3);
+		  fn = ((float)n +fn*299.0)/300.0;
 
-	  adc2 = ReadAnalogADC1(4);
-	  fpot = ((float)adc2 +fpot*199.0)/200.0;
+		  adc2 = ReadAnalogADC1(4);
+		  fpot = ((float)adc2 +fpot*199.0)/200.0;
 
-	  TIM3->CCR1 = 250+(uint32_t)round(fpot/15.0);
-	  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+		  TIM3->CCR1 = 300+(uint32_t)round(fpot/18.0);
+		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+	  }
+
   }
   /* USER CODE END 3 */
 
@@ -386,7 +415,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 5000;
+  htim3.Init.Period = 3000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
@@ -437,9 +466,9 @@ static void MX_TIM4_Init(void)
   TIM_IC_InitTypeDef sConfigIC;
 
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 2;
+  htim4.Init.Prescaler = 5000;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 64000;
+  htim4.Init.Period = 100;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
@@ -527,16 +556,16 @@ void init(void){
 	  //TIMER3 16 khz PWM
 	  HAL_TIM_Base_MspInit(&htim3);
 	  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
-	  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_2);
+	  //HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_2);
 	  HAL_TIM_Base_Start_IT(&htim3);
 	  HAL_NVIC_EnableIRQ(TIM3_IRQn);
 
 	  dt = (float)(htim3.Init.Prescaler+1)*(float)(htim3.Init.Period)/64000000.0;
 	  //
-	  /*HAL_TIM_Base_MspInit(&htim4);
-	  //HAL_TIM_Base_Start_IT(&htim4);
-	  HAL_TIM_IC_Start(&htim4,TIM_CHANNEL_1);
-	  HAL_NVIC_EnableIRQ(TIM4_IRQn);*/
+	  HAL_TIM_Base_MspInit(&htim4);
+	  HAL_TIM_Base_Start_IT(&htim4);
+	  //HAL_TIM_IC_Start(&htim4,TIM_CHANNEL_1);
+	  HAL_NVIC_EnableIRQ(TIM4_IRQn);
 
 	  //ADC1
 	  HAL_ADC_MspInit(&hadc1);

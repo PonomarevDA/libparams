@@ -103,9 +103,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance==TIM3) //check if the interrupt comes from TIM3
 	{
 		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		/*time+=dt;
-		if( time>=f_inv ){
-			time=0;*/
+		time+=dt;
+		if( time>=f_inv )
+			time=0;
 			/*phase++;
 			if(phase>=6)
 				phase=0;
@@ -214,7 +214,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   init();
 
-  f=4;
+  f=3;
   f_inv =  1/(f*POLES*STATES);
   TIM4->ARR = (uint32_t)round(12800.0*f_inv);
   TIM3->CCR1 = 300;
@@ -233,10 +233,6 @@ int main(void)
 
 	  float f0 = 4;
 
-	  f=4;//+(float)(HAL_GetTick()-t0)/300.0;
-	  //if(f>=f0)
-		 // f=f0;
-	  f_inv =  1/(f*POLES*STATES);
 
 
 	  if(f>=f0) {
@@ -251,7 +247,8 @@ int main(void)
 			  if(old_phase==phase && count>=0){
 				  if(old_phase==0 || old_phase==2 || old_phase==4){
 					  if(fadc<fn) {
-						  f_inv =  (f_inv*39.0+time*6.0)/40.0;
+						  //f_inv = (f_inv*39.0+time*6.0)/40.0;
+						  f_inv = (f_inv*39.0+((float)TIM4->CNT)*6.0/12800.0)/40.0;
 						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
@@ -264,6 +261,9 @@ int main(void)
 		  }
 
 	  }else{
+
+		  f=2+(float)(HAL_GetTick())/300.0;
+		  f_inv =  1/(f*POLES*STATES);
 		  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 		  /*f=1.5+(float)(HAL_GetTick()-t0)/300.0;
 		  f_inv =  1/(f*POLES*STATES);*/

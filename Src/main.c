@@ -60,11 +60,14 @@ int ch = 3;
 float fpot=0;
 uint32_t t0=0;
 uint32_t n=0;
-float fn=0;
-float fadc=0;
+float fn0=0;//initial neutral
+float fn=0;//neutral
+float fadc=0;//phase value
 uint32_t adc = 0;
+float adc0=0;
 uint32_t adc2 = 0;
 uint32_t sm_adc = 0;
+int ncount = 0;
 ADC_ChannelConfTypeDef adc1ch[5];
 /* USER CODE END PV */
 
@@ -128,7 +131,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			  count=0;*/
 			//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 		//}
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		switch(phase){
 						case 0:SetControlLOW(0,0,1,0,0,1);break;
 						case 1:SetControlLOW(0,1,1,0,0,0);break;
@@ -140,6 +143,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	if (htim->Instance==TIM4) //check if the interrupt comes from TIM3
 	{
+		 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		// HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		//HAL_GPIO_TogglePin(AH_GPIO_Port, AH_Pin);
 		phase++;
 					if(phase>=6)
@@ -168,7 +173,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
 	{
 		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_1){
 			ResetControlLOW();
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		}
 		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_2){
 			//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
@@ -214,12 +219,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
   init();
 
+ // PlaySound(100,1);
+
+
   f=3;
   f_inv =  1/(f*POLES*STATES);
   TIM4->ARR = (uint32_t)round(12800.0*f_inv);
   TIM3->CCR1 = 300;
   TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
 
+
+  HAL_Delay(200);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -230,13 +240,10 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
+	 // float f0 = 4;
 
-	  float f0 = 4;
-
-
-
-	  if(f>=f0) {
-		  if(HAL_GetTick()-t0>3000){
+	  //if(f>=f0) {
+		  //if(HAL_GetTick()-t0>1000){
 			  int old_phase = phase;
 
 			  if(count>=0){
@@ -244,41 +251,59 @@ int main(void)
 			  }
 			  adc = ReadAnalogADC2(ch);
 			  fadc = (float)adc;
+
+			  if( fabs(fadc-fn) < 30 )
+				  ncount++;
+			  else
+				  ncount=0;
+			  if(ncount>400){
+
+				  f=3;
+				  f_inv =  1/(f*POLES*STATES);
+				  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
+				  TIM3->CCR1 = 300;
+				  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+
+				  HAL_Delay(200);
+				  ncount=0;
+			  }
 			  if(old_phase==phase && count>=0){
 				  if(old_phase==0 || old_phase==2 || old_phase==4){
 					  if(fadc<fn) {
 						  //f_inv = (f_inv*39.0+time*6.0)/40.0;
-						  f_inv = (f_inv*39.0+((float)TIM4->CNT)*6.0/12800.0)/40.0;
+						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*7.0/12800.0)/100.0;
 						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
 						  count=-1;
-						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+						  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+						 // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+						 // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 					  }
 				  }
 			  }
-		  }
+		 // }
 
-	  }else{
+		  if(phase==1 || phase==3 || phase==5){
+		  		  n  = ReadAnalogADC1(3);//neutral
+		  		  fn = ((float)n +fn*299.0)/300.0;
+
+		  		  adc2 = ReadAnalogADC1(4);
+		  		  fpot = ((float)adc2 +fpot*199.0)/200.0;
+
+		  		  TIM3->CCR1 = 300+(uint32_t)round(fpot/10.0);
+		  		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+		  	  }
+	  /*}else{
 
 		  f=2+(float)(HAL_GetTick())/300.0;
 		  f_inv =  1/(f*POLES*STATES);
 		  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 		  /*f=1.5+(float)(HAL_GetTick()-t0)/300.0;
 		  f_inv =  1/(f*POLES*STATES);*/
-	  }
+	  //}
 
-	  if(phase==1 || phase==3 || phase==5){
-		  n  = ReadAnalogADC1(3);
-		  fn = ((float)n +fn*299.0)/300.0;
 
-		  adc2 = ReadAnalogADC1(4);
-		  fpot = ((float)adc2 +fpot*199.0)/200.0;
-
-		  TIM3->CCR1 = 300+(uint32_t)round(fpot/18.0);
-		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
-	  }
 
   }
   /* USER CODE END 3 */
@@ -602,6 +627,7 @@ void init(void){
 void PlaySound(float f_,int delay){
 	f=f_;
 	f_inv =  1/(f*POLES*STATES);
+	TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 	TIM3->CCR1 = 250;
 	TIM3->CCR2 = 250;
 	HAL_Delay(delay);

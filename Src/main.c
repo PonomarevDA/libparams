@@ -42,8 +42,14 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 
+I2C_HandleTypeDef hi2c1;
+
+SPI_HandleTypeDef hspi2;
+
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+
+USART_HandleTypeDef husart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -69,6 +75,19 @@ uint32_t adc2 = 0;
 uint32_t sm_adc = 0;
 int ncount = 0;
 ADC_ChannelConfTypeDef adc1ch[5];
+
+
+typedef struct{
+
+ unsigned char Read;
+ unsigned char Reg_Adress;
+ unsigned char Data;
+ unsigned char AccX;
+
+}SPI_Struct;
+
+SPI_Struct ACC;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,6 +98,9 @@ static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_USART3_Init(void);
+static void MX_SPI2_Init(void);
 
 /* USER CODE BEGIN PFP */
 void init(void);
@@ -189,6 +211,13 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
 		}
 }
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c){
+
+ if(hi2c->Instance == I2C1){
+  HAL_Delay(100);
+ }
+}
 //void HAL_TIM_IRQHandler(TIM_HandleTypeDef *htim){
 
 //}
@@ -215,6 +244,9 @@ int main(void)
   MX_TIM4_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
+  MX_I2C1_Init();
+  MX_USART3_Init();
+  MX_SPI2_Init();
 
   /* USER CODE BEGIN 2 */
   init();
@@ -230,6 +262,15 @@ int main(void)
 
 
   HAL_Delay(200);
+
+
+  /*I2C.Slave_Adress = 117;
+  I2C.Reg_Adress = 0x68;
+  I2C.Data = 0;
+  HAL_I2C_Master_Transmit_IT(&hi2c1, I2C.Slave_Adress, (unsigned char*) &I2C.Reg_Adress, 2);*/
+
+  uint8_t  data = 0x0f;
+  //uint8_t datain = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -240,6 +281,24 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
+	 /* data = 117;
+	  HAL_I2C_Master_Transmit(&hi2c1,0x68,&data,1,10);
+	  data = 1;
+	  HAL_I2C_Master_Receive(&hi2c1,0x68,&data,1,10);*/
+
+	  data = 0x80 | 0x0f;
+	 // datain = 0;
+
+	  HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_RESET);
+	  ///HAL_Delay(1);
+
+	  HAL_SPI_Transmit(&hspi2,&data,1,1);
+	  data = 0x00;
+	  HAL_SPI_Receive(&hspi2,&data,1,1);
+
+	 /// HAL_Delay(1);
+	    HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);
+	  HAL_Delay(200);
 	 // float f0 = 4;
 
 	  //if(f>=f0) {
@@ -263,6 +322,7 @@ int main(void)
 				  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 				  TIM3->CCR1 = 300;
 				  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+				  //fpot = 0;
 
 				  HAL_Delay(200);
 				  ncount=0;
@@ -291,7 +351,7 @@ int main(void)
 		  		  adc2 = ReadAnalogADC1(4);
 		  		  fpot = ((float)adc2 +fpot*199.0)/200.0;
 
-		  		  TIM3->CCR1 = 300+(uint32_t)round(fpot/10.0);
+		  		  TIM3->CCR1 = 300+(uint32_t)round(fpot/7.0);
 		  		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
 		  	  }
 	  /*}else{
@@ -429,6 +489,49 @@ static void MX_ADC2_Init(void)
 
 }
 
+/* I2C1 init function */
+static void MX_I2C1_Init(void)
+{
+
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 208;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* SPI2 init function */
+static void MX_SPI2_Init(void)
+{
+
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /* TIM3 init function */
 static void MX_TIM3_Init(void)
 {
@@ -491,9 +594,9 @@ static void MX_TIM4_Init(void)
   TIM_IC_InitTypeDef sConfigIC;
 
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 5000;
+  htim4.Init.Prescaler = 1600;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 100;
+  htim4.Init.Period = 200;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
@@ -523,6 +626,26 @@ static void MX_TIM4_Init(void)
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
   if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* USART3 init function */
+static void MX_USART3_Init(void)
+{
+
+  husart3.Instance = USART3;
+  husart3.Init.BaudRate = 1000000;
+  husart3.Init.WordLength = USART_WORDLENGTH_8B;
+  husart3.Init.StopBits = USART_STOPBITS_1;
+  husart3.Init.Parity = USART_PARITY_NONE;
+  husart3.Init.Mode = USART_MODE_TX_RX;
+  husart3.Init.CLKPolarity = USART_POLARITY_LOW;
+  husart3.Init.CLKPhase = USART_PHASE_1EDGE;
+  husart3.Init.CLKLastBit = USART_LASTBIT_ENABLE;
+  if (HAL_USART_Init(&husart3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -561,18 +684,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BL_Pin CL_Pin PB5 */
-  GPIO_InitStruct.Pin = BL_Pin|CL_Pin|GPIO_PIN_5;
+  /*Configure GPIO pins : BL_Pin CL_Pin */
+  GPIO_InitStruct.Pin = BL_Pin|CL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CS_Acc_Pin */
+  GPIO_InitStruct.Pin = CS_Acc_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(CS_Acc_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LD2_Pin|AL_Pin|AH_Pin|BH_Pin 
                           |CH_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, BL_Pin|CL_Pin|GPIO_PIN_5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BL_Pin|CL_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);
 
 }
 
@@ -616,6 +748,17 @@ void init(void){
 	  //adc2
 	  HAL_ADC_MspInit(&hadc2);
 	  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+
+	  //i2c
+	  HAL_I2C_MspInit(&hi2c1);
+	  HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+	  HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+
+	  //spi
+	  //HAL_USART_MspInit(&husart3);
+
+	  //spi2
+	  HAL_SPI_MspInit(&hspi2);
 
 	  /*PlaySound(100,100);
 	  PlaySound(3,100);

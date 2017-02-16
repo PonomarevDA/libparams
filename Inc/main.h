@@ -145,6 +145,8 @@
 #define LSM6DS3_MD1_CFG  			0x5E
 #define LSM6DS3_MD2_CFG  			0x5F
 
+#define READ 0x80
+#define WRITE 0x00
 /* USER CODE END Private defines */
 
 /**

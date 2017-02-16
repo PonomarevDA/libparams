@@ -49,6 +49,7 @@ SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
+UART_HandleTypeDef huart2;
 USART_HandleTypeDef husart3;
 
 /* USER CODE BEGIN PV */
@@ -76,13 +77,38 @@ uint32_t sm_adc = 0;
 int ncount = 0;
 ADC_ChannelConfTypeDef adc1ch[5];
 
+typedef struct{
+
+	uint32_t adc;
+	uint32_t neutral;
+	uint32_t pot;
+	uint32_t u_cur;
+	uint32_t u_cur_neutral;
+
+	float fpot;
+
+}ADC_Struct;
+ADC_Struct ADC;
 
 typedef struct{
 
- unsigned char Read;
+ unsigned char RW;
  unsigned char Reg_Adress;
  unsigned char Data;
- unsigned char AccX;
+ unsigned char OK;
+
+ unsigned char WHO_AM_I;
+
+ unsigned char OUTX_L_XL;
+ unsigned char OUTX_H_XL;
+ unsigned char OUTY_L_XL;
+ unsigned char OUTY_H_XL;
+ unsigned char OUTZ_L_XL;
+ unsigned char OUTZ_H_XL;
+
+ short ax;
+ short ay;
+ short az;
 
 }SPI_Struct;
 
@@ -101,6 +127,7 @@ static void MX_ADC2_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART3_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 void init(void);
@@ -111,7 +138,7 @@ void ResetControlLOW(void);
 void ResetControlHIGH(void);
 void SetControlHIGH(GPIO_PinState ah,GPIO_PinState al,GPIO_PinState bh,GPIO_PinState bl,GPIO_PinState ch,GPIO_PinState cl);
 void SetControlLOW(GPIO_PinState ah,GPIO_PinState al,GPIO_PinState bh,GPIO_PinState bl,GPIO_PinState ch,GPIO_PinState cl);
-
+void Accelerometer(unsigned char rw, unsigned char reg, unsigned char data_);
 /* Private function prototypes -----------------------------------------------*/
 void ResetControl(void);
 void SetControl(GPIO_PinState ah,GPIO_PinState al,GPIO_PinState bh,GPIO_PinState bl,GPIO_PinState ch,GPIO_PinState cl);
@@ -247,6 +274,7 @@ int main(void)
   MX_I2C1_Init();
   MX_USART3_Init();
   MX_SPI2_Init();
+  MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
   init();
@@ -261,7 +289,7 @@ int main(void)
   TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
 
 
-  HAL_Delay(200);
+ // HAL_Delay(2000);
 
 
   /*I2C.Slave_Adress = 117;
@@ -269,8 +297,19 @@ int main(void)
   I2C.Data = 0;
   HAL_I2C_Master_Transmit_IT(&hi2c1, I2C.Slave_Adress, (unsigned char*) &I2C.Reg_Adress, 2);*/
 
-  uint8_t  data = 0x0f;
-  //uint8_t datain = 0;
+  //uint8_t  data = 0x0f;
+
+  //check who am i
+  Accelerometer(READ, LSM6DS3_WHO_AM_I_REG, 0);
+  	  if(ACC.Data == 0x69)
+  		  ACC.OK = 1;
+  //Enable accelerometer. 52 Hz output. 200 Hz filter bandwidth.
+  Accelerometer(WRITE, LSM6DS3_CTRL1_XL, 0x31);
+  Accelerometer(READ, LSM6DS3_CTRL1_XL, 0);//check control register
+  if(ACC.Data == 0x31)
+	  ACC.OK = 1;
+  else
+	  ACC.OK = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -286,10 +325,10 @@ int main(void)
 	  data = 1;
 	  HAL_I2C_Master_Receive(&hi2c1,0x68,&data,1,10);*/
 
-	  data = 0x80 | 0x0f;
+
 	 // datain = 0;
 
-	  HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_RESET);
+	  /*HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_RESET);
 	  ///HAL_Delay(1);
 
 	  HAL_SPI_Transmit(&hspi2,&data,1,1);
@@ -297,8 +336,8 @@ int main(void)
 	  HAL_SPI_Receive(&hspi2,&data,1,1);
 
 	 /// HAL_Delay(1);
-	    HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);
-	  HAL_Delay(200);
+	    HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);*/
+	 // HAL_Delay(200);
 	 // float f0 = 4;
 
 	  //if(f>=f0) {
@@ -311,13 +350,13 @@ int main(void)
 			  adc = ReadAnalogADC2(ch);
 			  fadc = (float)adc;
 
-			  if( fabs(fadc-fn) < 30 )
+			  if( fabs(fadc-fn) < 20 )
 				  ncount++;
 			  else
 				  ncount=0;
 			  if(ncount>400){
 
-				  f=3;
+				  f=2;
 				  f_inv =  1/(f*POLES*STATES);
 				  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 				  TIM3->CCR1 = 300;
@@ -331,7 +370,7 @@ int main(void)
 				  if(old_phase==0 || old_phase==2 || old_phase==4){
 					  if(fadc<fn) {
 						  //f_inv = (f_inv*39.0+time*6.0)/40.0;
-						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*7.0/12800.0)/100.0;
+						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*2.0/12800.0)/100.0;
 						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
@@ -353,6 +392,30 @@ int main(void)
 
 		  		  TIM3->CCR1 = 300+(uint32_t)round(fpot/7.0);
 		  		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+
+		  		  Accelerometer(READ, LSM6DS3_WHO_AM_I_REG, 0);
+		  		  if(ACC.Data == 0x69){
+		  			  ACC.OK = 1;
+
+		  			  Accelerometer(READ, LSM6DS3_OUTX_L_XL, 0);
+		  			  ACC.OUTX_L_XL = ACC.Data;
+		  			  Accelerometer(READ, LSM6DS3_OUTX_H_XL, 0);
+		  			  ACC.OUTX_H_XL = ACC.Data;
+		  			  Accelerometer(READ, LSM6DS3_OUTY_L_XL, 0);
+		  			  ACC.OUTY_L_XL = ACC.Data;
+		  			  Accelerometer(READ, LSM6DS3_OUTY_H_XL, 0);
+		  			  ACC.OUTY_H_XL = ACC.Data;
+		  			  Accelerometer(READ, LSM6DS3_OUTZ_L_XL, 0);
+		  			  ACC.OUTZ_L_XL = ACC.Data;
+		  			  Accelerometer(READ, LSM6DS3_OUTZ_H_XL, 0);
+		  			  ACC.OUTZ_H_XL = ACC.Data;
+
+		  			  ACC.ax = (((int)ACC.OUTX_H_XL)<<8) | ACC.OUTX_L_XL;
+		  			  ACC.ay = (((int)ACC.OUTY_H_XL)<<8) | ACC.OUTY_L_XL;
+		  			  ACC.az = (((int)ACC.OUTZ_H_XL)<<8) | ACC.OUTZ_L_XL;
+		  		  }else{
+		  			  ACC.OK = 0;
+		  		  }
 		  	  }
 	  /*}else{
 
@@ -632,6 +695,25 @@ static void MX_TIM4_Init(void)
 
 }
 
+/* USART2 init function */
+static void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /* USART3 init function */
 static void MX_USART3_Init(void)
 {
@@ -750,9 +832,9 @@ void init(void){
 	  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
 
 	  //i2c
-	  HAL_I2C_MspInit(&hi2c1);
+	  /*HAL_I2C_MspInit(&hi2c1);
 	  HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-	  HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+	  HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);*/
 
 	  //spi
 	  //HAL_USART_MspInit(&husart3);
@@ -767,6 +849,20 @@ void init(void){
 	  PlaySound(100,100);
 	  PlaySound(1,100);*/
 }
+void Accelerometer(unsigned char rw, unsigned char reg, unsigned char data_){
+	ACC.RW = rw;
+	ACC.Data = data_;
+	ACC.Reg_Adress = reg | ACC.RW;
+
+	HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(&hspi2,&ACC.Reg_Adress,1,1);
+	if(ACC.RW==READ)
+		HAL_SPI_Receive(&hspi2,&ACC.Data,1,1);
+	else
+		HAL_SPI_Transmit(&hspi2,&ACC.Data,1,1);
+	HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);
+}
+
 void PlaySound(float f_,int delay){
 	f=f_;
 	f_inv =  1/(f*POLES*STATES);

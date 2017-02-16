@@ -36,6 +36,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <math.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -50,7 +51,7 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
-USART_HandleTypeDef husart3;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -114,6 +115,15 @@ typedef struct{
 
 SPI_Struct ACC;
 
+typedef struct{
+
+ uint8_t data[200];
+ int count;
+ char lock;
+
+}TX_Struct;
+
+TX_Struct TXBuf;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,7 +135,7 @@ static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_USART3_Init(void);
+static void MX_USART3_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 
@@ -272,7 +282,7 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_I2C1_Init();
-  MX_USART3_Init();
+  MX_USART3_UART_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
 
@@ -291,13 +301,9 @@ int main(void)
 
  // HAL_Delay(2000);
 
-
-  /*I2C.Slave_Adress = 117;
-  I2C.Reg_Adress = 0x68;
-  I2C.Data = 0;
-  HAL_I2C_Master_Transmit_IT(&hi2c1, I2C.Slave_Adress, (unsigned char*) &I2C.Reg_Adress, 2);*/
-
-  //uint8_t  data = 0x0f;
+  uint8_t  data = 'A';
+  TXBuf.lock = 0;
+  TXBuf.count = 0;
 
   //check who am i
   Accelerometer(READ, LSM6DS3_WHO_AM_I_REG, 0);
@@ -325,20 +331,28 @@ int main(void)
 	  data = 1;
 	  HAL_I2C_Master_Receive(&hi2c1,0x68,&data,1,10);*/
 
-
-	 // datain = 0;
-
-	  /*HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_RESET);
-	  ///HAL_Delay(1);
-
-	  HAL_SPI_Transmit(&hspi2,&data,1,1);
-	  data = 0x00;
-	  HAL_SPI_Receive(&hspi2,&data,1,1);
-
-	 /// HAL_Delay(1);
-	    HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);*/
-	 // HAL_Delay(200);
-	 // float f0 = 4;
+	  if(TXBuf.lock==1){
+		  data = TXBuf.data[TXBuf.count];
+		  if(data=='\n'){
+			  //HAL_Delay(200);
+			  TXBuf.count=0;
+			  TXBuf.lock=0;
+		  }
+		  HAL_UART_Transmit(&huart3,&data,1,100);
+		  TXBuf.count++;
+	  }
+	  /*HAL_UART_Transmit(&huart2,&data,1,100);
+	  data = 'S';
+	  HAL_UART_Transmit(&huart3,&data,1,100);
+	  data = 'A';
+	  HAL_UART_Transmit(&huart3,&data,1,100);
+	  data = '\t';
+	  HAL_UART_Transmit(&huart3,&data,1,100);
+	  data = '7';
+	  HAL_UART_Transmit(&huart3,&data,1,100);
+	  data = '\n';
+	  HAL_UART_Transmit(&huart3,&data,1,100);
+	  HAL_Delay(200);*/
 
 	  //if(f>=f0) {
 		  //if(HAL_GetTick()-t0>1000){
@@ -350,7 +364,7 @@ int main(void)
 			  adc = ReadAnalogADC2(ch);
 			  fadc = (float)adc;
 
-			  if( fabs(fadc-fn) < 20 )
+			  if( fabs(fadc-fn) < 25 )
 				  ncount++;
 			  else
 				  ncount=0;
@@ -370,7 +384,7 @@ int main(void)
 				  if(old_phase==0 || old_phase==2 || old_phase==4){
 					  if(fadc<fn) {
 						  //f_inv = (f_inv*39.0+time*6.0)/40.0;
-						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*2.0/12800.0)/100.0;
+						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*4.0/12800.0)/100.0;
 						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
@@ -413,6 +427,11 @@ int main(void)
 		  			  ACC.ax = (((int)ACC.OUTX_H_XL)<<8) | ACC.OUTX_L_XL;
 		  			  ACC.ay = (((int)ACC.OUTY_H_XL)<<8) | ACC.OUTY_L_XL;
 		  			  ACC.az = (((int)ACC.OUTZ_H_XL)<<8) | ACC.OUTZ_L_XL;
+
+		  			  if(TXBuf.lock != 1){
+						  sprintf(TXBuf.data, "Sain\t%d\t%d\t%d\t%f\t%f\n", ACC.ax, ACC.ay, ACC.az, 186.95/(f_inv*POLES*STATES),fpot );
+						  TXBuf.lock = 1;
+		  			  }
 		  		  }else{
 		  			  ACC.OK = 0;
 		  		  }
@@ -715,19 +734,18 @@ static void MX_USART2_UART_Init(void)
 }
 
 /* USART3 init function */
-static void MX_USART3_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
-  husart3.Instance = USART3;
-  husart3.Init.BaudRate = 1000000;
-  husart3.Init.WordLength = USART_WORDLENGTH_8B;
-  husart3.Init.StopBits = USART_STOPBITS_1;
-  husart3.Init.Parity = USART_PARITY_NONE;
-  husart3.Init.Mode = USART_MODE_TX_RX;
-  husart3.Init.CLKPolarity = USART_POLARITY_LOW;
-  husart3.Init.CLKPhase = USART_PHASE_1EDGE;
-  husart3.Init.CLKLastBit = USART_LASTBIT_ENABLE;
-  if (HAL_USART_Init(&husart3) != HAL_OK)
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -836,8 +854,11 @@ void init(void){
 	  HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
 	  HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);*/
 
-	  //spi
-	  //HAL_USART_MspInit(&husart3);
+	  //uart3
+	  HAL_UART_MspInit(&huart3);
+
+	  //uart2
+	  HAL_UART_MspInit(&huart2);
 
 	  //spi2
 	  HAL_SPI_MspInit(&hspi2);

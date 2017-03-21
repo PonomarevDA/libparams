@@ -51,6 +51,10 @@
 #define BL_GPIO_Port GPIOB
 #define CL_Pin GPIO_PIN_1
 #define CL_GPIO_Port GPIOB
+#define SERVO1_Pin GPIO_PIN_6
+#define SERVO1_GPIO_Port GPIOC
+#define SERVO2_Pin GPIO_PIN_7
+#define SERVO2_GPIO_Port GPIOC
 #define AH_Pin GPIO_PIN_8
 #define AH_GPIO_Port GPIOA
 #define BH_Pin GPIO_PIN_9

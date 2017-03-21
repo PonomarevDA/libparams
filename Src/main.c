@@ -47,6 +47,7 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi2;
 
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
@@ -76,17 +77,20 @@ float adc0=0;
 uint32_t adc2 = 0;
 uint32_t sm_adc = 0;
 int ncount = 0;
-ADC_ChannelConfTypeDef adc1ch[5];
+ADC_ChannelConfTypeDef adc1ch[6];
 
+uint32_t t4old = 0;
 typedef struct{
 
 	uint32_t adc;
 	uint32_t neutral;
 	uint32_t pot;
 	uint32_t u_cur;
-	uint32_t u_cur_neutral;
 
 	float fpot;
+	float current0;
+	float current;
+
 
 }ADC_Struct;
 ADC_Struct ADC;
@@ -138,10 +142,13 @@ static void MX_I2C1_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 void init(void);
 void PlaySound(float f_,int delay);
+void StartAnalogADC2( int ch );
+int GetAnalogADC2( void );
 int ReadAnalogADC1( int ch );
 int ReadAnalogADC2( int ch );
 void ResetControlLOW(void);
@@ -162,34 +169,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+	if (htim->Instance==TIM2) //check if the interrupt comes from TIM3
+		{
+		HAL_GPIO_WritePin(SERVO1_GPIO_Port, SERVO1_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SERVO2_GPIO_Port, SERVO2_Pin, GPIO_PIN_SET);
+		}
 	if (htim->Instance==TIM3) //check if the interrupt comes from TIM3
 	{
 		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		time+=dt;
-		if( time>=f_inv )
-			time=0;
-			/*phase++;
-			if(phase>=6)
-				phase=0;
-			switch(phase){
-							case 0:SetControlHIGH(0,0,1,0,0,1);break;
-							case 1:SetControlHIGH(0,1,1,0,0,0);break;
-							case 2:SetControlHIGH(0,1,0,0,1,0);break;
-							case 3:SetControlHIGH(0,0,0,1,1,0);break;
-							case 4:SetControlHIGH(1,0,0,1,0,0);break;
-							case 5:SetControlHIGH(1,0,0,0,0,1);break;
-						}
-			  switch(phase){
-				case 0:ch=2;break;
-				case 1:ch=1;break;
-				case 2:ch=0;break;
-				case 3:ch=2;break;
-				case 4:ch=1;break;
-				case 5:ch=0;break;
-			  }
-			  count=0;*/
-			//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-		//}
+		//time+=dt;
+		//if( time>=f_inv )
+		//	time=0;
 		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		switch(phase){
 						case 0:SetControlLOW(0,0,1,0,0,1);break;
@@ -198,36 +188,43 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						case 3:SetControlLOW(0,0,0,1,1,0);break;
 						case 4:SetControlLOW(1,0,0,1,0,0);break;
 						case 5:SetControlLOW(1,0,0,0,0,1);break;
-					}
+		}
 	}
 	if (htim->Instance==TIM4) //check if the interrupt comes from TIM3
 	{
+		count=-1;
+
 		 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		// HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		//HAL_GPIO_TogglePin(AH_GPIO_Port, AH_Pin);
 		phase++;
-					if(phase>=6)
-						phase=0;
-					switch(phase){
-									case 0:SetControlHIGH(0,0,1,0,0,1);break;
-									case 1:SetControlHIGH(0,1,1,0,0,0);break;
-									case 2:SetControlHIGH(0,1,0,0,1,0);break;
-									case 3:SetControlHIGH(0,0,0,1,1,0);break;
-									case 4:SetControlHIGH(1,0,0,1,0,0);break;
-									case 5:SetControlHIGH(1,0,0,0,0,1);break;
-								}
-					  switch(phase){
-						case 0:ch=2;break;
-						case 1:ch=1;break;
-						case 2:ch=0;break;
-						case 3:ch=2;break;
-						case 4:ch=1;break;
-						case 5:ch=0;break;
-					  }
-					  count=0;
+		if(phase>=6)
+			phase=0;
+		switch(phase){
+									case 0:SetControlHIGH(0,0,1,0,0,1);ch=2;break;
+									case 1:SetControlHIGH(0,1,1,0,0,0);ch=1;break;
+									case 2:SetControlHIGH(0,1,0,0,1,0);ch=0;break;
+									case 3:SetControlHIGH(0,0,0,1,1,0);ch=2;break;
+									case 4:SetControlHIGH(1,0,0,1,0,0);ch=1;break;
+									case 5:SetControlHIGH(1,0,0,0,0,1);ch=0;break;
+		}
+		HAL_ADC_ConfigChannel(&hadc2, &adc1ch[ch]);
+		HAL_ADC_Start(&hadc2);
+		count=0;
 	}
 }
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
+	if (htim->Instance==TIM2) //check if the interrupt comes from TIM3
+	{
+		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_1){
+			HAL_GPIO_WritePin(SERVO1_GPIO_Port, SERVO1_Pin, GPIO_PIN_RESET);
+
+			HAL_GPIO_WritePin(SERVO2_GPIO_Port, SERVO2_Pin, GPIO_PIN_RESET);
+		}
+		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_2){
+		}
+
+
+	}
 	if (htim->Instance==TIM3) //check if the interrupt comes from TIM3
 	{
 		if(htim->Channel==HAL_TIM_ACTIVE_CHANNEL_1){
@@ -285,21 +282,25 @@ int main(void)
   MX_USART3_UART_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
   init();
-
+  ADC.current0 = 0;
+  for(int i =0;i<200;i++){
+	  ADC.u_cur = ReadAnalogADC1(5);
+	  ADC.current0 +=  ((float)ADC.u_cur)/4095.0*3300.0;
+  }
+  ADC.current0 = ADC.current0/200.0;
  // PlaySound(100,1);
 
 
-  f=3;
+  f=1.2;
   f_inv =  1/(f*POLES*STATES);
   TIM4->ARR = (uint32_t)round(12800.0*f_inv);
-  TIM3->CCR1 = 300;
+  TIM3->CCR1 = 350;
   TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
-
-
- // HAL_Delay(2000);
+  HAL_Delay(5000);
 
   uint8_t  data = 'A';
   TXBuf.lock = 0;
@@ -316,6 +317,8 @@ int main(void)
 	  ACC.OK = 1;
   else
 	  ACC.OK = 0;
+
+  t4old = TIM4->ARR;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -326,78 +329,70 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
-	 /* data = 117;
-	  HAL_I2C_Master_Transmit(&hi2c1,0x68,&data,1,10);
-	  data = 1;
-	  HAL_I2C_Master_Receive(&hi2c1,0x68,&data,1,10);*/
-
-	  if(TXBuf.lock==1){
-		  data = TXBuf.data[TXBuf.count];
-		  if(data=='\n'){
-			  //HAL_Delay(200);
-			  TXBuf.count=0;
-			  TXBuf.lock=0;
-		  }
-		  HAL_UART_Transmit(&huart3,&data,1,100);
-		  TXBuf.count++;
-	  }
-	  /*HAL_UART_Transmit(&huart2,&data,1,100);
-	  data = 'S';
-	  HAL_UART_Transmit(&huart3,&data,1,100);
-	  data = 'A';
-	  HAL_UART_Transmit(&huart3,&data,1,100);
-	  data = '\t';
-	  HAL_UART_Transmit(&huart3,&data,1,100);
-	  data = '7';
-	  HAL_UART_Transmit(&huart3,&data,1,100);
-	  data = '\n';
-	  HAL_UART_Transmit(&huart3,&data,1,100);
-	  HAL_Delay(200);*/
-
 	  //if(f>=f0) {
 		  //if(HAL_GetTick()-t0>1000){
-			  int old_phase = phase;
-
+	  	  	  //StartAnalogADC2(ch);
 			  if(count>=0){
 				  count++;
+				  StartAnalogADC2(ch);
+				  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+				  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 			  }
-			  adc = ReadAnalogADC2(ch);
+			  int ph = phase;
+			  int chh = ch;
+			  adc = GetAnalogADC2();
 			  fadc = (float)adc;
 
-			  if( fabs(fadc-fn) < 25 )
-				  ncount++;
-			  else
-				  ncount=0;
-			  if(ncount>400){
-
-				  f=2;
-				  f_inv =  1/(f*POLES*STATES);
-				  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
-				  TIM3->CCR1 = 300;
-				  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
-				  //fpot = 0;
-
-				  HAL_Delay(200);
-				  ncount=0;
-			  }
-			  if(old_phase==phase && count>=0){
-				  if(old_phase==0 || old_phase==2 || old_phase==4){
-					  if(fadc<fn) {
+			  if(count>=0){
+				  if( phase==0 || phase==2 || phase==4 ){
+					  if(fadc<fn && TIM4->CNT>0 && ph==phase && chh==ch) {
+						  //
+						  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 						  //f_inv = (f_inv*39.0+time*6.0)/40.0;
-						  f_inv = (f_inv*99.0+((float)TIM4->CNT)*4.0/12800.0)/100.0;
+						  f_inv = (f_inv*39.0+((float)TIM4->CNT)*2.0/12800.0)/40.0;
 						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
 						  //f_inv =  (f_inv*19.0+time*SOKLSHENIE)/20.0;
 
 						  count=-1;
-						  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+						  //t4old = TIM4->CNT;
+
 						 // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 						 // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 					  }
 				  }
+				 if( phase==1 || phase==3 || phase==5){
+				  					  if(fadc>fn  && TIM4->CNT>0 && ph==phase && chh==ch) {
+				  						HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				  						  f_inv = (f_inv*39.0+((float)TIM4->CNT)*2.0/12800.0)/40.0;
+				  						  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
+
+				  						  count=-1;
+				  						  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				  					  }
+				  	}
 			  }
+
+
+			  /*if( fabs(fadc-fn) < 30 )
+			  		ncount++;
+			  else
+			  		ncount=0;
+			  if(ncount>400){
+
+			  				  f=1;
+			  				  f_inv =  1/(f*POLES*STATES);
+			  				  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
+			  				  TIM3->CCR1 = 500;
+			  				  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+			  				  t4old = TIM4->ARR;
+			  				  //fpot = 0;
+
+			  				  HAL_Delay(300);
+			  				  ncount=0;
+			  }*/
 		 // }
 
-		  if(phase==1 || phase==3 || phase==5){
+		 /* if(phase==1 && count>0){
 		  		  n  = ReadAnalogADC1(3);//neutral
 		  		  fn = ((float)n +fn*299.0)/300.0;
 
@@ -406,6 +401,9 @@ int main(void)
 
 		  		  TIM3->CCR1 = 300+(uint32_t)round(fpot/7.0);
 		  		  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED
+
+		  		  ADC.u_cur = ReadAnalogADC1(5);
+		  		  ADC.current = ( (((float)ADC.u_cur)/4095.0*3300.0)*0.1 +ADC.current*49.0)/50.0;
 
 		  		  Accelerometer(READ, LSM6DS3_WHO_AM_I_REG, 0);
 		  		  if(ACC.Data == 0x69){
@@ -429,19 +427,41 @@ int main(void)
 		  			  ACC.az = (((int)ACC.OUTZ_H_XL)<<8) | ACC.OUTZ_L_XL;
 
 		  			  if(TXBuf.lock != 1){
-						  sprintf(TXBuf.data, "Sain\t%d\t%d\t%d\t%f\t%f\n", ACC.ax, ACC.ay, ACC.az, 186.95/(f_inv*POLES*STATES),fpot );
+						  sprintf(TXBuf.data, "Sain\t%d\t%d\t%d\t%f\t%d/3000\t%f\t%f\n", ACC.ax, ACC.ay, ACC.az, 186.95/(f_inv*POLES*STATES),TIM3->CCR1,ADC.current,f_inv );
 						  TXBuf.lock = 1;
 		  			  }
 		  		  }else{
 		  			  ACC.OK = 0;
 		  		  }
-		  	  }
+
+		  		  if(TXBuf.lock==1){
+		  			  data = TXBuf.data[TXBuf.count];
+		  			  if(data=='\n'){
+		  				  //HAL_Delay(200);
+		  				  TXBuf.count=0;
+		  				  TXBuf.lock=0;
+		  			  }
+		  			  HAL_UART_Transmit(&huart3,&data,1,100);
+		  			  TXBuf.count++;
+		  		  }
+		  	  }*/
+			  n  = ReadAnalogADC1(3);//neutral
+			  fn = ((float)n +fn*299.0)/300.0;
+			  adc2 = ReadAnalogADC1(4);
+			  fpot = ((float)adc2 +fpot*499.0)/500.0;
+
+			  TIM3->CCR1 = 300+(uint32_t)round(fpot/6.0);
+			  TIM3->CCR2 = TIM3->CCR1;//copy PWM to LED*/
+
+		  TIM2->CCR1 = 1000 + (uint32_t)round(fpot/3.0);//+1000*sin( ((float)HAL_GetTick())/1000.0 );
+		  TIM2->CCR2 = 2000 - (uint32_t)round(fpot/3.0);
+
 	  /*}else{
 
 		  f=2+(float)(HAL_GetTick())/300.0;
 		  f_inv =  1/(f*POLES*STATES);
 		  TIM4->ARR = (uint32_t)round(12800.0*f_inv);
-		  /*f=1.5+(float)(HAL_GetTick()-t0)/300.0;
+		  f=1.5+(float)(HAL_GetTick()-t0)/300.0;
 		  f_inv =  1/(f*POLES*STATES);*/
 	  //}
 
@@ -614,6 +634,58 @@ static void MX_SPI2_Init(void)
 
 }
 
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+  TIM_OC_InitTypeDef sConfigOC;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 64;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 10000;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  if (HAL_TIM_OC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 1000;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /* TIM3 init function */
 static void MX_TIM3_Init(void)
 {
@@ -625,7 +697,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 3000;
+  htim3.Init.Period = 2000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
@@ -673,7 +745,6 @@ static void MX_TIM4_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
-  TIM_IC_InitTypeDef sConfigIC;
 
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 1600;
@@ -691,23 +762,9 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
 
-  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -790,6 +847,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : SERVO1_Pin SERVO2_Pin */
+  GPIO_InitStruct.Pin = SERVO1_Pin|SERVO2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : CS_Acc_Pin */
   GPIO_InitStruct.Pin = CS_Acc_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -804,12 +867,22 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, BL_Pin|CL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, SERVO1_Pin|SERVO2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CS_Acc_GPIO_Port, CS_Acc_Pin, GPIO_PIN_SET);
 
 }
 
 /* USER CODE BEGIN 4 */
 void init(void){
+
+	//timer 2
+	HAL_TIM_Base_MspInit(&htim2);
+	HAL_TIM_OC_Start_IT(&htim2,TIM_CHANNEL_1);
+	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_NVIC_EnableIRQ(TIM2_IRQn);
+
 	  //TIMER3 16 khz PWM
 	  HAL_TIM_Base_MspInit(&htim3);
 	  HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
@@ -826,15 +899,15 @@ void init(void){
 
 	  //ADC1
 	  HAL_ADC_MspInit(&hadc1);
-	  adc1ch[0].Channel = ADC_CHANNEL_11;//B
+	  adc1ch[0].Channel = ADC_CHANNEL_12;//B//11
 	  adc1ch[0].Rank = 1;
 	  adc1ch[0].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
 
-	  adc1ch[1].Channel = ADC_CHANNEL_10;//C
+	  adc1ch[1].Channel = ADC_CHANNEL_13;//C//10
 	  adc1ch[1].Rank = 1;
 	  adc1ch[1].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
 
-	  adc1ch[2].Channel = ADC_CHANNEL_1;//A
+	  adc1ch[2].Channel = ADC_CHANNEL_14;//A//1
 	  adc1ch[2].Rank = 1;
 	  adc1ch[2].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
 
@@ -845,6 +918,10 @@ void init(void){
 	  adc1ch[4].Channel = ADC_CHANNEL_0;//pot
 	  adc1ch[4].Rank = 1;
 	  adc1ch[4].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+
+	  adc1ch[5].Channel = ADC_CHANNEL_6;//cur
+	  adc1ch[5].Rank = 1;
+	  adc1ch[5].SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
 	  //adc2
 	  HAL_ADC_MspInit(&hadc2);
 	  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
@@ -897,6 +974,14 @@ int ReadAnalogADC1( int ch ){
 	HAL_ADC_Start(&hadc1);
 	while( __HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_EOC)==0 ){}
 	return HAL_ADC_GetValue(&hadc1);
+}
+void StartAnalogADC2( int ch ){
+	HAL_ADC_ConfigChannel(&hadc2, &adc1ch[ch]);
+	HAL_ADC_Start(&hadc2);
+}
+int GetAnalogADC2( void ){
+	while( __HAL_ADC_GET_FLAG(&hadc2, ADC_FLAG_EOC)==0 ){}
+	return HAL_ADC_GetValue(&hadc2);
 }
 int ReadAnalogADC2( int ch ){
 	HAL_ADC_ConfigChannel(&hadc2, &adc1ch[ch]);

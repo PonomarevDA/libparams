@@ -108,6 +108,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   esc_init();
+  uavcanInit();
   /* USER CODE END 2 */
 
   /* Infinite loop */

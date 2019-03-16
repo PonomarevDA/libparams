@@ -84,6 +84,14 @@ void onTransferReceived(CanardInstance* ins, CanardRxTransfer* transfer)
     {
         getsetHandleCanard(transfer);
     }
+    
+    // SAVE TO FLASH COMMAND (0)
+    if (transfer->data_type_id == UAVCAN_PROTOCOL_PARAM_EXECUTEOPCODE_ID)
+    {
+
+    	saveHandle(transfer);
+    	//updateStorage(transfer);
+    }
 
 }
 
@@ -134,7 +142,13 @@ void uavcanInit(void)
         	else
         		parameters[i].val = fl[i];
     }
+    /*
+    if(((uint32_t)fl[0])>150)
+    	canardSetLocalNodeID(&g_canard, NODE_ID);
+    else
+    	canardSetLocalNodeID(&g_canard, fl[0]);//NODE_ID);
 
+	*/
     canardSetLocalNodeID(&g_canard, parameters[0].val);
 
 }
@@ -201,7 +215,31 @@ void publishCanard(void)
     {
         step = 0;
     }
-
+  /*
+    float val = sine_wave[step];
+    static uint8_t transfer_id = 0;
+    canardEncodeScalar(buffer, 0, 32, &val);
+    memcpy(&buffer[4], "sin", 3);    
+    canardBroadcast(&g_canard, 
+                    UAVCAN_PROTOCOL_DEBUG_KEYVALUE_SIGNATURE,
+                    UAVCAN_PROTOCOL_DEBUG_KEYVALUE_ID,
+                    &transfer_id,
+                    CANARD_TRANSFER_PRIORITY_LOW,
+                    &buffer[0], 
+                    7);
+    memset(buffer,0x00,UAVCAN_PROTOCOL_DEBUG_KEYVALUE_MESSAGE_SIZE);
+  
+    val = step;
+    canardEncodeScalar(buffer, 0, 32, &val);
+    memcpy(&buffer[4], "stp", 3);  
+    canardBroadcast(&g_canard, 
+                    UAVCAN_PROTOCOL_DEBUG_KEYVALUE_SIGNATURE,
+                    UAVCAN_PROTOCOL_DEBUG_KEYVALUE_ID,
+                    &transfer_id,
+                    CANARD_TRANSFER_PRIORITY_LOW,
+                    &buffer[0], 
+                    7);
+                    */
     	float val = sine_wave[step];
         static uint8_t transfer_id = 0;
         canardEncodeScalar(buffer, 0, 32, &T);
@@ -345,4 +383,122 @@ uint16_t encodeParamCanard(param_t * p, uint8_t * buffer)
     
     memcpy(&buffer[offset / 8], p->name, strlen((char const*)p->name));
     return  (offset/8 + strlen((char const*)p->name)); 
+}
+
+
+void getsetHandleCanard(CanardRxTransfer* transfer)
+{
+    uint16_t index = 0xFFFF;
+    uint8_t tag    = 0;
+    int offset     = 0;
+    int64_t val    = 0;
+
+    canardDecodeScalar(transfer, offset,  13, false, &index);
+    offset += 13;
+    canardDecodeScalar(transfer, offset, 3, false, &tag);
+    offset += 3;
+
+    if(tag == 1)
+    {
+        canardDecodeScalar(transfer, offset, 64, false, &val);
+        offset += 64;
+    } 
+
+    uint16_t n = transfer->payload_len - offset / 8 ;
+    uint8_t name[16]      = "";
+    for(int i = 0; i < n; i++)
+    {
+        canardDecodeScalar(transfer, offset, 8, false, &name[i]);
+        offset += 8;
+    }
+
+    param_t * p = NULL;
+
+    if(strlen((char const*)name))
+    {
+        p = getParamByName(name);
+    }
+    else
+    {
+        p = getParamByIndex(index);
+    }
+
+    if((p)&&(tag == 1))
+    {
+        p->val = val;
+
+  //      HAL_FLASH_Unlock();
+ //       HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, 0x0801FF00, 6);
+  //      HAL_FLASH_Lock();
+
+        /*flash_unlock();
+        flash_erase();
+        //flash_write((uint32_t)STORAGE_PAGE, parameters, 3);
+        flash_write_param( (uint32_t)STORAGE_PAGE, parameters[0].val);
+        flash_write_param( (uint32_t)STORAGE_PAGE+4, parameters[1].val);
+        flash_write_param( (uint32_t)STORAGE_PAGE+4*2, parameters[2].val);
+        flash_lock();*/
+        //osSemaphoreRelease(myBinarySem01Handle);
+    }
+
+    uint8_t  buffer[64] = "";
+    uint16_t len = encodeParamCanard(p, buffer);
+    canardRequestOrRespond(&g_canard,
+                           transfer->source_node_id,
+                           UAVCAN_PROTOCOL_PARAM_GETSET_SIGNATURE,
+                           UAVCAN_PROTOCOL_PARAM_GETSET_ID,
+                           &transfer->transfer_id,
+                           transfer->priority,
+                           CanardResponse,
+                           &buffer[0],
+                           (uint16_t)len);
+
+}
+
+void saveHandle(CanardRxTransfer* transfer)
+{
+    //uint16_t index = 0xFFFF;
+    //uint8_t tag    = 0;
+    int offset     = 0;
+    int64_t val    = 0;
+    int8_t ok = 1;
+
+    uint8_t opcode;
+
+    canardDecodeScalar(transfer, offset,  8, false, &opcode);
+    offset += 8;
+    //canardDecodeScalar(transfer, offset, 3, false, &tag);
+    //offset += 3;
+
+    uint8_t  buffer[64] = "";
+    //uint16_t len = encodeParamCanard(p, buffer);
+    canardEncodeScalar(buffer, 0, 		48, 	&val);
+    canardEncodeScalar(buffer, 48, 		1, 	&ok);
+
+    canardRequestOrRespond(&g_canard,
+                           transfer->source_node_id,
+                           UAVCAN_PROTOCOL_PARAM_EXECUTEOPCODE_SIGNATURE,
+                           UAVCAN_PROTOCOL_PARAM_EXECUTEOPCODE_ID,
+                           &transfer->transfer_id,
+                           transfer->priority,
+                           CanardResponse,
+                           &buffer[0],
+                           7);
+
+    //if(tag == 1)
+    	//osSemaphoreRelease(myCountingSem01Handle);
+    updateStorage();
+}
+
+void updateStorage(void){
+	flash_unlock();
+	        flash_erase();
+	        //flash_write((uint32_t)STORAGE_PAGE, parameters, 3);
+	for(int i = 0; i < param_num; i++)
+	{
+		flash_write_param( (int32_t)(STORAGE_PAGE+4*i), parameters[i].val);
+	}
+	        /*flash_write_param( (uint32_t)STORAGE_PAGE+4, parameters[1].val);
+	        flash_write_param( (uint32_t)STORAGE_PAGE+4*2, parameters[2].val);*/
+	        flash_lock();
 }

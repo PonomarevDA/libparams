@@ -9,6 +9,7 @@
  * @file esc.c
  * @author sainquake
  */
+
 #ifndef INC_SQ_UAVCAN_H_
 #define INC_SQ_UAVCAN_H_
 
@@ -18,6 +19,7 @@
 #include "stm32f1xx_hal.h"
 #include "main.h"
 
+#include "sq_flash.h"
 #include "cmsis_os.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -61,6 +63,7 @@
 
 #define UAVCAN_PROTOCOL_PARAM_GETSET_ID                             11
 #define UAVCAN_PROTOCOL_PARAM_GETSET_SIGNATURE                      0xa7b622f939d1a4d5    
+
 
 #define UAVCAN_PROTOCOL_PARAM_EXECUTEOPCODE_ID                      10
 #define UAVCAN_PROTOCOL_PARAM_EXECUTEOPCODE_SIGNATURE               0xa7b622f939d1a466

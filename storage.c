@@ -136,9 +136,5 @@ void paramsLoadToFlash() {
     for (int32_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
         flashWriteU32ByIndex(param_idx, parameters[param_idx].val);
     }
-    for (int32_t param_idx = integer_params_amount; param_idx < all_params_amount; param_idx++) {
-        uint8_t str_param_idx = param_idx - integer_params_amount;
-        flashWriteStringByIndex(str_param_idx, str_params[str_param_idx].val);
-    }
     flashLock();
 }

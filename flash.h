@@ -8,9 +8,14 @@
 #define LIBPARAM_FLASH_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define PAGE_SIZE_BYTES         (1024)
 #define PARAM_STRING_MAX_SIZE   20
+
+int8_t flashInit();
+size_t flashRead(size_t offset, uint8_t* data, size_t size);
+size_t flashWrite(size_t offset, const uint8_t* data, size_t size);
 
 /**
  * @brief You can read param value from flash memory at any time
@@ -25,7 +30,6 @@ int64_t flashReadI32ByIndex(uint8_t param_idx);
 void flashUnlock();
 void flashErase();
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data);
-int8_t flashWriteStringByIndex(uint8_t param_idx, uint8_t* string);
 void flashLock();
 
 #endif  // LIBPARAM_FLASH_H_

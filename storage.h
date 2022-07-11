@@ -8,10 +8,10 @@
 #define LIBPARAM_STORAGE_H_
 
 #include <stdint.h>
+#include "flash.h"
 
 
 #define MAX_PARAM_NAME_LENGTH   32
-#define PAGE_SIZE_BYTES         (1024)
 #define MAX_STRING_LENGTH       20
 
 

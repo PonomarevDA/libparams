@@ -22,7 +22,6 @@
     #define FLASH_START_ADDR            0x08000000
     #define FLASH_SIZE_KBYTES           128 * 1024
     #define FLASH_NUM_OF_PAGES          128
-    #define FLASH_PAGE_SIZE_BYTES       1024
     #define FLASH_LAST_PAGE_ADDR        0x0801FC00
     #define FLASH_END_ADDR              0x0801FFFF
 #endif
@@ -32,24 +31,22 @@
 
 ///< Default values correspond to the last page access only.
 static const volatile int32_t *flash_memory_ptr = (const volatile int32_t *)FLASH_LAST_PAGE_ADDR;
-static size_t flash_size = FLASH_PAGE_SIZE_BYTES;
+static size_t flash_size = PAGE_SIZE_BYTES;
 static size_t num_of_pages = 1;
 
 
 static int8_t flashWriteU32ByAddress(uint32_t address, uint32_t data);
 
 
-int8_t flashInit(size_t initial_address, size_t size) {
-    if ((initial_address % FLASH_PAGE_SIZE_BYTES != 0) ||
-            initial_address < FLASH_START_ADDR ||
-            initial_address > FLASH_LAST_PAGE_ADDR ||
-            initial_address + size > FLASH_END_ADDR ||
-            size == 0) {
+int8_t flashInit(uint8_t first_page_idx, uint8_t pages_amount) {
+    size_t last_page_idx = first_page_idx + pages_amount;
+    if (last_page_idx >= FLASH_NUM_OF_PAGES || pages_amount == 0 || pages_amount > FLASH_NUM_OF_PAGES) {
         return -1;
     }
-    flash_memory_ptr = (const volatile int32_t*)initial_address;
-    flash_size = size;
-    num_of_pages = 1 + (size - 1) / FLASH_PAGE_SIZE_BYTES;
+
+    flash_memory_ptr = (const volatile int32_t *)(FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES);
+    flash_size = pages_amount * PAGE_SIZE_BYTES;
+    num_of_pages = pages_amount;
     return 0;
 }
 size_t flashRead(size_t offset, uint8_t* data, size_t requested_size) {

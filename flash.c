@@ -5,6 +5,7 @@
  */
 
 #include "flash.h"
+#include <stddef.h>
 #include "stm32f1xx_hal.h"
 
 #define STORAGE_PAGE                    0x0801FC00

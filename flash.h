@@ -13,25 +13,25 @@
 #define PAGE_SIZE_BYTES         (1024)
 #define PARAM_STRING_MAX_SIZE   20
 
-// By default it is initialized as last page only.
+/**
+ * @brief By default it is initialized as last page only.
+ */
 int8_t flashInit(uint8_t first_page_idx, uint8_t pages_amount);
 
-// Return the number of bytes read (may be less than size).
+/**
+ * @brief Return the number of bytes read (may be less than size).
+ */
 size_t flashRead(size_t offset, uint8_t* data, size_t size);
 
-// Return the number of bytes wrote (0 in case of error).
+/**
+ * @brief Return the number of bytes wrote (0 in case of error).
+ */
 size_t flashWrite(size_t offset, const uint8_t* data, size_t size);
 
 /**
- * @brief You can read param value from flash memory at any time
+ * @brief ???Deprecated???
  */
 int64_t flashReadI32ByIndex(uint8_t param_idx);
-
-
-/**
- * @brief To write a param value, you need initially to unlock the flash memory, then erase
- * desired page, write data and then lock it back
- */
 void flashUnlock();
 void flashErase();
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data);

@@ -13,7 +13,7 @@ int main() {
     flashWrite(0, first_buf, PAGE_SIZE_BYTES);
 
     uint8_t second_buf[PAGE_SIZE_BYTES];
-    flashWrite(0, second_buf, PAGE_SIZE_BYTES);
+    flashRead(0, second_buf, PAGE_SIZE_BYTES);
 
     return 0;
 }

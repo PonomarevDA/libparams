@@ -13,7 +13,7 @@
 #include "flash.h"
 #include <stddef.h>
 #include <string.h>
-#include "stm32f1xx_hal.h"
+#include "flash_driver.h"
 
 #ifndef MCU_TYPE
     #define STM32F103_128KB
@@ -35,12 +35,9 @@ static size_t flash_size = PAGE_SIZE_BYTES;
 static size_t num_of_pages = 1;
 
 
-static int8_t flashWriteU32ByAddress(uint32_t address, uint32_t data);
-
-
 int8_t flashInit(uint8_t first_page_idx, uint8_t pages_amount) {
-    size_t last_page_idx = first_page_idx + pages_amount;
-    if (last_page_idx >= FLASH_NUM_OF_PAGES || pages_amount == 0 || pages_amount > FLASH_NUM_OF_PAGES) {
+    size_t last_page_num = first_page_idx + pages_amount;
+    if (last_page_num > FLASH_NUM_OF_PAGES || pages_amount == 0) {
         return -1;
     }
 
@@ -53,44 +50,33 @@ size_t flashRead(size_t offset, uint8_t* data, size_t requested_size) {
     if (data == NULL || offset >= flash_size || requested_size == 0) {
         return 0;
     }
+
     size_t allowed_size = flash_size - offset;
     size_t bytes_to_read = (allowed_size < requested_size) ? allowed_size : requested_size;
-    memcpy(data, (const void*)&flash_memory_ptr[offset], bytes_to_read);
+    memcpy(data, ((const uint8_t*)flash_memory_ptr) + offset, bytes_to_read);
     return bytes_to_read;
 }
 size_t flashWrite(size_t offset, const uint8_t* data, size_t size) {
-    if (data == NULL || offset >= flash_size || size == 0) {
+    if (data == NULL || offset >= flash_size || size == 0 || offset + size > flash_size ) {
         return 0;
     }
-    return 0;
+
+    flashUnlock();
+    flashErase((uint32_t)flash_memory_ptr, num_of_pages);
+    uint32_t address = (uint32_t)flash_memory_ptr + offset;
+    uint32_t written_data = *(const uint32_t*) (void*) data;
+    int8_t status = flashWriteWord(address, written_data);
+    flashLock();
+
+    return (status != -1) ? size : 0;
 }
 
 
-void flashUnlock() {
-    HAL_FLASH_Unlock();
-}
-void flashLock() {
-    HAL_FLASH_Lock();
-}
-void flashErase() {
-    FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
-        .TypeErase = FLASH_TYPEERASE_PAGES,
-        .PageAddress = (uint32_t)flash_memory_ptr,
-        .NbPages = num_of_pages
-    };
-    uint32_t error = 0;
-    HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &error);
-}
-
+///< deprecated???
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data) {
-    return flashWriteU32ByAddress((int32_t)(flash_memory_ptr + 4 * param_idx), data);
+    return flashWriteWord((int32_t)(flash_memory_ptr + 4 * param_idx), data);
 }
 int64_t flashReadI32ByIndex(uint8_t param_idx) {
     int32_t param_value = flash_memory_ptr[param_idx];
     return param_value;
-}
-
-int8_t flashWriteU32ByAddress(uint32_t address, uint32_t data) {
-    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data);
-    return (hal_status != HAL_OK) ? -1 : 0;
 }

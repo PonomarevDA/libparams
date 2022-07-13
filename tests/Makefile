@@ -6,10 +6,10 @@ BUILD_DIR = build
 ######################################
 # source
 ######################################
-C_SOURCES =  \
-../flash.c \
-../flash_driver.c \
-../storage.c \
+C_SOURCES =             \
+../src/flash.c          \
+../src/flash_driver.c   \
+../src/storage.c        \
 main.c
 
 
@@ -33,9 +33,9 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 C_DEFS = -DUSE_HAL_DRIVER -DSTM32F103xB
 
 # C includes
-C_INCLUDES =  	\
--I../			\
--I./
+C_INCLUDES =    \
+-I../src/       \
+-I./ 
 
 # compile gcc flags
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -Wcast-align -MMD -MP -MF"$(@:%.o=%.d)"

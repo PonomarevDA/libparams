@@ -39,7 +39,7 @@ size_t flashWrite(size_t offset, const uint8_t* data, size_t size);
  */
 int64_t flashReadI32ByIndex(uint8_t param_idx);
 void flashUnlock();
-void flashErase();
+void flashEraseAllocatedSpace();
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data);
 void flashLock();
 

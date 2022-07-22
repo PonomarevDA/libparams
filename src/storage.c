@@ -139,7 +139,7 @@ void paramsLoadFromFlash() {
 
 void paramsLoadToFlash() {
     flashUnlock();
-    flashErase();
+    flashEraseAllocatedSpace();
     for (int32_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
         flashWriteU32ByIndex(param_idx, parameters[param_idx].val);
     }

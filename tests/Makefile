@@ -7,9 +7,9 @@ BUILD_DIR = build
 # source
 ######################################
 C_SOURCES =             \
-../src/flash.c          \
-../src/flash_driver.c   \
-../src/storage.c        \
+../libparams/flash.c          \
+../libparams/flash_driver.c   \
+../libparams/storage.c        \
 main.c
 
 
@@ -34,7 +34,7 @@ C_DEFS = -DUSE_HAL_DRIVER -DSTM32F103xB
 
 # C includes
 C_INCLUDES =    \
--I../src/       \
+-I../libparams/	\
 -I./ 
 
 # compile gcc flags

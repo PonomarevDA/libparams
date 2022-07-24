@@ -77,7 +77,8 @@ void flashEraseAllocatedSpace() {
 
 ///< deprecated???
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data) {
-    return flashWriteWord((int32_t)(flash_memory_ptr + 4 * param_idx), data);
+	uint32_t address = (uint32_t)(flash_memory_ptr) + 4 * param_idx;
+    return flashWriteWord(address, data);
 }
 int64_t flashReadI32ByIndex(uint8_t param_idx) {
     int32_t param_value = flash_memory_ptr[param_idx];

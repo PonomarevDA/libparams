@@ -68,6 +68,6 @@ ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_length);
 StorageCellType_t paramsGetType(ParamIndex_t param_idx);
 
 void paramsLoadFromFlash();
-void paramsLoadToFlash();
+int8_t paramsLoadToFlash();
 
 #endif  // LIBPARAM_STORAGE_H_

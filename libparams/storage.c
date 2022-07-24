@@ -137,11 +137,20 @@ void paramsLoadFromFlash() {
     }
 }
 
-void paramsLoadToFlash() {
+int8_t paramsLoadToFlash() {
+    int8_t res = 0;
     flashUnlock();
     flashEraseAllocatedSpace();
     for (int32_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
-        flashWriteU32ByIndex(param_idx, parameters[param_idx].val);
+    	int32_t write_value = parameters[param_idx].val;
+        if (flashWriteU32ByIndex(param_idx, write_value) == -1) {
+        	res = -1;
+        }
+        int32_t read_value = flashReadI32ByIndex(param_idx);
+        if (write_value != read_value) {
+        	res = -1;
+        }
     }
     flashLock();
+    return res;
 }

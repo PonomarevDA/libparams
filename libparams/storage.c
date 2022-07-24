@@ -13,6 +13,7 @@
 
 #include "storage.h"
 #include <string.h>
+#include "flash_driver.h"
 #include "flash.h"
 
 
@@ -22,16 +23,6 @@ extern StringCell_t str_params[];
 static uint16_t integer_params_amount = 0;
 static uint16_t string_params_amount = 0;
 static uint16_t all_params_amount = 0;
-
-IntegerCell_t __attribute__((weak)) parameters[] = {
-    // name                         val     min     max     default
-    {(uint8_t*)"identifier",        50,     0,      100,    50},
-};
-
-StringCell_t __attribute__((weak)) str_params[] = {
-    // name                         val             default
-    {(uint8_t*)"name",              "custom_name",  "default_name"},
-};
 
 void paramsInit(uint8_t int_params_amount, uint8_t str_params_amount) {
     integer_params_amount = int_params_amount;

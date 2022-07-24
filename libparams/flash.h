@@ -38,9 +38,7 @@ size_t flashWrite(size_t offset, const uint8_t* data, size_t size);
  * @brief ???Deprecated???
  */
 int64_t flashReadI32ByIndex(uint8_t param_idx);
-void flashUnlock();
 void flashEraseAllocatedSpace();
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data);
-void flashLock();
 
 #endif  // LIBPARAM_FLASH_H_

@@ -6,10 +6,11 @@ BUILD_DIR = build
 ######################################
 # source
 ######################################
-C_SOURCES =             \
-../libparams/flash.c          \
-../libparams/flash_driver.c   \
-../libparams/storage.c        \
+C_SOURCES =                     \
+../libparams/flash.c            \
+../libparams/flash_driver.c     \
+../libparams/storage.c          \
+params.c                        \
 main.c
 
 

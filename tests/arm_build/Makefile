@@ -1,18 +1,23 @@
 TARGET = libparams
 DEBUG = 1
 OPT = -Og
-BUILD_DIR = build
+BUILD_DIR = ../../build/tests/arm_build
 
 ######################################
 # source
 ######################################
-C_SOURCES =                     \
-../libparams/flash.c            \
-../libparams/flash_driver.c     \
-../libparams/storage.c          \
-params.c                        \
+C_SOURCES =                     	\
+../../libparams/flash.c             \
+../../libparams/flash_driver.c      \
+../../libparams/storage.c           \
+../params.c                         \
+../stm32f1xx_hal.c                  \
 main.c
 
+# C includes
+C_INCLUDES =    \
+-I../../libparams/	\
+-I../ 
 
 #######################################
 # binaries
@@ -32,11 +37,6 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
 # C defines
 C_DEFS = -DUSE_HAL_DRIVER -DSTM32F103xB
-
-# C includes
-C_INCLUDES =    \
--I../libparams/	\
--I./ 
 
 # compile gcc flags
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -Wcast-align -MMD -MP -MF"$(@:%.o=%.d)"

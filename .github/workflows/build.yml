@@ -16,4 +16,4 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y make gcc-arm-none-eabi
 
-      - run: cd repository/tests && make
+      - run: mkdir -p repository/build/tests/arm_build && cd repository/tests/arm_build && make

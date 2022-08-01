@@ -41,7 +41,8 @@ int8_t flashInit(uint8_t first_page_idx, uint8_t pages_amount) {
         return -1;
     }
 
-    flash_memory_ptr = (const volatile int32_t *)(FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES);
+    size_t flash_memory_addr = (FLASH_START_ADDR + (size_t)first_page_idx * PAGE_SIZE_BYTES);
+    flash_memory_ptr = (const volatile int32_t*)(flash_memory_addr);
     flash_size = pages_amount * PAGE_SIZE_BYTES;
     num_of_pages = pages_amount;
     return 0;
@@ -63,7 +64,7 @@ size_t flashWrite(size_t offset, const uint8_t* data, size_t size) {
 
     flashUnlock();
     flashEraseAllocatedSpace();
-    uint32_t address = (uint32_t)flash_memory_ptr + offset;
+    uint32_t address = (uint32_t)(intptr_t)flash_memory_ptr + (uint32_t)offset;
     uint32_t written_data = *(const uint32_t*) (void*) data;
     int8_t status = flashWriteWord(address, written_data);
     flashLock();
@@ -72,12 +73,12 @@ size_t flashWrite(size_t offset, const uint8_t* data, size_t size) {
 }
 
 void flashEraseAllocatedSpace() {
-    flashErase((uint32_t)flash_memory_ptr, num_of_pages);
+    flashErase((uint32_t)(intptr_t)flash_memory_ptr, num_of_pages);
 }
 
 ///< deprecated???
 int8_t flashWriteU32ByIndex(uint8_t param_idx, uint32_t data) {
-    uint32_t address = (uint32_t)(flash_memory_ptr) + 4 * param_idx;
+    uint32_t address = (uint32_t)(intptr_t)(flash_memory_ptr) + 4 * param_idx;
     return flashWriteWord(address, data);
 }
 int64_t flashReadI32ByIndex(uint8_t param_idx) {

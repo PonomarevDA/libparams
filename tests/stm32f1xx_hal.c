@@ -18,7 +18,7 @@
 #define PAGE_SIZE 1024
 static uint8_t flash_memory[PAGE_SIZE];
 static bool is_locked = true;
-static uint32_t initial_addr = 0x08000000;
+static size_t initial_addr = 0x08000000;
 
 void HAL_FLASH_Init(uint32_t new_initial_addr) {
     initial_addr = new_initial_addr;
@@ -41,20 +41,23 @@ HAL_StatusTypeDef HAL_FLASH_Lock(void) {
 }
 
 HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef *pEraseInit, uint32_t *PageError) {
-    if (pEraseInit->PageAddress != FLASH_TYPEERASE_PAGES ||
-            pEraseInit->PageAddress != 127 ||
+    if (pEraseInit->TypeErase != FLASH_TYPEERASE_PAGES ||
+            pEraseInit->PageAddress != initial_addr ||
             pEraseInit->NbPages != 1) {
         return HAL_ERROR;
     }
-    memset(initial_addr, 0x00, PAGE_SIZE);
+    memset((void*)flash_memory, 0x00, PAGE_SIZE);
     return HAL_OK;
 }
 
 HAL_StatusTypeDef HAL_FLASH_Program(uint32_t TypeProgram, uint32_t Address, uint64_t Data) {
     if (TypeProgram != FLASH_TYPEPROGRAM_WORD ||
             Address < initial_addr ||
-            initial_addr >= initial_addr + PAGE_SIZE) {
+            Address % 4 != 0 ||
+            Address >= initial_addr + PAGE_SIZE) {
         return HAL_ERROR;
     }
+    size_t offset = Address - initial_addr;
+    flash_memory[offset] = (uint32_t)Data;
     return HAL_OK;
 }

@@ -24,6 +24,7 @@ void flashLock() {
 void flashErase(uint32_t page_address, uint32_t num_pf_pages) {
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
+        .Banks = 0,
         .PageAddress = (uint32_t)page_address,
         .NbPages = num_pf_pages
     };

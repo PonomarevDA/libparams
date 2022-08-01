@@ -16,4 +16,13 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y make gcc-arm-none-eabi
 
+      - name: Install gtest
+        run: |
+          sudo apt-get install libgtest-dev cmake                                   &&  \
+          cd /usr/src/gtest                                                         &&  \
+          sudo cmake CMakeLists.txt                                                 &&  \
+          sudo make                                                                 &&  \
+          sudo cp ./lib/libgtest*.a /usr/lib
+
       - run: mkdir -p repository/build/tests/arm_build && cd repository/tests/arm_build && make
+      - run: mkdir -p repository/build/tests/gtest && cd repository/tests/gtest && make

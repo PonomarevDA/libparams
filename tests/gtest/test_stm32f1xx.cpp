@@ -1,7 +1,7 @@
 /**
- * @file test_algorithms.cpp
+ * @file test_stm32f1xx.cpp
  * @author d.ponomarev
- * @date Apr 16, 2021
+ * @date Aug 01, 2022
  */
 
 #include <gtest/gtest.h>

@@ -13,7 +13,7 @@
 #include "flash.h"
 #include <stddef.h>
 #include <string.h>
-#include "flash_driver.h"
+#include "flash_stm32.h"
 
 #ifndef MCU_TYPE
     #define STM32F103_128KB

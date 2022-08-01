@@ -8,7 +8,7 @@ BUILD_DIR = ../../build/tests/arm_build
 ######################################
 C_SOURCES =                     	\
 ../../libparams/flash.c             \
-../../libparams/flash_driver.c      \
+../../libparams/flash_stm32.c       \
 ../../libparams/storage.c           \
 ../params.c                         \
 ../stm32f1xx_hal.c                  \

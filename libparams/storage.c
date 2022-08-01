@@ -17,8 +17,6 @@
 #include "flash.h"
 
 
-static StorageCellType_t paramsGetByIndex(ParamIndex_t index, IntegerDesc_t**);
-
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];
 
@@ -41,6 +39,10 @@ void paramsInit(uint8_t int_params_amount, uint8_t str_params_amount) {
     all_params_amount = integer_params_amount + string_params_amount;
 }
 
+const IntegerDesc_t* paramsGetIntDesc(ParamIndex_t param_idx) {
+    return &integer_desc_pool[param_idx];
+}
+
 int32_t paramsGetValue(ParamIndex_t param_idx) {
     return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
 }
@@ -52,15 +54,6 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     return NULL;
 }
 
-IntegerParamValue_t paramsGetDefaultValue(ParamIndex_t param_idx) {
-    return (param_idx < integer_params_amount) ? integer_desc_pool[param_idx].defval : 1000;
-}
-IntegerParamValue_t paramsGetMinValue(ParamIndex_t param_idx) {
-    return (param_idx < integer_params_amount) ? integer_desc_pool[param_idx].min : 1000;
-}
-IntegerParamValue_t paramsGetMaxValue(ParamIndex_t param_idx) {
-    return (param_idx < integer_params_amount) ? integer_desc_pool[param_idx].max : 1000;
-}
 char* paramsGetParamName(ParamIndex_t param_idx) {
     if (param_idx < integer_params_amount) {
         return (char*)integer_desc_pool[param_idx].name;
@@ -89,16 +82,6 @@ void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, StringParamValue_t 
 }
 
 
-StorageCellType_t paramsGetByIndex(ParamIndex_t index, IntegerDesc_t** param) {
-    if (index < integer_params_amount) {
-        *param = &integer_desc_pool[index];
-        return CELL_TYPE_INTEGER;
-    } else {
-        *param = NULL;
-        return CELL_TYPE_UNDEFINED;
-    }
-}
-
 ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integer_params_amount; idx++) {
@@ -107,8 +90,8 @@ ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_len) {
         }
     }
     for (idx = integer_params_amount; idx < all_params_amount; idx++) {
-        size_t param_idx = idx - integer_params_amount;
-        if (strncmp((char const*)name, (char const*)string_desc_pool[param_idx].name, name_len) == 0) {
+        size_t str_idx = idx - integer_params_amount;
+        if (strncmp((char const*)name, (char const*)string_desc_pool[str_idx].name, name_len) == 0) {
             return idx;
         }
     }
@@ -127,17 +110,16 @@ StorageCellType_t paramsGetType(ParamIndex_t param_idx) {
 
 
 void paramsLoadFromFlash() {
-    IntegerDesc_t* param = NULL;
     flashRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
-    for (uint_fast8_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
-        paramsGetByIndex(param_idx, &param);
-        IntegerParamValue_t val = integer_values_pool[param_idx];
-        if (val < param->min || val > param->max) {
-            integer_values_pool[param_idx] = param->defval;
+    flashRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
+
+    for (uint_fast8_t idx = 0; idx < integer_params_amount; idx++) {
+        IntegerParamValue_t val = integer_values_pool[idx];
+        if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
+            integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
 
-    flashRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
 }
 
 int8_t paramsLoadToFlash() {
@@ -145,10 +127,8 @@ int8_t paramsLoadToFlash() {
     flashEraseAllocatedSpace();
 
     int8_t res = 0;
-    if (!flashWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
-        res = -1;
-    }
-    if (!flashWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE)) {
+    if (!flashWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE) ||
+            !flashWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
         res = -1;
     }
 

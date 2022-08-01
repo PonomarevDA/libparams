@@ -6,7 +6,7 @@
 
 #include "flash.h"
 
-int main() {
+void test_flash_wr() {
     flashInit(127, 1);
 
     const uint8_t first_buf[PAGE_SIZE_BYTES];
@@ -14,6 +14,10 @@ int main() {
 
     uint8_t second_buf[PAGE_SIZE_BYTES];
     flashRead(0, second_buf, PAGE_SIZE_BYTES);
+}
+
+int main() {
+    test_flash_wr();
 
     return 0;
 }

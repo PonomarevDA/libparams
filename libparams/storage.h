@@ -34,18 +34,16 @@ typedef enum {
 typedef int32_t IntegerParamValue_t;
 typedef struct {
     uint8_t* name;
-    IntegerParamValue_t val;
     IntegerParamValue_t min;
     IntegerParamValue_t max;
-    IntegerParamValue_t defval;
-} IntegerCell_t;
+    IntegerParamValue_t def;
+} IntegerDesc_t;
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];
 typedef struct {
     uint8_t* name;
-    StringParamValue_t val;
-    StringParamValue_t defval;
-} StringCell_t;
+    StringParamValue_t def;
+} StringDesc_t;
 
 
 typedef uint8_t ParamIndex_t;
@@ -54,10 +52,8 @@ typedef uint8_t ParamIndex_t;
  * @note Main Get/Set API
  */
 void paramsInit(uint8_t int_params_amount, uint8_t str_params_amount);
+const IntegerDesc_t* paramsGetIntDesc(ParamIndex_t param_id);
 IntegerParamValue_t paramsGetValue(ParamIndex_t param_idx);
-IntegerParamValue_t paramsGetDefaultValue(ParamIndex_t param_idx);
-IntegerParamValue_t paramsGetMinValue(ParamIndex_t param_idx);
-IntegerParamValue_t paramsGetMaxValue(ParamIndex_t param_idx);
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
 
 void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);

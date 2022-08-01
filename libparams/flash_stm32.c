@@ -6,12 +6,12 @@
  */
 
 /**
- * @file flash_driver.c
+ * @file flash_stm32.c
  * @author ko.burdinov, d.ponomarev
  * @date Apr 1, 2020
  */
 
-#include "flash_driver.h"
+#include "flash_stm32.h"
 #include "stm32f1xx_hal.h"
 
 
@@ -24,6 +24,7 @@ void flashLock() {
 void flashErase(uint32_t page_address, uint32_t num_pf_pages) {
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
+        .Banks = 0,
         .PageAddress = (uint32_t)page_address,
         .NbPages = num_pf_pages
     };

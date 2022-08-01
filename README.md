@@ -72,7 +72,7 @@ Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the 
 
 ## Usage example
 
-To use the library you need to provide `IntegerCell_t parameters[]` and `StringCell_t str_params[]` arrays with parameters.
+To use the library you need to provide `IntegerDesc_t integer_desc_pool[]` and `StringDesc_t string_desc_pool[]` arrays with parameters.
 
 ```c++
 #include "params.h"
@@ -81,18 +81,18 @@ To use the library you need to provide `IntegerCell_t parameters[]` and `StringC
 /**
  * @note Names of these params should not contain spaces, because Mavlink console can't handle them
  */
-IntegerCell_t parameters[] = {
+IntegerDesc_t integer_desc_pool[] = {
     // name                         val     min     max     default
     {(uint8_t*)"identifier",        50,     0,      100,    50},
     {(uint8_t*)"log_level",         3,      0,      4,      3},
 }
 
-StringCell_t str_params[] = {
+StringDesc_t string_desc_pool[] = {
     // name                         val             default
     {(uint8_t*)"name",              "custom_name",  "default_name"},
 };
 
-static_assert(sizeof(parameters) + sizeof(str_params) < PAGE_SIZE_BYTES, "Parameters are out of flash.");
+static_assert(sizeof(integer_desc_pool) + sizeof(string_desc_pool) < PAGE_SIZE_BYTES, "Parameters are out of flash.");
 ```
 
 Then you need to call to initialize the library:

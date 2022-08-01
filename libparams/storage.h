@@ -34,18 +34,17 @@ typedef enum {
 typedef int32_t IntegerParamValue_t;
 typedef struct {
     uint8_t* name;
-    IntegerParamValue_t val;
     IntegerParamValue_t min;
     IntegerParamValue_t max;
     IntegerParamValue_t defval;
-} IntegerCell_t;
+} IntegerDesc_t;
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];
 typedef struct {
     uint8_t* name;
     StringParamValue_t val;
     StringParamValue_t defval;
-} StringCell_t;
+} StringDesc_t;
 
 
 typedef uint8_t ParamIndex_t;

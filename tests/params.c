@@ -18,14 +18,16 @@
  * @note Names of these params should not contain spaces, because Mavlink console can't handle them
  */
 
-IntegerCell_t __attribute__((weak)) parameters[] = {
-    // name                         val     min     max     default
-    {(uint8_t*)"identifier",        50,     0,      100,    50},
+IntegerDesc_t __attribute__((weak)) integer_desc_pool[] = {
+    // name                         min     max     default
+    {(uint8_t*)"identifier",        0,      100,    50},
 };
+IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
-StringCell_t __attribute__((weak)) str_params[] = {
-    // name                         val             default
-    {(uint8_t*)"name",              "custom_name",  "default_name"},
+StringDesc_t __attribute__((weak)) string_desc_pool[] = {
+    // name                         default
+    {(uint8_t*)"name",              "default_name"},
 };
+StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
 
-static_assert(sizeof(parameters) + sizeof(str_params) < PAGE_SIZE_BYTES, "Params are out of mem.");
+static_assert(sizeof(integer_desc_pool) + sizeof(string_desc_pool) < PAGE_SIZE_BYTES, "Params are out of mem.");

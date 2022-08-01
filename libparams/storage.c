@@ -121,16 +121,21 @@ StorageCellType_t paramsGetType(ParamIndex_t param_idx) {
 
 
 void paramsLoadFromFlash() {
+    const size_t INT_VAL_POOL_SIZE = sizeof(IntegerParamValue_t) * integer_params_amount;
+    const size_t STR_VAL_POOL_SIZE = MAX_STRING_LENGTH * string_params_amount;
+    const size_t STR_VAL_POOL_FIRST_ADDR = PAGE_SIZE_BYTES - STR_VAL_POOL_SIZE;
+
     IntegerDesc_t* param = NULL;
+    flashRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
     for (uint_fast8_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
-        int64_t val = flashReadI32ByIndex(param_idx);
         paramsGetByIndex(param_idx, &param);
-        if (val == 0xffffffff || param == NULL || val < param->min || val > param->max) {
+        IntegerParamValue_t val = integer_values_pool[param_idx];
+        if (val < param->min || val > param->max) {
             integer_values_pool[param_idx] = param->defval;
-        } else {
-            integer_values_pool[param_idx] = val;
         }
     }
+
+    flashRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
 }
 
 int8_t paramsLoadToFlash() {
@@ -138,6 +143,7 @@ int8_t paramsLoadToFlash() {
     int32_t write_value, read_value;
     flashUnlock();
     flashEraseAllocatedSpace();
+
     for (int32_t param_idx = 0; param_idx < integer_params_amount; param_idx++) {
         write_value = integer_values_pool[param_idx];
         if (flashWriteU32ByIndex(param_idx, write_value) == -1) {
@@ -148,6 +154,7 @@ int8_t paramsLoadToFlash() {
             res = -1;
         }
     }
+
     flashLock();
     return res;
 }

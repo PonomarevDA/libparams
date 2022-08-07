@@ -14,7 +14,7 @@
 #include "storage.h"
 #include <string.h>
 #include "flash_stm32.h"
-#include "flash.h"
+#include "rom.h"
 
 
 extern IntegerDesc_t integer_desc_pool[];
@@ -110,8 +110,8 @@ StorageCellType_t paramsGetType(ParamIndex_t param_idx) {
 
 
 void paramsLoadFromFlash() {
-    flashRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
-    flashRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
+    romRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
+    romRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
 
     for (uint_fast8_t idx = 0; idx < integer_params_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
@@ -123,15 +123,14 @@ void paramsLoadFromFlash() {
 }
 
 int8_t paramsLoadToFlash() {
-    flashUnlock();
-    flashEraseAllocatedSpace();
+    romBeginWrite();
 
     int8_t res = 0;
-    if (!flashWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE) ||
-            !flashWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
+    if (!romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE) ||
+            !romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
         res = -1;
     }
 
-    flashLock();
+    romEndWrite();
     return res;
 }

@@ -6,12 +6,12 @@
  */
 
 /**
- * @file sq_flash.c
- * @author sainquake
+ * @file rom.h
+ * @author ponomarev.da, sainquake
  */
 
-#ifndef LIBPARAM_FLASH_H_
-#define LIBPARAM_FLASH_H_
+#ifndef LIBPARAM_ROM_H_
+#define LIBPARAM_ROM_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -22,21 +22,18 @@
 /**
  * @brief By default it is initialized as last page only.
  */
-int8_t flashInit(uint8_t first_page_idx, uint8_t pages_amount);
+int8_t romInit(uint8_t first_page_idx, uint8_t pages_amount);
 
 /**
  * @brief Return the number of bytes read (may be less than size).
  */
-size_t flashRead(size_t offset, uint8_t* data, size_t size);
+size_t romRead(size_t offset, uint8_t* data, size_t size);
 
 /**
  * @brief Return the number of bytes wrote (0 in case of error).
  */
-size_t flashWrite(size_t offset, const uint8_t* data, size_t size);
+void romBeginWrite();
+size_t romWrite(size_t offset, const uint8_t* data, size_t size);
+void romEndWrite();
 
-/**
- * @brief ???Deprecated???
- */
-void flashEraseAllocatedSpace();
-
-#endif  // LIBPARAM_FLASH_H_
+#endif  // LIBPARAM_ROM_H_

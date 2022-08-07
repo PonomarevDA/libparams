@@ -46,7 +46,7 @@ To write something to flash memory we need:
 3. write
 4. lock the flash memory
 
-Look at [flash.h](flash.h) files for API and [flash.c](flash.c) for the implementation details.
+Look at [rom.h](rom.h) files for API and [rom.c](rom.c) for the implementation details.
 
 ## High level description
 

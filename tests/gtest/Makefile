@@ -2,7 +2,7 @@ INC=-I ../../libparams/   	\
     -I ../       			\
     -I ./
 
-SRC_COMMON=../../libparams/flash_stm32.c ../../libparams/flash.c ../../libparams/storage.c ../params.c ../stm32f1xx_hal.c
+SRC_COMMON=../../libparams/flash_stm32.c ../../libparams/rom.c ../../libparams/storage.c ../params.c ../stm32f1xx_hal.c
 SRC_FLASH_TEST=test_stm32f1xx.cpp
 
 COMMON_LIBS=-lpthread -pthread -lgtest

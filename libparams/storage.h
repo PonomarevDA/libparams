@@ -15,7 +15,7 @@
 #define LIBPARAM_STORAGE_H_
 
 #include <stdint.h>
-#include "flash.h"
+#include "rom.h"
 
 
 #define MAX_PARAM_NAME_LENGTH   32

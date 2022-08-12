@@ -126,8 +126,8 @@ int8_t paramsLoadToFlash() {
     romBeginWrite();
 
     int8_t res = 0;
-    if (!romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE) ||
-            !romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
+    if (!romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE) ||
+        !romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE)) {
         res = -1;
     }
 

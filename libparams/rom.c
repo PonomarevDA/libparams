@@ -71,8 +71,8 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
     uint32_t rom_word_address = (uint32_t)(intptr_t)rom_ptr + (uint32_t)offset;
     int8_t status = 0;
     for (size_t idx = 0; idx < size / 4; idx++) {
-        uint32_t written_integer = ((const uint32_t*)(void*)data)[idx];
-        status = flashWriteWord(rom_word_address + 4 * idx, written_integer);
+        uint32_t word = ((const uint32_t*)(void*)data)[idx];
+        status = flashWriteWord(rom_word_address + 4 * idx, word);
     }
 
     return (status != -1) ? size : 0;

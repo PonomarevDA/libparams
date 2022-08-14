@@ -75,7 +75,7 @@ Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the 
 To use the library you need to provide `IntegerDesc_t integer_desc_pool[]` and `StringDesc_t string_desc_pool[]` arrays with parameters.
 
 ```c++
-#include "params.h"
+#include "params.hpp"
 #include <assert.h>
 
 /**

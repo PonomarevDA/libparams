@@ -10,7 +10,7 @@ INPUT_PARAM_FILE_NAME = ["*_params.c", "*_params.cpp"]
 GENERATED_SOURCE_FILE_NAME = ["params.c", "params.cpp"]
 GENERATED_HEADER_FILE_NAME = ["params.h", "params.hpp"]
 GENERATED_HPP_FILE_NAME = "params.hpp"
-START_SOURCE_LINE = "static IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
+START_SOURCE_LINE = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
 END_HEADER_LINE = ["} IntParamsIndexes;", "};"]
 
 END_SOURCE_LINE = "};"

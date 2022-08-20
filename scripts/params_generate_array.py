@@ -32,12 +32,12 @@ def parse_args():
 
     input_dir = sys.argv[1]
     if not os.path.exists(input_dir):
-        print(f"Input directotry `{input_dir}` is not exist!")
+        print(f"Input file with paths `{input_dir}` is not exist!")
         exit()
 
     output_dir = sys.argv[2]
     if not os.path.exists(output_dir):
-        print(f"Input directotry `{output_dir}` is not exist!")
+        print(f"Output directotry `{output_dir}` is not exist!")
         exit()
 
     language = sys.argv[3]
@@ -48,6 +48,11 @@ def parse_args():
     else:
         print(f"Language `{language}` is not supported!")
         exit()
+
+    print("Config of the parameters generator:")
+    print(f"- Input file with paths: `{input_dir}`")
+    print(f"- Output directotry: `{output_dir}`")
+    print(f"- Language: `{sys.argv[3]}`")
 
     return input_dir, output_dir, language
 
@@ -101,10 +106,19 @@ def sort_files_by_priorities(files):
             break
     return files
 
-def find_src_files(input_dir, language):
-    src_files = [y for x in os.walk(input_dir) for y in glob(os.path.join(x[0], INPUT_PARAM_FILE_NAME[language]))]
-    src_files = sort_files_by_priorities(src_files)
-    return src_files
+def find_src_files(input_file, language):
+    config_fd = open(input_file, 'r')
+    source_files_paths = config_fd.readlines()
+    all_src_files = []
+    for line in source_files_paths:
+        source_files_path = line.rstrip()
+        src_files = [y for x in os.walk(source_files_path) for y in glob(os.path.join(x[0], INPUT_PARAM_FILE_NAME[language]))]
+        if len(src_files) != 0:
+            all_src_files.append(*src_files)
+    config_fd.close()
+
+    all_src_files = sort_files_by_priorities(all_src_files)
+    return all_src_files
 
 if __name__=="__main__":
     input_dir, output_dir, language = parse_args()

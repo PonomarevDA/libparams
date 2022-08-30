@@ -1,12 +1,39 @@
 # libparams
 
-This library is dedicated for storing parameters on stm32f103 flash memory.
+libparams is a C-written hardware abstract library that consist of 2 things:
 
-It is useful for any STM32 application, especially for those which are based on Cyphal/DroneCAN.
+- Parameters Storage - an interface under ROM that allows to store integers and strings with O(1) access complexity.
+- Abstract ROM Driver - an interface under your flash memory that allows to write and read sequence of bytes.
 
-> The library expect stm32f103 with 128 KBytes of flash, but it might be easily adopted for other sizes.
+It also has an example of flash memory driver implementation for stm32f103 based on Stm32CubeIDE HAL.
 
-## Low level description
+![scope_of_libparams](doc/scope_of_libparams.png?raw=true "scope_of_libparams")
+
+This library is suitable for Cyphal and DroneCAN application.
+
+> By default the library expect stm32f103 with 128 KBytes of flash, but it might be easily adopted for other sizes.
+
+## Parameters Storage API description
+
+There are 4 types of parameters that we may want to store (they are defined in `StorageParamType_t` enum):
+- PARAM_TYPE_INTEGER (int32)
+- PARAM_TYPE_REAL (float32)
+- PARAM_TYPE_BOOLEAN (uint8)
+- PARAM_TYPE_STRING (uint8[20])
+
+Each integer/real parameter has following fields:
+- value (volatile)
+- default value (hardcoded)
+- min (hardcoded)
+- max (hardcoded)
+
+Each string/boolean parameter has the following fields:
+- value
+- default value (hardcoded)
+
+A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`. Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the implementation details.
+
+## STM32 flash driver example description
 
 According to the datasheets STM32F1 has different page size depends on flash size:
 
@@ -34,7 +61,7 @@ The memory table for stm32f103 with 128 KBytes might rbe represented as below:
 | Page 127| 0x0801 FC00 - 0x0801 FCFF | 1 KByte     |
 | Page 128| 0x0802 0000 -             | 1 KByte     |
 
-The library allocates the last page.
+The library allocates the last page by default.
 
 On the low level it suggests 256 words.
 
@@ -47,28 +74,6 @@ To write something to flash memory we need:
 4. lock the flash memory
 
 Look at [rom.h](rom.h) files for API and [rom.c](rom.c) for the implementation details.
-
-## High level description
-
-There are 4 types of parameters that we may want to store:
-- integer (int32)
-- real (float32)
-- boolean (uint8)
-- string (uint8[20])
-
-Each integer/real parameter has following fields:
-- value (volatile)
-- default value (hardcoded)
-- min (hardcoded)
-- max (hardcoded)
-
-Each string/boolean parameter has following fields:
-- value
-- default value (hardcoded)
-
-The library stores in flash storage only the actual value.
-
-Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the implementation details.
 
 ## Usage example
 

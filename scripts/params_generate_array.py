@@ -16,7 +16,7 @@ class ParamsGenerator:
         self.start_src_line = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
         self.start_hdr_line = ""
         self.end_hdr_line = ""
-        self.include_storage_line = "#include \"storage.h\"\n\n"
+        self.include_storage_line = ""
         self.end_src_line = "};"
         self.array_line = "IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
 
@@ -64,12 +64,14 @@ class ParamsGenerator:
             num_of_params = last_param_idx - first_param_idx + 1
             for line_idx in range(first_param_idx, last_param_idx + 1):
                 out_fd.write(lines[line_idx])
+            out_fd.write("\n")
 
         return num_of_params
 
     def generate_everything(self, input_files, output_file):
         out_src_fd = self.prepare_head_of_src_file(output_file)
         out_hdr_fd = self.write_beginning_header_part(output_file)
+        print(f"[INFO] Number of files is {len(input_files)}")
 
         for src_file in input_files:
             src_count = ParamsGenerator.process_single_file(src_file, out_src_fd, self.start_src_line, self.end_src_line)
@@ -89,7 +91,7 @@ class CGenerator(ParamsGenerator):
         self.generated_source_file_name = "params.c"
         self.generated_header_file_name = "params.h"
         self.end_hdr_line = "} IntParamsIndexes;"
-        self.include_storage_line = "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"
+        self.include_storage_line = "#include \"storage.h\"\n\n"
         self.start_hdr_line = "typedef enum {"
 
 class CppGenerator(ParamsGenerator):
@@ -99,7 +101,7 @@ class CppGenerator(ParamsGenerator):
         self.generated_source_file_name = "params.cpp"
         self.generated_header_file_name = "params.hpp"
         self.end_hdr_line = "};"
-        self.include_storage_line = ""
+        self.include_storage_line = "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"
         self.start_hdr_line = "enum class IntParamsIndexes {"
 
 def print_help():
@@ -122,7 +124,7 @@ def parse_args():
 
     output_dir = sys.argv[2]
     if not os.path.exists(output_dir):
-        print(f"Output directotry `{output_dir}` is not exist!")
+        print(f"Output directory `{output_dir}` is not exist!")
         exit()
 
     language = sys.argv[3]

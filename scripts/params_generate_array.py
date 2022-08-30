@@ -7,38 +7,100 @@ LANGUAGE_C = 0
 LANGUAGE_CPP = 1
 
 
-class AbstractGenerator:
+class ParamsGenerator:
     def __init__(self) -> None:
         self.input_param_file_name = ""
         self.generated_source_file_name = ""
         self.generated_header_file_name = ""
         self.generated_hpp_file_name = "params.hpp"
-        self.start_source_line = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
-        self.end_header_line = ""
+        self.start_src_line = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
+        self.start_hdr_line = ""
+        self.end_hdr_line = ""
         self.include_storage_line = "#include \"storage.h\"\n\n"
-        self.end_source_line = "};"
+        self.end_src_line = "};"
         self.array_line = "IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
-        self.start_header_line = ""
 
-class CGenerator(AbstractGenerator):
+    def prepare_head_of_src_file(self, output_file):
+        out_src_fd = open(output_file + generator.generated_source_file_name, 'w')
+        out_src_fd.write(f"#include \"{self.generated_header_file_name}\"\n")
+        out_src_fd.write(self.include_storage_line)
+        out_src_fd.write(f"{self.start_src_line}\n")
+        return out_src_fd
+
+    def finish_src_file(self, out_src_fd):
+        out_src_fd.write(f"{self.end_src_line}\n")
+        out_src_fd.write(self.array_line)
+        out_src_fd.close()
+
+    def write_beginning_header_part(self, output_file):
+        out_header_fd = open(output_file+generator.generated_header_file_name, 'w')
+        out_header_fd.write("#pragma once\n\n")
+        out_header_fd.write(f"{self.start_hdr_line}\n")
+        return out_header_fd
+
+    def finish_hdr_file(self, out_header_fd):
+        out_header_fd.write("    INTEGER_PARAMS_AMOUNT\n")
+        out_header_fd.write(f"{self.end_hdr_line}\n")
+        out_header_fd.close()
+
+    @staticmethod
+    def process_single_file(src_file, out_fd, start_line, end_line):
+        num_of_params = 0
+        count = 0
+        first_param_idx = None
+        last_param_idx = None
+        in_fd = open(src_file, 'r')
+        lines = in_fd.readlines()
+        for line in lines:
+            if line.find(start_line) != -1:
+                first_param_idx = count + 1
+            if first_param_idx is not None and line.find(end_line) != -1:
+                last_param_idx = count - 1
+                break
+            count += 1
+        in_fd.close()
+
+        if last_param_idx is not None and last_param_idx >= first_param_idx:
+            num_of_params = last_param_idx - first_param_idx + 1
+            for line_idx in range(first_param_idx, last_param_idx + 1):
+                out_fd.write(lines[line_idx])
+
+        return num_of_params
+
+    def generate_everything(self, input_files, output_file):
+        out_src_fd = self.prepare_head_of_src_file(output_file)
+        out_hdr_fd = self.write_beginning_header_part(output_file)
+
+        for src_file in input_files:
+            src_count = ParamsGenerator.process_single_file(src_file, out_src_fd, self.start_src_line, self.end_src_line)
+            hdr_count = ParamsGenerator.process_single_file(src_file, out_hdr_fd, self.start_hdr_line, self.end_hdr_line)
+            if src_count == hdr_count:
+                print(f"[INFO] {src_file} has {src_count} params.")
+            else:
+                print(f"[WARN] {src_file} is broken: {src_count} or {hdr_count} params")
+
+        self.finish_src_file(out_src_fd)
+        self.finish_hdr_file(out_hdr_fd)
+
+class CGenerator(ParamsGenerator):
     def __init__(self) -> None:
         super().__init__()
         self.input_param_file_name = "*_params.c"
         self.generated_source_file_name = "params.c"
         self.generated_header_file_name = "params.h"
-        self.end_header_line = "} IntParamsIndexes;"
+        self.end_hdr_line = "} IntParamsIndexes;"
         self.include_storage_line = "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"
-        self.start_header_line = "typedef enum {"
+        self.start_hdr_line = "typedef enum {"
 
-class CppGenerator(AbstractGenerator):
+class CppGenerator(ParamsGenerator):
     def __init__(self) -> None:
         super().__init__()
         self.input_param_file_name = "*_params.cpp"
         self.generated_source_file_name = "params.cpp"
         self.generated_header_file_name = "params.hpp"
-        self.end_header_line = "};"
+        self.end_hdr_line = "};"
         self.include_storage_line = ""
-        self.start_header_line = "enum class IntParamsIndexes {"
+        self.start_hdr_line = "enum class IntParamsIndexes {"
 
 def print_help():
     usage_line = "python3 params_generate_array.py [input_dir] [output_dir] [language: `c++` or `c`]"
@@ -79,47 +141,6 @@ def parse_args():
 
     return input_dir, output_dir, language
 
-def generate(input_files, out_fd, start_line, end_line):
-    for src_file in input_files:
-        count = 0
-        first_param_idx = None
-        last_param_idx = None
-        fd = open(src_file, 'r')
-        lines = fd.readlines()
-        for line in lines:
-            if line.find(start_line) != -1:
-                first_param_idx = count + 1
-            if first_param_idx is not None and line.find(end_line) != -1:
-                last_param_idx = count - 1
-                break
-            count += 1
-        fd.close()
-
-        if last_param_idx is not None and last_param_idx >= first_param_idx:
-            print(src_file, last_param_idx - first_param_idx + 1)
-            for line_idx in range(first_param_idx, last_param_idx + 1):
-                out_fd.write(lines[line_idx])
-
-def generate_source_files(input_files, output_file, generator):
-    out_fd = open(output_file + generator.generated_source_file_name, 'w')
-    out_fd.write(f"#include \"{generator.generated_header_file_name}\"\n")
-    out_fd.write(generator.include_storage_line)
-
-    out_fd.write(f"{generator.start_source_line}\n")
-    generate(input_files, out_fd, generator.start_source_line, generator.end_source_line)
-    out_fd.write(f"{generator.end_source_line}\n")
-    out_fd.write(generator.array_line)
-    out_fd.close()
-
-def generate_header_files(input_files, output_file, generator):
-    out_fd = open(output_file+generator.generated_header_file_name, 'w')
-    out_fd.write("#pragma once\n\n")
-    out_fd.write(f"{generator.start_header_line}\n")
-    generate(input_files, out_fd, generator.start_header_line, generator.end_header_line)
-    out_fd.write("    INTEGER_PARAMS_AMOUNT\n")
-    out_fd.write(f"{generator.end_header_line}\n")
-    out_fd.close()
-
 def sort_files_by_priorities(files):
     """ It is preferred to keep Cyphal parameters first. """
     for file in files:
@@ -153,5 +174,4 @@ if __name__=="__main__":
         exit()
 
     src_files = find_src_files(input_dir, generator)
-    generate_source_files(src_files, output_dir, generator)
-    generate_header_files(src_files, output_dir, generator)
+    generator.generate_everything(src_files, output_dir)

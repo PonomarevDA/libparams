@@ -12,6 +12,7 @@ GENERATED_HEADER_FILE_NAME = ["params.h", "params.hpp"]
 GENERATED_HPP_FILE_NAME = "params.hpp"
 START_SOURCE_LINE = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
 END_HEADER_LINE = ["} IntParamsIndexes;", "};"]
+INCLUDE_STORAGE_LINE = ["#include \"storage.h\"\n\n", "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"]
 
 END_SOURCE_LINE = "};"
 START_HEADER_LINE = ["typedef enum {", "enum class IntParamsIndexes {"]
@@ -66,7 +67,6 @@ def generate(input_files, out_fd, start_line, end_line):
         for line in lines:
             if line.find(start_line) != -1:
                 first_param_idx = count + 1
-            # print("end_line", end_line)
             if first_param_idx is not None and line.find(end_line) != -1:
                 last_param_idx = count - 1
                 break
@@ -81,7 +81,7 @@ def generate(input_files, out_fd, start_line, end_line):
 def generate_source_files(input_files, output_file, language):
     out_fd = open(output_file + GENERATED_SOURCE_FILE_NAME[language], 'w')
     out_fd.write(f"#include \"{GENERATED_HEADER_FILE_NAME[language]}\"\n")
-    out_fd.write("extern \"C\" {\n    #include \"storage.h\"\n}\n")
+    out_fd.write(INCLUDE_STORAGE_LINE[language])
 
     out_fd.write(f"{START_SOURCE_LINE}\n")
     generate(input_files, out_fd, START_SOURCE_LINE, END_SOURCE_LINE)
@@ -91,10 +91,10 @@ def generate_source_files(input_files, output_file, language):
 
 def generate_header_files(input_files, output_file, language):
     out_fd = open(output_file+GENERATED_HEADER_FILE_NAME[language], 'w')
-    out_fd.write("#pragma once\n")
+    out_fd.write("#pragma once\n\n")
     out_fd.write(f"{START_HEADER_LINE[language]}\n")
     generate(input_files, out_fd, START_HEADER_LINE[language], END_HEADER_LINE[language])
-    out_fd.write("    INTEGER_AMOUNT\n")
+    out_fd.write("    INTEGER_PARAMS_AMOUNT\n")
     out_fd.write(f"{END_HEADER_LINE[language]}\n")
     out_fd.close()
 

@@ -35,7 +35,7 @@ class ParamsGenerator:
 
     def write_beginning_header_part(self, output_file):
         out_header_fd = open(output_file+generator.generated_header_file_name, 'w')
-        out_header_fd.write("#pragma once\n\n")
+        out_header_fd.write("#pragma once\n#include \"storage.h\"\n#include \"config.h\"\n\n")
         out_header_fd.write(f"{self.start_hdr_line}\n")
         return out_header_fd
 

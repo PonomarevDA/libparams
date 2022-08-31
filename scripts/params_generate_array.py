@@ -2,6 +2,7 @@
 import os
 import sys
 from glob import glob
+from color_logging import log_info, log_warn, log_err
 
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
@@ -12,8 +13,8 @@ class ParamsGenerator:
         self.input_param_file_name = ""
         self.generated_source_file_name = ""
         self.generated_header_file_name = ""
-        self.generated_hpp_file_name = "params.hpp"
-        self.start_src_line = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
+        self.in_start_src_line = "IntegerDesc_t integer_desc_pool[] __attribute__((unused)) = {"
+        self.out_start_src_line = "IntegerDesc_t integer_desc_pool[] = {"
         self.start_hdr_line = ""
         self.end_hdr_line = ""
         self.include_storage_line = ""
@@ -24,7 +25,7 @@ class ParamsGenerator:
         out_src_fd = open(output_file + generator.generated_source_file_name, 'w')
         out_src_fd.write(f"#include \"{self.generated_header_file_name}\"\n")
         out_src_fd.write(self.include_storage_line)
-        out_src_fd.write(f"{self.start_src_line}\n")
+        out_src_fd.write(f"{self.out_start_src_line}\n")
         return out_src_fd
 
     def finish_src_file(self, out_src_fd):
@@ -71,35 +72,35 @@ class ParamsGenerator:
     def generate_everything(self, input_files, output_file):
         out_src_fd = self.prepare_head_of_src_file(output_file)
         out_hdr_fd = self.write_beginning_header_part(output_file)
-        print(f"[INFO] Number of files is {len(input_files)}")
+        log_info(f"Number of files is {len(input_files)}")
 
         for src_file in input_files:
-            src_count = ParamsGenerator.process_single_file(src_file, out_src_fd, self.start_src_line, self.end_src_line)
+            src_count = ParamsGenerator.process_single_file(src_file, out_src_fd, self.in_start_src_line, self.end_src_line)
             hdr_count = ParamsGenerator.process_single_file(src_file, out_hdr_fd, self.start_hdr_line, self.end_hdr_line)
             if src_count == hdr_count:
-                print(f"[INFO] {src_file} has {src_count} params.")
+                log_info(f"{src_file} has {src_count} params.")
             else:
-                print(f"[WARN] {src_file} is broken: {src_count} or {hdr_count} params")
+                log_warn(f"{src_file} is broken: {src_count} or {hdr_count} params")
 
         self.finish_src_file(out_src_fd)
         self.finish_hdr_file(out_hdr_fd)
 
 class CGenerator(ParamsGenerator):
-    def __init__(self) -> None:
+    def __init__(self, output_file_name) -> None:
         super().__init__()
         self.input_param_file_name = "*_params.c"
-        self.generated_source_file_name = "params.c"
-        self.generated_header_file_name = "params.h"
+        self.generated_source_file_name = f"{output_file_name}.c"
+        self.generated_header_file_name = f"{output_file_name}.h"
         self.end_hdr_line = "} IntParamsIndexes;"
         self.include_storage_line = "#include \"storage.h\"\n\n"
         self.start_hdr_line = "typedef enum {"
 
 class CppGenerator(ParamsGenerator):
-    def __init__(self) -> None:
+    def __init__(self, output_file_name) -> None:
         super().__init__()
         self.input_param_file_name = "*_params.cpp"
-        self.generated_source_file_name = "params.cpp"
-        self.generated_header_file_name = "params.hpp"
+        self.generated_source_file_name = f"{output_file_name}.cpp"
+        self.generated_header_file_name = f"{output_file_name}.hpp"
         self.end_hdr_line = "};"
         self.include_storage_line = "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"
         self.start_hdr_line = "enum class IntParamsIndexes {"
@@ -113,18 +114,18 @@ def print_help():
 
 def parse_args():
     num_of_args = len(sys.argv)
-    if num_of_args != 4:
+    if num_of_args != 5:
         print_help()
         exit()
 
     input_dir = sys.argv[1]
     if not os.path.exists(input_dir):
-        print(f"Input file with paths `{input_dir}` is not exist!")
+        log_err(f"Input file with paths `{input_dir}` is not exist!")
         exit()
 
     output_dir = sys.argv[2]
     if not os.path.exists(output_dir):
-        print(f"Output directory `{output_dir}` is not exist!")
+        log_err(f"Output directory `{output_dir}` is not exist!")
         exit()
 
     language = sys.argv[3]
@@ -133,15 +134,21 @@ def parse_args():
     elif language == "c++":
         language = LANGUAGE_CPP
     else:
-        print(f"Language `{language}` is not supported!")
+        log_err(f"Language `{language}` is not supported!")
+        exit()
+
+    output_file_name = sys.argv[4]
+    if output_file_name is None or len(output_file_name) == 0:
+        log_err(f"Output file name is empty!")
         exit()
 
     print("Config of the parameters generator:")
     print(f"- Input file with paths: `{input_dir}`")
-    print(f"- Output directotry: `{output_dir}`")
+    print(f"- Output directory: `{output_dir}`")
     print(f"- Language: `{sys.argv[3]}`")
+    print(f"- Output file name: `{output_file_name}`")
 
-    return input_dir, output_dir, language
+    return input_dir, output_dir, language, output_file_name
 
 def sort_files_by_priorities(files):
     """ It is preferred to keep Cyphal parameters first. """
@@ -166,12 +173,12 @@ def find_src_files(input_file, generator):
     return all_src_files
 
 if __name__=="__main__":
-    input_dir, output_dir, language = parse_args()
+    input_dir, output_dir, language, output_file_name = parse_args()
 
     if language == LANGUAGE_C:
-        generator = CGenerator()
+        generator = CGenerator(output_file_name)
     elif language == LANGUAGE_CPP:
-        generator = CppGenerator()
+        generator = CppGenerator(output_file_name)
     else:
         exit()
 

@@ -16,13 +16,11 @@
 
 #include <stdint.h>
 
-#ifdef STM32F103xB
-    #define FLASH_START_ADDR            0x08000000
-    #define FLASH_SIZE_KBYTES           128 * 1024
-    #define FLASH_NUM_OF_PAGES          128
-    #define FLASH_LAST_PAGE_ADDR        0x0801FC00
-    #define FLASH_END_ADDR              0x0801FFFF
-#endif
+#define FLASH_START_ADDR            0x08000000
+#define FLASH_SIZE_KBYTES           128 * 1024
+#define FLASH_NUM_OF_PAGES          128
+#define FLASH_LAST_PAGE_ADDR        0x0801FC00
+#define FLASH_END_ADDR              0x0801FFFF
 
 void flashUnlock();
 void flashLock();

@@ -22,4 +22,5 @@ jobs:
           sudo cp ./lib/libgtest*.a /usr/lib
 
       - run: mkdir -p repository/build/tests/stm32f103_build && cd repository/tests/stm32f103_build && make
+      - run: mkdir -p repository/build/tests/stm32g0b1_build && cd repository/tests/stm32g0b1_build && make
       - run: mkdir -p repository/build/tests/gtest && cd repository/tests/gtest && make

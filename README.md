@@ -31,13 +31,15 @@ Each string/boolean parameter has the following fields:
 - value
 - default value (hardcoded)
 
-A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`. Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the implementation details.
+A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`.
+
+Look at [storage.h](storage.h) to get full API and [storage.c](storage.c) for the implementation details.
 
 ## 2. Middle level interface. Abstract ROM driver
 
 ROM driver simply allows you to write and read sequence of bytes. Mainly, it consist of 3 operations.
 
-1. Initialization. It is necessary to call `romInit()` to configure the driver. Storage driver do it automatically.
+1. Initialization. It is necessary to call `romInit()` to configure the driver. Storage driver do it automatically. The library allocates the last page by default.
 
 2. Read operation. You just need to call `romRead` with corresponded arguments.
 
@@ -47,7 +49,7 @@ Look at [rom.h](rom.h) to get full API and [rom.c](rom.c) for the implementation
 
 ## 3. Low level interface. Hardware specific flash driver
 
-Here there are 2 flash drivers implementation:
+Here there are following flash drivers implementation:
 
 <details>
   <summary>1. STM32F103</summary>
@@ -57,7 +59,7 @@ According to [the reference manual](https://www.st.com/resource/en/reference_man
 | Name | Series | Flash density, KB | Page size, KB |
 | ---- | ------ | ----------------- | ------------- |
 | Low-density | STM32F101xx, STM32F102xx, STM32F103xx | 16 - 32 | 1 |
-| Medium-density | STM32F101xx, STM32F102xx, STM32F103xx | 64 - 128 | 1 |
+| **Medium-density** | STM32F101xx, STM32F102xx, **STM32F103xx** | **64 - 128** | **1** |
 | High-density | STM32F101xx, STM32F103xx | 256 - 512 | 2 |
 | XL-density | STM32F101xx, STM32F103xx | 768 - 1024 | 2 |
 | Connectivity line devices | STM32F105xx, STM32F107xx | any | 1 |
@@ -81,12 +83,36 @@ The memory table for stm32f103 with 128 KBytes might rbe represented as below:
 </details>
 
 <details>
-  <summary>2. STM32G0</summary>
-    not ready yet
+  <summary>2. STM32G0B1xx</summary>
+
+According to [the reference manual](https://www.st.com/resource/en/reference_manual/rm0444-stm32g0x1-advanced-armbased-32bit-mcus-stmicroelectronics.pdf) STM32G0B1xx has different page size depends on flash size:
+
+Up to 512 Kbytes of Flash memory (Main memory):
+- up to 64 Kbytes for STM32G031xx and STM32G041xx / STM32G051xx and
+STM32G061xx
+- up to 128 Kbytes for STM32G071xx and STM32G081xx
+- **up to 512 Kbytes for STM32G0B1xx** and STM32G0C1xx
+- Page size: 2 Kbytes
+- Subpage size: 512 bytes
+
+So, we have 512 Kbytes dual-bank device.
+
+The main memory is:
+
+| Name          | hex address               | Size        |
+| ------------- | ------------------------- | ----------- |
+| Page 383      | 0x0807 F804 - 0x0807 FFFF | 2 KByte     |
+| Page 258-382  | ...                       | ...         |
+| Page 257      | 0x0804 0800 - 0x0804 0FFF | 2 KByte     |
+| Page 256      | 0x0804 0000 - 0x0804 07FF | 2 KByte     |
+| Page 127      | 0x0803 F800 - 0x0803 FFFF | 2 KByte     |
+| Page 2-126    | ...                       | ...         |
+| Page 1        | 0x0800 0800 - 0x0800 0FFF | 2 KByte     |
+| Page 0        | 0x0800 0000 - 0x0800 07FF | 2 KByte     |
+
 </details>
 
-
-The library allocates the last page by default.
+New drivers might be added in future.
 
 ## 4. Usage example
 

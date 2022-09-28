@@ -13,7 +13,7 @@
 
 #include "storage.h"
 #include <string.h>
-#include "flash_stm32.h"
+#include "flash_driver.h"
 #include "rom.h"
 
 

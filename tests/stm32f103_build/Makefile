@@ -1,14 +1,14 @@
 TARGET = libparams
 DEBUG = 1
 OPT = -Og
-BUILD_DIR = ../../build/tests/stm32f1_build
+BUILD_DIR = ../../build/tests/stm32f103_build
 
 ######################################
 # source
 ######################################
 C_SOURCES =                     	\
 ../../libparams/rom.c             	\
-../../libparams/flash_stm32.c       \
+../../platform_specific/stm32f103/flash_driver.c       \
 ../../libparams/storage.c           \
 ../params.c                         \
 ../main.c                  			\
@@ -17,6 +17,7 @@ application.c
 # C includes
 C_INCLUDES =    \
 -I../../libparams/	\
+-I../../platform_specific/stm32f103/ \
 -I../ 
 
 #######################################

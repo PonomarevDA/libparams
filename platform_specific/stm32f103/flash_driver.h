@@ -6,19 +6,27 @@
  */
 
 /**
- * @file flash_stm32.h
+ * @file flash_driver.h
  * @author d.ponomarev
  * @date Jul 12, 2022
  */
 
-#ifndef LIBPARAM_FLASH_STM32_H_
-#define LIBPARAM_FLASH_STM32_H_
+#ifndef PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_
+#define PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_
 
 #include <stdint.h>
+
+#ifdef STM32F103xB
+    #define FLASH_START_ADDR            0x08000000
+    #define FLASH_SIZE_KBYTES           128 * 1024
+    #define FLASH_NUM_OF_PAGES          128
+    #define FLASH_LAST_PAGE_ADDR        0x0801FC00
+    #define FLASH_END_ADDR              0x0801FFFF
+#endif
 
 void flashUnlock();
 void flashLock();
 void flashErase(uint32_t page_address, uint32_t num_pf_pages);
 int8_t flashWriteWord(uint32_t address, uint32_t data);
 
-#endif  // LIBPARAM_FLASH_STM32_H_
+#endif  // PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_

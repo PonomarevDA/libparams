@@ -13,18 +13,7 @@
 #include "rom.h"
 #include <stddef.h>
 #include <string.h>
-#include "flash_stm32.h"
-
-#ifdef STM32F103xB
-    #define FLASH_START_ADDR            0x08000000
-    #define FLASH_SIZE_KBYTES           128 * 1024
-    #define FLASH_NUM_OF_PAGES          128
-    #define FLASH_LAST_PAGE_ADDR        0x0801FC00
-    #define FLASH_END_ADDR              0x0801FFFF
-#endif
-
-#define STORAGE_PAGE                    0x0801FC00
-
+#include "flash_driver.h"
 
 ///< Default values correspond to the last page access only.
 static const volatile int32_t* rom_ptr = (const volatile int32_t *)FLASH_LAST_PAGE_ADDR;

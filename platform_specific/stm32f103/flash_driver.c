@@ -6,12 +6,12 @@
  */
 
 /**
- * @file flash_stm32.c
+ * @file flash_driver.c
  * @author ko.burdinov, d.ponomarev
  * @date Apr 1, 2020
  */
 
-#include "flash_stm32.h"
+#include "flash_driver.h"
 #include "main.h"
 
 

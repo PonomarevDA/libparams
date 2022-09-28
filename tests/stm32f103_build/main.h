@@ -1,5 +1,5 @@
 /**
- * @file main.h
+ * @file stm32f1xx_hal.h
  * @author d.ponomarev
  * @date Jun 11, 2022
  */

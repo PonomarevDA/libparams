@@ -11,13 +11,14 @@ C_SOURCES =                     	\
 ../../platform_specific/stm32f103/flash_driver.c       \
 ../../libparams/storage.c           \
 ../params.c                         \
-../main.c                  			\
+main.c               				\
 application.c
 
 # C includes
 C_INCLUDES =    \
 -I../../libparams/	\
 -I../../platform_specific/stm32f103/ \
+-I./ \
 -I../ 
 
 #######################################

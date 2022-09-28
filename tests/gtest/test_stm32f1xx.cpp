@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "stm32f1xx_hal.h"
+#include "main.h"
 
 constexpr size_t FLASH_ADDR = 0x08000000;
 constexpr size_t PAGE_SIZE = 1024;

@@ -1,5 +1,5 @@
 /**
- * @file main.c
+ * @file application.c
  * @author d.ponomarev
  * @date Jul 11, 2022
  */

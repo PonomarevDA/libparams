@@ -12,7 +12,7 @@
  */
 
 #include "flash_stm32.h"
-#include "stm32f1xx_hal.h"
+#include "main.h"
 
 
 void flashUnlock() {

@@ -7,12 +7,12 @@ BUILD_DIR = ../../build/tests/arm_build
 # source
 ######################################
 C_SOURCES =                     	\
-../../libparams/rom.c             \
+../../libparams/rom.c             	\
 ../../libparams/flash_stm32.c       \
 ../../libparams/storage.c           \
 ../params.c                         \
-../stm32f1xx_hal.c                  \
-main.c
+../main.c                  			\
+application.c
 
 # C includes
 C_INCLUDES =    \

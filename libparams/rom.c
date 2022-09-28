@@ -7,7 +7,7 @@
 
 /**
  * @file rom.c
- * @author sainquake
+ * @author d.ponomarev, ko.burdinov
  */
 
 #include "rom.h"
@@ -15,10 +15,7 @@
 #include <string.h>
 #include "flash_stm32.h"
 
-#ifndef MCU_TYPE
-    #define STM32F103_128KB
-#endif
-#ifdef STM32F103_128KB
+#ifdef STM32F103xB
     #define FLASH_START_ADDR            0x08000000
     #define FLASH_SIZE_KBYTES           128 * 1024
     #define FLASH_NUM_OF_PAGES          128

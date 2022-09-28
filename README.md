@@ -13,7 +13,7 @@ This library is suitable for Cyphal and DroneCAN application.
 
 > By default the library expect stm32f103 with 128 KBytes of flash, but it might be easily adopted for other sizes.
 
-## Parameters Storage API description
+## 1. High level interface. Parameters
 
 There are 4 types of parameters that we may want to store (they are defined in `StorageParamType_t` enum):
 - PARAM_TYPE_INTEGER (int32)
@@ -33,9 +33,26 @@ Each string/boolean parameter has the following fields:
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`. Look at [storage.h](storage.h) files for API and [storage.c](storage.c) for the implementation details.
 
-## STM32 flash driver example description
+## 2. Middle level interface. Abstract ROM driver
 
-According to the datasheets STM32F1 has different page size depends on flash size:
+ROM driver simply allows you to write and read sequence of bytes. Mainly, it consist of 3 operations.
+
+1. Initialization. It is necessary to call `romInit()` to configure the driver. Storage driver do it automatically.
+
+2. Read operation. You just need to call `romRead` with corresponded arguments.
+
+3. Write operation. Writing requires to unlock and lock ROM, so it might be done by calling `romBeginWrite()`, `romWrite` and `romEndWrite()` one by one.
+
+Look at [rom.h](rom.h) to get full API and [rom.c](rom.c) for the implementation details.
+
+## 3. Low level interface. Hardware specific flash driver
+
+Here there are 2 flash drivers implementation:
+
+<details>
+  <summary>1. STM32F103</summary>
+
+According to [the reference manual](https://www.st.com/resource/en/reference_manual/cd00171190-stm32f101xx-stm32f102xx-stm32f103xx-stm32f105xx-and-stm32f107xx-advanced-arm-based-32-bit-mcus-stmicroelectronics.pdf) STM32F1 has different page size depends on flash size:
 
 | Name | Series | Flash density, KB | Page size, KB |
 | ---- | ------ | ----------------- | ------------- |
@@ -61,21 +78,17 @@ The memory table for stm32f103 with 128 KBytes might rbe represented as below:
 | Page 127| 0x0801 FC00 - 0x0801 FCFF | 1 KByte     |
 | Page 128| 0x0802 0000 -             | 1 KByte     |
 
+</details>
+
+<details>
+  <summary>2. STM32G0</summary>
+    not ready yet
+</details>
+
+
 The library allocates the last page by default.
 
-On the low level it suggests 256 words.
-
-We can read a 32-bit word from flash memory at any time.
-
-To write something to flash memory we need:
-1. unlock the flash memory
-2. erase the flash memory
-3. write
-4. lock the flash memory
-
-Look at [rom.h](rom.h) files for API and [rom.c](rom.c) for the implementation details.
-
-## Usage example
+## 4. Usage example
 
 To use the library you need to provide `IntegerDesc_t integer_desc_pool[]` and `StringDesc_t string_desc_pool[]` arrays with parameters.
 

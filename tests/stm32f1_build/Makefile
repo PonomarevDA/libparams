@@ -1,7 +1,7 @@
 TARGET = libparams
 DEBUG = 1
 OPT = -Og
-BUILD_DIR = ../../build/tests/arm_build
+BUILD_DIR = ../../build/tests/stm32f1_build
 
 ######################################
 # source

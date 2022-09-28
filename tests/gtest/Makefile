@@ -7,7 +7,7 @@ SRC_FLASH_TEST=test_stm32f1xx.cpp
 
 COMMON_LIBS=-lpthread -pthread -lgtest
 
-CPPFLAGS = -Wall -std=c++11 -DCPP_TEST
+CPPFLAGS = -Wall -std=c++11 -DCPP_TEST -DSTM32F103xB
 COMPILE = g++ $(CPPFLAGS) $(INC) -o shell
 
 all:

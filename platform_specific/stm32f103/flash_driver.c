@@ -21,18 +21,19 @@ void flashUnlock() {
 void flashLock() {
     HAL_FLASH_Lock();
 }
-void flashErase(uint32_t page_address, uint32_t num_pf_pages) {
+int8_t flashErase(uint32_t page_address, uint32_t num_pf_pages) {
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
         .Banks = 0,
         .PageAddress = (uint32_t)page_address,
         .NbPages = num_pf_pages
     };
-    uint32_t error = 0;
-    HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &error);
+    uint32_t page_error = 0;
+    HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &page_error);
+    return (page_error == 0xFFFFFFFF) ? 0 : -1;
 }
 
-int8_t flashWriteWord(uint32_t address, uint32_t data) {
+int8_t flashWriteU32(uint32_t address, uint32_t data) {
     HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data);
     return (hal_status != HAL_OK) ? -1 : 0;
 }

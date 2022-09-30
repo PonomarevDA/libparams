@@ -5,6 +5,7 @@
  */
 
 #include "rom.h"
+#include "flash_info.h"
 
 void test_flash_wr() {
     romInit(127, 1);

@@ -7,8 +7,9 @@
 #ifndef STM32G0XX_HAL_MOCK_H_
 #define STM32G0XX_HAL_MOCK_H_
 
-#define FLASH_TYPEERASE_PAGES     0x00U
-#define FLASH_TYPEPROGRAM_FAST    0x02U
+#define FLASH_TYPEERASE_PAGES         0x00U
+#define FLASH_TYPEPROGRAM_DOUBLEWORD  0x02U
+#define FLASH_BANK_2                  0x0
 
 #include <stdint.h>
 

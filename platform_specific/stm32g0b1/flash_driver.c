@@ -21,18 +21,22 @@ void flashUnlock() {
 void flashLock() {
     HAL_FLASH_Lock();
 }
-void flashErase(uint32_t page_address, uint32_t num_pf_pages) {
+int8_t flashErase(uint32_t page_address, uint32_t num_of_pages) {
+    uint32_t page_idx = ((uint32_t)(intptr_t)page_address - FLASH_START_ADDR) / PAGE_SIZE_BYTES;
+
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
-        .Banks = 0,
-        .Page = (uint32_t)page_address,
-        .NbPages = num_pf_pages
+        .Banks = FLASH_BANK_2,
+        .Page = (uint32_t)page_idx,
+        .NbPages = num_of_pages
     };
-    uint32_t error = 0;
-    HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &error);
+    uint32_t page_error = 0;
+    HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &page_error);
+    int8_t res = (page_error == 0xFFFFFFFF && status == HAL_OK) ? 0 : -1;
+    return res;
 }
 
-int8_t flashWriteWord(uint32_t address, uint32_t data) {
-    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FAST, address, data);
+int8_t flashWriteU64(uint32_t address, uint64_t data) {
+    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
     return (hal_status != HAL_OK) ? -1 : 0;
 }

@@ -16,7 +16,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define PAGE_SIZE_BYTES         (1024)
 #define PARAM_STRING_MAX_SIZE   20
 
 /**

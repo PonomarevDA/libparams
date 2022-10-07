@@ -35,7 +35,9 @@ class ParamsGenerator:
 
     def write_beginning_header_part(self, output_file):
         out_header_fd = open(output_file+generator.generated_header_file_name, 'w')
-        out_header_fd.write("#pragma once\n#include \"storage.h\"\n#include \"config.h\"\n\n")
+        out_header_fd.write("#pragma once\n")
+        out_header_fd.write("#include \"storage.h\"\n")
+        out_header_fd.write("\n")
         out_header_fd.write(f"{self.start_hdr_line}\n")
         return out_header_fd
 
@@ -106,15 +108,16 @@ class CppGenerator(ParamsGenerator):
         self.start_hdr_line = "enum class IntParamsIndexes {"
 
 def print_help():
-    usage_line = "python3 params_generate_array.py [input_dir] [output_dir] [language: `c++` or `c`]"
+    usage_line = "python3 params_generate_array.py [input_dir] [output_dir] [language: `c++` or `c`] [output_file_name]"
     short_desc_line = "Generate a single C++ array and enum class with parameters based on several inputs."
-    example_desc_line = "Example: python3 params_generate_array.py ./Src/ ./ c++"
+    example_desc_line = "Example: python3 params_generate_array.py ./Src/ ./ c++ params"
     print(f"{usage_line}\n    {short_desc_line}\n    {example_desc_line}")
 
 
 def parse_args():
     num_of_args = len(sys.argv)
     if num_of_args != 5:
+        log_err("Wrong args number")
         print_help()
         exit()
 

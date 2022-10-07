@@ -27,8 +27,8 @@ void flashLock() {
     is_locked = true;
 }
 
-int8_t flashErase(uint32_t page_address, uint32_t num_of_pages) {
-    if (is_locked || page_address != 0 || num_of_pages != 1) {
+int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
+    if (is_locked || start_page_idx != 0 || num_of_pages != 1) {
         return -1;
     }
     memset(flash_memory, 0x00, PAGE_SIZE_BYTES);

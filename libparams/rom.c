@@ -45,7 +45,8 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
 
 void romBeginWrite() {
     flashUnlock();
-    flashErase((uint32_t)(intptr_t)rom_ptr, rom_size_pages);
+    uint32_t start_page_idx = ((uint32_t)(intptr_t)rom_ptr - FLASH_START_ADDR) / PAGE_SIZE_BYTES;
+    flashErase(start_page_idx, rom_size_pages);
 }
 
 void romEndWrite() {

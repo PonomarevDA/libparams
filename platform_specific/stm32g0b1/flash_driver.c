@@ -21,13 +21,11 @@ void flashUnlock() {
 void flashLock() {
     HAL_FLASH_Lock();
 }
-int8_t flashErase(uint32_t page_address, uint32_t num_of_pages) {
-    uint32_t page_idx = ((uint32_t)(intptr_t)page_address - FLASH_START_ADDR) / PAGE_SIZE_BYTES;
-
+int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
         .Banks = FLASH_BANK_2,
-        .Page = (uint32_t)page_idx,
+        .Page = start_page_idx,
         .NbPages = num_of_pages
     };
     uint32_t page_error = 0;

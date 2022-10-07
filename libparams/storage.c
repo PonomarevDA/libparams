@@ -70,7 +70,7 @@ void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_val
     integer_values_pool[param_idx] = param_value;
 }
 
-void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, StringParamValue_t param_value) {
+void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, const StringParamValue_t param_value) {
     if (str_len > MAX_STRING_LENGTH || idx < integer_params_amount || idx >= all_params_amount) {
         return;
     }

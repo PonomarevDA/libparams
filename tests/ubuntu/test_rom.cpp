@@ -8,12 +8,12 @@
 #include <iostream>
 #include "rom.h"
 
-TEST(FlashHal, test_rom_init_ok) {
+TEST(TestRom, test_rom_init_ok) {
     auto res = romInit(0, 1);
     ASSERT_EQ(res, 0);
 }
 
-TEST(FlashHal, test_rom_write_read_ok) {
+TEST(TestRom, test_rom_write_read_ok) {
     const uint8_t WRITTEN_DATA[] = {1, 2, 3, 4, 5, 6, 7, 8};
     auto res = romInit(0, 1);
     ASSERT_EQ(res, 0);

@@ -19,7 +19,7 @@ COMMON_LIBS=-lpthread -pthread -lgtest
 CPPFLAGS = -Wall -std=c++11
 COMPILE = g++ $(CPPFLAGS) $(INC) -o shell
 
-all: flash_driver rom
+all: flash_driver rom storage
 
 flash_driver:
 	$(COMPILE) $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
@@ -27,6 +27,10 @@ flash_driver:
 
 rom:
 	$(COMPILE) $(SRC) test_rom.cpp $(COMMON_LIBS)
+	./shell
+
+storage:
+	$(COMPILE) $(SRC) test_storage.cpp $(COMMON_LIBS)
 	./shell
 
 clean:

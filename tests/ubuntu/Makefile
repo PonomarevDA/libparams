@@ -15,16 +15,18 @@ SRC+=$(wildcard ${REPOSITORY_PATH}/platform_specific/ubuntu/*.c)
 # user params
 SRC+=${REPOSITORY_PATH}/tests/params.c
 
-# target
-FLASH_DRIVER_TEST_SRC=test_flash_driver.cpp
-
 COMMON_LIBS=-lpthread -pthread -lgtest
 CPPFLAGS = -Wall -std=c++11
 COMPILE = g++ $(CPPFLAGS) $(INC) -o shell
 
+all: flash_driver rom
 
-all:
-	$(COMPILE) $(SRC) $(FLASH_DRIVER_TEST_SRC) $(COMMON_LIBS)
+flash_driver:
+	$(COMPILE) $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
+	./shell
+
+rom:
+	$(COMPILE) $(SRC) test_rom.cpp $(COMMON_LIBS)
 	./shell
 
 clean:

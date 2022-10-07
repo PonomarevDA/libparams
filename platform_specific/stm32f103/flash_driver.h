@@ -39,4 +39,6 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
  */
 int8_t flashWriteU32(uint32_t address, uint32_t data);
 
+uint8_t* flashGetPointer();
+
 #endif  // PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_

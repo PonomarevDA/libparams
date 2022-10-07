@@ -44,3 +44,7 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
            FLASH_WORD_SIZE);
     return 0;
 }
+
+uint8_t* flashGetPointer() {
+    return (uint8_t*) flash_memory;
+}

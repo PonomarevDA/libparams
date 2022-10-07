@@ -38,3 +38,7 @@ int8_t flashWriteU32(uint32_t address, uint32_t data) {
     HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data);
     return (hal_status != HAL_OK) ? -1 : 0;
 }
+
+uint8_t* flashGetPointer() {
+    return (uint8_t*) FLASH_START_ADDR;
+}

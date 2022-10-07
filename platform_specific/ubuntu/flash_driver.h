@@ -31,7 +31,7 @@ void flashLock();
 /**
  * @return 0 if success, otherwise -1
  */
-int8_t flashErase(uint32_t page_address, uint32_t num_pf_pages);
+int8_t flashErase(uint32_t page_address, uint32_t num_of_pages);
 
 /**
  * @return 0 if success, otherwise -1

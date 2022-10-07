@@ -18,6 +18,10 @@
 
 void flashUnlock();
 void flashLock();
+
+/**
+ * @return 0 if success, otherwise -1
+ */
 int8_t flashErase(uint32_t page_address, uint32_t num_pf_pages);
 
 #endif  // LIBPARAM_FLASH_DRIVER_H_

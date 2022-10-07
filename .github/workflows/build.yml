@@ -23,4 +23,4 @@ jobs:
 
       - run: mkdir -p repository/build/tests/stm32f103_build && cd repository/tests/stm32f103_build && make
       - run: mkdir -p repository/build/tests/stm32g0b1_build && cd repository/tests/stm32g0b1_build && make
-      - run: mkdir -p repository/build/tests/gtest && cd repository/tests/gtest && make
+      - run: mkdir -p repository/build/tests/ubuntu && cd repository/tests/ubuntu && make

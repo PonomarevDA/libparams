@@ -13,7 +13,7 @@
 
 #include <assert.h>
 #include "storage.h"
-#include "flash_info.h"
+#include "flash_driver.h"
 
 /**
  * @note Names of these params should not contain spaces, because Mavlink console can't handle them

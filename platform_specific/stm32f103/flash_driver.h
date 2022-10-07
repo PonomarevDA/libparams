@@ -6,24 +6,35 @@
  */
 
 /**
- * @file specific_info.h
+ * @file flash_driver.h
  * @author d.ponomarev
  * @date Jul 12, 2022
  */
 
-#ifndef PLATFORM_SPECIFIC_STM32G0B1_FLASH_INFO_H_
-#define PLATFORM_SPECIFIC_STM32G0B1_FLASH_INFO_H_
+#ifndef PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_
+#define PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_
 
 #include <stdint.h>
 
 #define FLASH_START_ADDR            0x08000000
-#define PAGE_SIZE_BYTES             2048
-#define FLASH_NUM_OF_PAGES          256
-#define FLASH_WORD_SIZE             8
+#define PAGE_SIZE_BYTES             1024
+#define FLASH_NUM_OF_PAGES          128
+#define FLASH_WORD_SIZE             4
 
 #define FLASH_SIZE_KBYTES           (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)
 #define FLASH_LAST_PAGE_ADDR        (FLASH_START_ADDR + PAGE_SIZE_BYTES * (FLASH_NUM_OF_PAGES - 1))
 
-int8_t flashWriteU64(uint32_t address, uint64_t data);
+void flashUnlock();
+void flashLock();
 
-#endif  // PLATFORM_SPECIFIC_STM32G0B1_FLASH_INFO_H_
+/**
+ * @return 0 if success, otherwise -1
+ */
+int8_t flashErase(uint32_t page_address, uint32_t num_pf_pages);
+
+/**
+ * @return 0 if success, otherwise -1
+ */
+int8_t flashWriteU32(uint32_t address, uint32_t data);
+
+#endif  // PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_

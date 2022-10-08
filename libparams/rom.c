@@ -41,7 +41,7 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
 
     size_t allowed_size = rom_size_bytes - offset;
     size_t bytes_to_read = (allowed_size < requested_size) ? allowed_size : requested_size;
-    memcpy(data, &(flashGetPointer()[offset]), bytes_to_read);
+    memcpy(data, &(flashGetPointer()[start_page_idx * PAGE_SIZE_BYTES + offset]), bytes_to_read);
     return bytes_to_read;
 }
 

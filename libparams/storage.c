@@ -125,10 +125,13 @@ void paramsLoadFromFlash() {
 int8_t paramsLoadToFlash() {
     romBeginWrite();
 
-    int8_t res = 0;
-    if (!romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE) ||
-        !romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE)) {
+    int8_t res;
+    if (0 == romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
         res = -1;
+    } else if (0 == romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE)) {
+        res = -1;
+    } else {
+        res = 0;
     }
 
     romEndWrite();

@@ -15,6 +15,7 @@
 #define LIBPARAM_STORAGE_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "rom.h"
 
 
@@ -43,6 +44,7 @@ typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];
 typedef struct {
     uint8_t* name;
     StringParamValue_t def;
+    bool is_persistent;
 } StringDesc_t;
 
 

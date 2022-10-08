@@ -48,10 +48,15 @@ int32_t paramsGetValue(ParamIndex_t param_idx) {
 }
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     int8_t str_param_idx = param_idx - integer_params_amount;
-    if (str_param_idx >= 0 && str_param_idx < string_params_amount) {
-        return (StringParamValue_t*)string_values_pool[str_param_idx];
+    StringParamValue_t* str;
+    if (str_param_idx < 0 || str_param_idx >= string_params_amount) {
+        str = NULL;
+    } else if (string_desc_pool[str_param_idx].is_persistent) {
+        str = (StringParamValue_t*)string_desc_pool[str_param_idx].def;
+    } else {
+        str = (StringParamValue_t*)string_values_pool[str_param_idx];
     }
-    return NULL;
+    return str;
 }
 
 char* paramsGetParamName(ParamIndex_t param_idx) {

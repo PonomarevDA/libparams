@@ -20,7 +20,7 @@
 
 
 #define MAX_PARAM_NAME_LENGTH   32
-#define MAX_STRING_LENGTH       48
+#define MAX_STRING_LENGTH       60
 
 
 typedef enum {

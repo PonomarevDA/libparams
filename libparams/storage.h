@@ -67,5 +67,6 @@ StorageCellType_t paramsGetType(ParamIndex_t param_idx);
 
 void paramsLoadFromFlash();
 int8_t paramsLoadToFlash();
+int8_t paramsResetToDefault();
 
 #endif  // LIBPARAM_STORAGE_H_

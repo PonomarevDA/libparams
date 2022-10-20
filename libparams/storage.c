@@ -142,3 +142,10 @@ int8_t paramsLoadToFlash() {
     romEndWrite();
     return res;
 }
+
+int8_t paramsResetToDefault() {
+    ParamIndex_t idx;
+    for (idx = 0; idx < integer_params_amount; idx++) {
+        integer_values_pool[idx] = integer_desc_pool[idx].def;
+    }
+}

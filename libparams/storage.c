@@ -148,4 +148,5 @@ int8_t paramsResetToDefault() {
     for (idx = 0; idx < integer_params_amount; idx++) {
         integer_values_pool[idx] = integer_desc_pool[idx].def;
     }
+    return 0;
 }

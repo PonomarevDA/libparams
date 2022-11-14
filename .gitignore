@@ -3,3 +3,4 @@ build/
 .vscode/
 shell
 scripts/__pycache__/
+code_style/

@@ -1,0 +1,51 @@
+name: code_style
+
+on: [push]
+jobs:
+  astyle:
+    timeout-minutes: 1
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - uses: actions/checkout@v3
+        with:
+          repository: RaccoonlabDev/code_style
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: repo/code_style
+
+      - run: sudo apt-get install -y astyle
+      - run: ./repo/scripts/code_style/check_astyle.sh
+
+  cpplint:
+    timeout-minutes: 1
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - uses: actions/checkout@v3
+        with:
+          repository: RaccoonlabDev/code_style
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: repo/code_style
+
+      - run: pip3 install cpplint
+      - run: ./repo/scripts/code_style/lint.sh
+
+  crlf:
+    timeout-minutes: 1
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - uses: actions/checkout@v3
+        with:
+          repository: RaccoonlabDev/code_style
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: repo/code_style
+
+      - run: sudo apt-get install -y dos2unix
+      - run: ./repo/scripts/code_style/crlf.sh

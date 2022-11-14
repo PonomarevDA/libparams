@@ -90,13 +90,13 @@ void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, const StringParamVa
 ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integer_params_amount; idx++) {
-        if (strncmp((char const*)name, (char const*)integer_desc_pool[idx].name, name_len) == 0) {
+        if (strncmp((char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
             return idx;
         }
     }
     for (idx = integer_params_amount; idx < all_params_amount; idx++) {
         size_t str_idx = idx - integer_params_amount;
-        if (strncmp((char const*)name, (char const*)string_desc_pool[str_idx].name, name_len) == 0) {
+        if (strncmp((char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
             return idx;
         }
     }
@@ -124,7 +124,6 @@ void paramsLoadFromFlash() {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
-
 }
 
 int8_t paramsLoadToFlash() {
@@ -133,7 +132,9 @@ int8_t paramsLoadToFlash() {
     int8_t res;
     if (0 == romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
         res = -1;
-    } else if (0 == romWrite(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)string_values_pool, STR_VAL_POOL_SIZE)) {
+    } else if (0 == romWrite(STR_VAL_POOL_FIRST_ADDR,
+                             (uint8_t*)string_values_pool,
+                             STR_VAL_POOL_SIZE)) {
         res = -1;
     } else {
         res = 0;

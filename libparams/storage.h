@@ -59,7 +59,9 @@ IntegerParamValue_t paramsGetValue(ParamIndex_t param_idx);
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
 
 void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);
-void paramsSetStringValue(ParamIndex_t param_idx, uint8_t str_len, const StringParamValue_t param_value);
+void paramsSetStringValue(ParamIndex_t param_idx,
+                          uint8_t str_len,
+                          const StringParamValue_t param_value);
 
 char* paramsGetParamName(ParamIndex_t param_idx);
 ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_length);

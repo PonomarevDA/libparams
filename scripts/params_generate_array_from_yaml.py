@@ -67,7 +67,7 @@ class Generator:
         max_value = self.params[param_name][5]
 
         out_cpp_fd = open(self.out_source_file, "a")
-        c_string = "    {}(uint8_t*){}, {}, {}, {}{},\n".format("{", name, def_value, min_value, max_value, "}")
+        c_string = "    {}(uint8_t*){}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
         out_cpp_fd.write(c_string)
         out_cpp_fd.close()
 

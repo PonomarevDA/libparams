@@ -18,10 +18,11 @@ INTEGER_H_HEAD="""#pragma once
 typedef enum {
 """
 INTEGER_H_TAIL="""
+    INTEGER_PARAMS_AMOUNT
 } IntParamsIndexes;
 """
 
-INTEGER_C_HEAD="""#include "params.hpp"
+INTEGER_C_HEAD="""#include "params.h"
 #include "storage.h"
 IntegerDesc_t integer_desc_pool[] = {
 """
@@ -125,10 +126,8 @@ if __name__=="__main__":
         print("2. language", language)
         language = LANGUAGE_CPP
     elif language == "c":
-        log_err(f"Language `{language}` not supported yet!")
-        exit()
-        # print("2. language", language)
-        # language = LANGUAGE_C
+        print("2. language", language)
+        language = LANGUAGE_C
     else:
         log_err(f"Unknown language `{language}`!")
         exit()
@@ -136,7 +135,7 @@ if __name__=="__main__":
     out_file_name = sys.argv[3]
     print("3. out_file_name", out_file_name)
 
-    params_generator = Generator(LANGUAGE_CPP, out_path, out_file_name)
+    params_generator = Generator(language, out_path, out_file_name)
     params_generator.generate_head()
 
     for yaml_file_idx in range(4, num_of_args):

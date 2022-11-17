@@ -7,21 +7,31 @@ import yaml
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
 
-HPP_HEAD="""#pragma once
+INTEGER_HPP_HEAD="""#pragma once
 enum class IntParamsIndexes {
 """
-HPP_TAIL="""
+INTEGER_HPP_TAIL="""
     INTEGER_PARAMS_AMOUNT
 };
 """
+INTEGER_H_HEAD="""#pragma once
+typedef enum {
+"""
+INTEGER_H_TAIL="""
+} IntParamsIndexes;
+"""
 
-CPP_HEAD="""#include "params.hpp"
+INTEGER_C_HEAD="""#include "params.hpp"
+#include "storage.h"
+IntegerDesc_t integer_desc_pool[] = {
+"""
+INTEGER_CPP_HEAD="""#include "params.hpp"
 extern "C" {
     #include "storage.h"
 }
 IntegerDesc_t integer_desc_pool[] = {
 """
-CPP_TAIL="""
+INTEGER_C_CPP_TAIL="""
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 """
@@ -34,29 +44,36 @@ class Generator:
         if language == LANGUAGE_C:
             self.out_source_file = f"{out_path}/{out_file_name}.c"
             self.out_header_file = f"{out_path}/{out_file_name}.h"
+            self.int_header_head = INTEGER_H_HEAD
+            self.int_source_head = INTEGER_C_HEAD
+            self.int_header_tail = INTEGER_H_TAIL
         else:
             self.out_source_file = f"{out_path}/{out_file_name}.cpp"
             self.out_header_file = f"{out_path}/{out_file_name}.hpp"  
+            self.int_header_head = INTEGER_HPP_HEAD
+            self.int_source_head = INTEGER_CPP_HEAD
+            self.int_header_tail = INTEGER_HPP_TAIL
+        self.int_source_tail = INTEGER_C_CPP_TAIL
 
     def set_params(self, params):
         self.params = params
 
     def generate_head(self):
         out_cpp_fd = open(self.out_source_file, 'w')
-        out_cpp_fd.write(CPP_HEAD)
+        out_cpp_fd.write(self.int_source_head)
         out_cpp_fd.close()
 
         out_hpp_fd = open(self.out_header_file, 'w')
-        out_hpp_fd.write(HPP_HEAD)
+        out_hpp_fd.write(self.int_header_head)
         out_hpp_fd.close()
 
     def generate_tail(self):
         out_cpp_fd = open(self.out_source_file, 'a')
-        out_cpp_fd.write(CPP_TAIL)
+        out_cpp_fd.write(self.int_source_tail)
         out_cpp_fd.close()
 
         out_hpp_fd = open(self.out_header_file, 'a')
-        out_hpp_fd.write(HPP_TAIL)
+        out_hpp_fd.write(self.int_header_tail)
         out_hpp_fd.close()
 
     def process_integer_param(self, param_name):

@@ -14,7 +14,6 @@
 #include "flash_driver.h"
 #include <stdbool.h>
 #include <string.h>
-#include <cstddef>
 
 static uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;

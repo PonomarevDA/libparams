@@ -37,45 +37,80 @@ INTEGER_C_CPP_TAIL="""
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 """
 
+STRING_HPP_HEAD="""#pragma once
+"""
+STRING_HPP_TAIL="""
+"""
+STRING_CPP_HEAD="""#include "string_params.hpp"
+extern "C" {
+    #include "storage.h"
+}
+StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {
+"""
+STRING_CPP_TAIL="""
+};
+StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
+"""
+
 class Generator:
     def __init__(self, language, out_path, out_file_name) -> None:
         self.language = language
         self.path = out_path
 
         if language == LANGUAGE_C:
-            self.out_source_file = f"{out_path}/{out_file_name}.c"
-            self.out_header_file = f"{out_path}/{out_file_name}.h"
+            self.out_int_source_file = f"{out_path}/{out_file_name}.c"
+            self.out_int_header_file = f"{out_path}/{out_file_name}.h"
             self.int_header_head = INTEGER_H_HEAD
             self.int_source_head = INTEGER_C_HEAD
             self.int_header_tail = INTEGER_H_TAIL
         else:
-            self.out_source_file = f"{out_path}/{out_file_name}.cpp"
-            self.out_header_file = f"{out_path}/{out_file_name}.hpp"  
+            self.out_int_source_file = f"{out_path}/{out_file_name}.cpp"
+            self.out_int_header_file = f"{out_path}/{out_file_name}.hpp"
+            self.out_str_source_file = f"{out_path}/string_{out_file_name}.cpp"
+            self.out_str_header_file = f"{out_path}/string_{out_file_name}.hpp"
             self.int_header_head = INTEGER_HPP_HEAD
             self.int_source_head = INTEGER_CPP_HEAD
             self.int_header_tail = INTEGER_HPP_TAIL
+            self.str_header_head = STRING_HPP_HEAD
+            self.str_source_head = STRING_CPP_HEAD
+            self.str_source_tail = STRING_CPP_TAIL
+            self.str_header_tail = STRING_HPP_TAIL
         self.int_source_tail = INTEGER_C_CPP_TAIL
+
+        self.num_of_int_params = 0
+        self.num_of_str_params = 0
+
 
     def set_params(self, params):
         self.params = params
 
-    def generate_head(self):
-        out_cpp_fd = open(self.out_source_file, 'w')
-        out_cpp_fd.write(self.int_source_head)
-        out_cpp_fd.close()
+    @staticmethod
+    def open_and_write(file, text):
+        fd = open(file, 'w')
+        fd.write(text)
+        fd.close()
 
-        out_hpp_fd = open(self.out_header_file, 'w')
-        out_hpp_fd.write(self.int_header_head)
-        out_hpp_fd.close()
+    @staticmethod
+    def open_and_append(file, text):
+        fd = open(file, 'a')
+        fd.write(text)
+        fd.close()
+
+    def generate_head(self):
+        Generator.open_and_write(self.out_int_source_file, self.int_source_head)
+        Generator.open_and_write(self.out_int_header_file, self.int_header_head)
+
+        Generator.open_and_write(self.out_str_source_file, self.str_source_head)
+        Generator.open_and_write(self.out_str_header_file, self.str_header_head)
 
     def generate_tail(self):
-        out_cpp_fd = open(self.out_source_file, 'a')
-        out_cpp_fd.write(self.int_source_tail)
-        out_cpp_fd.close()
+        Generator.open_and_append(self.out_int_source_file, self.int_source_tail)
+        Generator.open_and_append(self.out_int_header_file, self.int_header_tail)
 
-        out_hpp_fd = open(self.out_header_file, 'a')
-        out_hpp_fd.write(self.int_header_tail)
-        out_hpp_fd.close()
+        Generator.open_and_append(self.out_str_source_file, self.str_source_tail)
+        h_string = f"#define NUM_OF_STR_PARAMS {self.num_of_str_params}"
+        Generator.open_and_append(self.out_str_header_file, h_string)
+        Generator.open_and_append(self.out_str_header_file, self.str_header_tail)
 
     def process_integer_param(self, param_name):
         name = f"\"{param_name}\""
@@ -84,19 +119,28 @@ class Generator:
         min_value = self.params[param_name][4]
         max_value = self.params[param_name][5]
 
-        out_cpp_fd = open(self.out_source_file, "a")
         c_string = "    {}(uint8_t*){}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
-        out_cpp_fd.write(c_string)
-        out_cpp_fd.close()
+        Generator.open_and_append(self.out_int_source_file, c_string)
 
-        out_hpp_fd = open(self.out_header_file, "a")
-        out_hpp_fd.write(f"    {enum_name},\n")
-        out_hpp_fd.close()
+        h_string = f"    {enum_name},\n"
+        Generator.open_and_append(self.out_int_header_file, h_string)
+
+    def process_string_param(self, param_name):
+        name = f"\"{param_name}\""
+        # enum_name = self.params[param_name][1]
+        is_mutable = str(self.params[param_name][2]).lower()
+        def_value = "\"{}\"".format(self.params[param_name][3])
+
+        c_string = "    {}(uint8_t*){}, {}, {}{},\n".format("{", name, def_value, is_mutable, "}")
+        Generator.open_and_append(self.out_str_source_file, c_string)
+        self.num_of_str_params += 1
 
     def process_param(self, param_name):
         param_type = self.params[param_name][0]
         if param_type == "Integer":
             self.process_integer_param(param_name)
+        elif param_type == "String":
+            self.process_string_param(param_name)
 
     def process_yaml_file(self, input_dir):
         if not os.path.exists(input_dir):

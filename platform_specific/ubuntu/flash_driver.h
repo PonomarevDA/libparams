@@ -24,6 +24,9 @@
 #define FLASH_SIZE_KBYTES           (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)
 #define FLASH_LAST_PAGE_ADDR        (FLASH_START_ADDR + PAGE_SIZE_BYTES * (FLASH_NUM_OF_PAGES - 1))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void flashUnlock();
 void flashLock();
@@ -41,5 +44,9 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
 int8_t flashWriteU64(uint32_t address, uint64_t data);
 
 uint8_t* flashGetPointer();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // PLATFORM_SPECIFIC_STM32G0B1_FLASH_DRIVER_H_

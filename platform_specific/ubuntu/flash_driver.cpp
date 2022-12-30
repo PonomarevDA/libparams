@@ -14,6 +14,9 @@
 #include "flash_driver.h"
 #include <stdbool.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 static uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;
@@ -44,6 +47,30 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
     return 0;
 }
 
+void flashLoadBufferFromFile() {
+#ifdef FLASH_DRIVER_STORAGE_FILE
+    std::ifstream myfile;
+    myfile.open(FLASH_DRIVER_STORAGE_FILE, std::ios::in);
+    size_t read_counter = 0;
+    while (myfile) {
+        if (read_counter % 2) {
+            uint32_t param_value;
+            uint32_t param_idx = read_counter / 2;
+            myfile >> param_value;
+            memcpy(flash_memory + 4*param_idx, &param_value, 4);
+            std::cout << param_value << std::endl;
+        } else {
+            std::string mystring;
+            myfile >> mystring;
+            std::cout << mystring;
+        }
+        read_counter++;
+    }
+    std::cout << std::endl;
+#endif
+}
+
 uint8_t* flashGetPointer() {
+    flashLoadBufferFromFile();
     return (uint8_t*) flash_memory;
 }

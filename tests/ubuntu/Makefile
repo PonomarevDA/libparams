@@ -10,7 +10,7 @@ SRC+=$(wildcard ${REPOSITORY_PATH}/libparams/*.c)
 
 # platform_specific
 INC+=-I ${REPOSITORY_PATH}/platform_specific/ubuntu/
-SRC+=$(wildcard ${REPOSITORY_PATH}/platform_specific/ubuntu/*.c)
+SRC+=$(wildcard ${REPOSITORY_PATH}/platform_specific/ubuntu/*.cpp)
 
 # user params
 SRC+=${REPOSITORY_PATH}/tests/params.c

@@ -3,6 +3,9 @@ name: build
 on: [push]
 jobs:
   build:
+    strategy:
+      matrix:
+        target: [stm32f103_build, stm32g0b1_build, ubuntu]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -21,6 +24,4 @@ jobs:
           sudo make                                                                 &&  \
           sudo cp ./lib/libgtest*.a /usr/lib
 
-      - run: mkdir -p repository/build/tests/stm32f103_build && cd repository/tests/stm32f103_build && make
-      - run: mkdir -p repository/build/tests/stm32g0b1_build && cd repository/tests/stm32g0b1_build && make
-      - run: mkdir -p repository/build/tests/ubuntu && cd repository/tests/ubuntu && make
+      - run: mkdir -p repository/build/tests/${{ matrix.target }} && cd repository/tests/${{ matrix.target }} && make

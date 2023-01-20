@@ -1,14 +1,11 @@
 /*
  * Copyright (C) 2017 Konstantin Burdinov <sainquake@gmail.com>
+ * Copyright (C) 2020-2023 Dmitry Ponomarev <ponomarevda96@gmail.com>
+ * Copyright (C) 2020-2023 Raccoon Lab team
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-/**
- * @file storage.c
- * @author d.ponomarev
- * @date March 5, 2021
  */
 
 #include "storage.h"

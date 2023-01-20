@@ -18,6 +18,10 @@
 
 #define PARAM_STRING_MAX_SIZE   20
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief By default it is initialized as last page only.
  */
@@ -34,5 +38,9 @@ size_t romRead(size_t offset, uint8_t* data, size_t size);
 void romBeginWrite();
 size_t romWrite(size_t offset, const uint8_t* data, size_t size);
 void romEndWrite();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // LIBPARAM_ROM_H_

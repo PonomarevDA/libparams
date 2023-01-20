@@ -27,9 +27,7 @@ INTEGER_C_HEAD="""#include "params.h"
 IntegerDesc_t integer_desc_pool[] = {
 """
 INTEGER_CPP_HEAD="""#include "params.hpp"
-extern "C" {
-    #include "storage.h"
-}
+#include "storage.h"
 IntegerDesc_t integer_desc_pool[] = {
 """
 INTEGER_C_CPP_TAIL="""
@@ -42,9 +40,7 @@ STRING_HPP_HEAD="""#pragma once
 STRING_HPP_TAIL="""
 """
 STRING_CPP_HEAD="""#include "string_params.hpp"
-extern "C" {
-    #include "storage.h"
-}
+#include "storage.h"
 StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {
 """
 STRING_CPP_TAIL="""

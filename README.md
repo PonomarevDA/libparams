@@ -9,9 +9,7 @@ It also has an example of flash memory driver implementation for stm32f103 based
 
 ![scope_of_libparams](doc/scope_of_libparams.png?raw=true "scope_of_libparams")
 
-This library is suitable for Cyphal and DroneCAN application.
-
-> By default the library expect stm32f103 with 128 KBytes of flash, but it might be easily adopted for other sizes.
+This library is suitable for Cyphal and DroneCAN applications.
 
 ## 1. High level interface. Parameters
 
@@ -33,7 +31,7 @@ Each string/boolean parameter has the following fields:
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`.
 
-Look at [storage.h](storage.h) to get full API and [storage.c](storage.c) for the implementation details.
+Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparams/storage.c](libparams/storage.c) for the implementation details.
 
 ## 2. Middle level interface. Abstract ROM driver
 
@@ -146,9 +144,7 @@ It will create .cpp and .hpp files:
 
 ```c++
 #include "params.hpp"
-extern "C" {
-    #include "storage.h"
-}
+#include "storage.h"
 IntegerDesc_t integer_desc_pool[] = {
     {(uint8_t*)"uavcan.node.id", 0, 127, 50},
     {(uint8_t*)"uavcan.pub.mag.id", 0, 65535, 65535},

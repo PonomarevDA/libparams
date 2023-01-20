@@ -50,6 +50,10 @@ typedef struct {
 
 typedef uint8_t ParamIndex_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @note Main Get/Set API
  */
@@ -70,5 +74,9 @@ StorageCellType_t paramsGetType(ParamIndex_t param_idx);
 void paramsLoadFromFlash();
 int8_t paramsLoadToFlash();
 int8_t paramsResetToDefault();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // LIBPARAM_STORAGE_H_

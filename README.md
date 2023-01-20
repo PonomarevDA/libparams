@@ -114,74 +114,35 @@ New drivers might be added in future.
 
 ## 4. Usage example
 
-There are 2 ways of usage of the library:
-- You may provide a .cpp and .hpp files with parameters.
-- Alternatively, you may provide .yaml files with parameters and generate .cpp and .hpp files based on them.
-
-Let's say you have the following files:
-
-node.yaml:
-
-```yaml
-uavcan.node.id   : ["Integer",  "ID",               True,   50,  0,  127]
-uavcan.node.name : ["String",   "PARAM_NODE_NAME",  True,   ""]
-```
-
-magnetometer.yaml:
-
-```yaml
-uavcan.pub.mag.id :   ["Integer", "MAGNETOMETER_ID",    True,  65535,  0,  65535]
-uavcan.pub.mag.type : ["String",  "MAGNETOMETER_TYPE",  True, "uavcan.si.sample.magnetic_field_strength.Vector3"]
-```
-
-Then call the generator script:
-
-```bash
-./libparams/scripts/params_generate_array_from_yaml.py build/ c++ params node.yaml magnetometer.yaml
-```
-
-It will create .cpp and .hpp files:
+A minimal usage example is shown below.
 
 ```c++
-#include "params.hpp"
 #include "storage.h"
-IntegerDesc_t integer_desc_pool[] = {
-    {(uint8_t*)"uavcan.node.id", 0, 127, 50},
-    {(uint8_t*)"uavcan.pub.mag.id", 0, 65535, 65535},
 
-};
-IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
-
-StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {
-    {(uint8_t*)"name", "", true},
-    {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
-
-};
-StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
-
-```
-
-```c++
-#pragma once
 enum class IntParamsIndexes {
-    ID,
+    NODE_ID,
     MAGNETOMETER_ID,
     INTEGER_PARAMS_AMOUNT
 };
 
 #define NUM_OF_STR_PARAMS 2
 
-```
+IntegerDesc_t integer_desc_pool[] = {
+    {(uint8_t*)"uavcan.node.id", 0, 127, 50},
+    {(uint8_t*)"uavcan.pub.mag.id", 0, 65535, 65535},
+};
+IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
+StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {
+    {(uint8_t*)"name", "", true},
+    {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
 
+};
+StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
 
-The minimal usage program might be as follow:
+void application_example() {
+    paramsInit(static_cast<uint8_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT), NUM_OF_STR_PARAMS);
+    paramsLoadFromFlash();
+}
 
-```c++
-#include "storage.hpp"
-#include "params.hpp"
-#include "string_params.hpp"
-
-paramsInit(static_cast<uint8_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT), NUM_OF_STR_PARAMS);
-paramsLoadFromFlash();
 ```

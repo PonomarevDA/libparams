@@ -25,3 +25,27 @@ jobs:
           sudo cp ./lib/libgtest*.a /usr/lib
 
       - run: mkdir -p repository/build/tests/${{ matrix.target }} && cd repository/tests/${{ matrix.target }} && make
+
+  test_generator:
+    strategy:
+      matrix:
+        target: [params_generator_c, params_generator_cpp]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: 'repository'
+          submodules: recursive
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y make gcc-arm-none-eabi
+
+      - name: Install gtest
+        run: |
+          sudo apt-get install libgtest-dev cmake                                   &&  \
+          cd /usr/src/gtest                                                         &&  \
+          sudo cmake CMakeLists.txt                                                 &&  \
+          sudo make                                                                 &&  \
+          sudo cp ./lib/libgtest*.a /usr/lib
+
+      - run: ./repository/tests/${{ matrix.target }}/test.sh

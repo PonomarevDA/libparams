@@ -20,9 +20,9 @@ extern IntegerParamValue_t integer_values_pool[];
 extern StringDesc_t string_desc_pool[];
 extern StringParamValue_t string_values_pool[];
 
-static uint16_t integer_params_amount = 0;
-static uint16_t string_params_amount = 0;
-static uint16_t all_params_amount = 0;
+static uint8_t integer_params_amount = 0;
+static uint8_t string_params_amount = 0;
+static uint8_t all_params_amount = 0;
 
 
 #define INT_VAL_POOL_SIZE           integer_params_amount * sizeof(IntegerParamValue_t)
@@ -44,11 +44,18 @@ int32_t paramsGetValue(ParamIndex_t param_idx) {
     return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
 }
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
-    int8_t str_param_idx = param_idx - integer_params_amount;
+    if (param_idx < integer_params_amount) {
+        return NULL;
+    }
+
+    uint8_t str_param_idx = param_idx - integer_params_amount;
+
+    if (str_param_idx >= string_params_amount) {
+        return NULL;
+    }
+
     StringParamValue_t* str;
-    if (str_param_idx < 0 || str_param_idx >= string_params_amount) {
-        str = NULL;
-    } else if (string_desc_pool[str_param_idx].is_persistent) {
+    if (string_desc_pool[str_param_idx].is_persistent) {
         str = (StringParamValue_t*)string_desc_pool[str_param_idx].def;
     } else {
         str = (StringParamValue_t*)string_values_pool[str_param_idx];
@@ -142,8 +149,7 @@ int8_t paramsLoadToFlash() {
 }
 
 int8_t paramsResetToDefault() {
-    ParamIndex_t idx;
-    for (idx = 0; idx < integer_params_amount; idx++) {
+    for (ParamIndex_t idx = 0; idx < integer_params_amount; idx++) {
         integer_values_pool[idx] = integer_desc_pool[idx].def;
     }
     return 0;

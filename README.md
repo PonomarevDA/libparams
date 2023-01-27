@@ -147,7 +147,7 @@ IntegerDesc_t integer_desc_pool[] = {
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
 StringDesc_t string_desc_pool[] = {
-    {(uint8_t*)"name", "", true},
+    {(uint8_t*)"name", "Unknown", false},
     {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
 
 };

@@ -37,6 +37,9 @@ void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) 
 }
 
 const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
+    if (param_idx >= integer_params_amount) {
+        return NULL;
+    }
     return &integer_desc_pool[param_idx];
 }
 

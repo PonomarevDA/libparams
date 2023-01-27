@@ -45,7 +45,7 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
 
 void romBeginWrite() {
     flashUnlock();
-    flashErase(start_page_idx, rom_size_pages);
+    flashErase(start_page_idx, (uint32_t)rom_size_pages);
 }
 
 void romEndWrite() {
@@ -60,7 +60,7 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
     int8_t status = 0;
 
     for (size_t idx = 0; idx < (size + FLASH_WORD_SIZE - 1) / FLASH_WORD_SIZE; idx++) {
-        uint32_t addr = rom_addr + offset + FLASH_WORD_SIZE * idx;
+        size_t addr = rom_addr + offset + FLASH_WORD_SIZE * idx;
 #if FLASH_WORD_SIZE == 4
         uint32_t word = ((const uint32_t*)(const void*)data)[idx];
         status = flashWriteU32(addr, word);

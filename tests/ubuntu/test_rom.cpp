@@ -11,9 +11,21 @@
 #include <iostream>
 #include "rom.h"
 
-TEST(TestRom, test_rom_init_ok) {
-    auto res = romInit(0, 1);
-    ASSERT_EQ(res, 0);
+TEST(TestRom, test_rom_init) {
+    ASSERT_EQ(romInit(0, 1), 0);
+    ASSERT_EQ(romInit(129, 129), -1);
+    ASSERT_EQ(romInit(0, 0), -1);
+}
+
+TEST(TestRom, test_rom_read) {
+    romInit(0, 1);
+    uint8_t data[4048];
+
+    ASSERT_EQ(romRead(0, NULL, 8), 0);
+
+    ASSERT_EQ(romRead(0, data, 4096), 2048);
+
+    ASSERT_EQ(romRead(0, data, 8), 8);
 }
 
 TEST(TestRom, test_rom_write_read_ok) {

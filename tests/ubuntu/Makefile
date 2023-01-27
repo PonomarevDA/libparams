@@ -16,7 +16,7 @@ SRC+=$(wildcard ${REPOSITORY_PATH}/platform_specific/ubuntu/*.cpp)
 SRC+=${REPOSITORY_PATH}/tests/params.c
 
 COMMON_LIBS=-lpthread -pthread -lgtest
-CPPFLAGS = -Wall -std=c++11
+CPPFLAGS = -Wall -Wpedantic -Werror -std=c++11
 COMPILE = g++ $(CPPFLAGS) $(INC) -o shell
 
 all: flash_driver rom storage

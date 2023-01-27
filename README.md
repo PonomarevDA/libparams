@@ -13,7 +13,7 @@ This library is suitable for Cyphal and DroneCAN applications.
 
 ## 1. High level interface. Parameters
 
-There are 4 types of parameters that we may want to store (they are defined in `StorageParamType_t` enum):
+There are 4 types of parameters that we may want to store (they are defined in [ParamType_t](https://github.com/PonomarevDA/libparams/blob/585dd09fdd3267675acdf890978c1a266b38c39a/libparams/storage.h#L29) enum):
 - PARAM_TYPE_INTEGER (int32)
 - PARAM_TYPE_REAL (float32)
 - PARAM_TYPE_BOOLEAN (uint8)
@@ -29,7 +29,9 @@ Each string/boolean parameter has the following fields:
 - value
 - default value (hardcoded)
 
-A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t`.
+A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
+
+The library allows to have a read/write access to these parameters by their index or name, reset them to default values and other features.
 
 Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparams/storage.c](libparams/storage.c) for the implementation details.
 
@@ -110,6 +112,13 @@ The main memory is:
 
 </details>
 
+<details>
+  <summary>3. Ubuntu (flash memory simulation using a file)</summary>
+
+In process...
+
+</details>
+
 New drivers might be added in future.
 
 ## 4. Usage example
@@ -125,7 +134,11 @@ enum class IntParamsIndexes {
     INTEGER_PARAMS_AMOUNT
 };
 
-#define NUM_OF_STR_PARAMS 2
+enum class StrParamsIndexes {
+    NODE_NAME,
+    MAGNETOMETER_TYPE,
+    STRING_PARAMS_AMOUNT
+};
 
 IntegerDesc_t integer_desc_pool[] = {
     {(uint8_t*)"uavcan.node.id", 0, 127, 50},
@@ -133,7 +146,7 @@ IntegerDesc_t integer_desc_pool[] = {
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
-StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {
+StringDesc_t string_desc_pool[] = {
     {(uint8_t*)"name", "", true},
     {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
 
@@ -141,7 +154,8 @@ StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {
 StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
 
 void application_example() {
-    paramsInit(static_cast<uint8_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT), NUM_OF_STR_PARAMS);
+    paramsInit(static_cast<ParamIndex_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT),
+               static_cast<ParamIndex_t>(StrParamsIndexes::STRING_PARAMS_AMOUNT));
     paramsLoadFromFlash();
 }
 

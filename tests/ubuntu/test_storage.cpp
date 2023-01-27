@@ -18,7 +18,7 @@ void init() {
 
 void write_integer_test_param() {
     paramsSetIntegerValue(0, 42);
-    IntegerParamValue_t param_value = paramsGetValue(0);
+    IntegerParamValue_t param_value = paramsGetIntegerValue(0);
     ASSERT_EQ(param_value, 42);
 }
 
@@ -62,7 +62,7 @@ TEST(TestStorage, test_load_to_and_from) {
     paramsLoadFromFlash();
 
     // check that now params are empty
-    IntegerParamValue_t read_int_param_value = paramsGetValue(0);
+    IntegerParamValue_t read_int_param_value = paramsGetIntegerValue(0);
     ASSERT_EQ(read_int_param_value, 0);
 
     StringParamValue_t* read_str_param = paramsGetStringValue(1);

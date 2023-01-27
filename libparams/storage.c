@@ -20,9 +20,9 @@ extern IntegerParamValue_t integer_values_pool[];
 extern StringDesc_t string_desc_pool[];
 extern StringParamValue_t string_values_pool[];
 
-static uint8_t integer_params_amount = 0;
-static uint8_t string_params_amount = 0;
-static uint8_t all_params_amount = 0;
+static ParamIndex_t integer_params_amount = 0;
+static ParamIndex_t string_params_amount = 0;
+static ParamIndex_t all_params_amount = 0;
 
 
 #define INT_VAL_POOL_SIZE           integer_params_amount * sizeof(IntegerParamValue_t)
@@ -30,17 +30,17 @@ static uint8_t all_params_amount = 0;
 #define STR_VAL_POOL_FIRST_ADDR     PAGE_SIZE_BYTES - STR_VAL_POOL_SIZE
 
 
-void paramsInit(uint8_t int_params_amount, uint8_t str_params_amount) {
+void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) {
     integer_params_amount = int_params_amount;
     string_params_amount = str_params_amount;
     all_params_amount = integer_params_amount + string_params_amount;
 }
 
-const IntegerDesc_t* paramsGetIntDesc(ParamIndex_t param_idx) {
+const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
     return &integer_desc_pool[param_idx];
 }
 
-int32_t paramsGetValue(ParamIndex_t param_idx) {
+int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
     return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
 }
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
@@ -48,7 +48,7 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
         return NULL;
     }
 
-    uint8_t str_param_idx = param_idx - integer_params_amount;
+    ParamIndex_t str_param_idx = param_idx - integer_params_amount;
 
     if (str_param_idx >= string_params_amount) {
         return NULL;
@@ -107,13 +107,13 @@ ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_len) {
     return all_params_amount;
 }
 
-StorageCellType_t paramsGetType(ParamIndex_t param_idx) {
+ParamType_t paramsGetType(ParamIndex_t param_idx) {
     if (param_idx < integer_params_amount) {
-        return CELL_TYPE_INTEGER;
+        return PARAM_TYPE_INTEGER;
     } else if (param_idx < all_params_amount) {
-        return CELL_TYPE_STRING;
+        return PARAM_TYPE_STRING;
     } else {
-        return CELL_TYPE_UNDEFINED;
+        return PARAM_TYPE_UNDEFINED;
     }
 }
 

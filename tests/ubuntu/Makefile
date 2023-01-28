@@ -25,6 +25,16 @@ all: flash_driver rom storage
 create_build_dir:
 	mkdir -p ${BUILD_PATH}
 
+coverage:
+	$(COMPILE) --coverage $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
+	$(COMPILE) --coverage $(SRC) test_rom.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
+	$(COMPILE) --coverage $(SRC) test_storage.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
 flash_driver: create_build_dir
 	$(COMPILE) $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
 	./${EXECUTABLE_PATH}
@@ -37,5 +47,5 @@ storage: create_build_dir
 	$(COMPILE) $(SRC) test_storage.cpp $(COMMON_LIBS)
 	./${EXECUTABLE_PATH}
 
-clean:
-	rm -rf ${BUILD_PATH}
+# clean:
+# 	rm -rf ${BUILD_PATH}

@@ -63,10 +63,10 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
         size_t addr = rom_addr + offset + FLASH_WORD_SIZE * idx;
 #if FLASH_WORD_SIZE == 4
         uint32_t word = ((const uint32_t*)(const void*)data)[idx];
-        status = flashWriteU32(addr, word);
+        status = flashWriteU32((uint32_t)addr, word);
 #elif FLASH_WORD_SIZE == 8
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
-        status = flashWriteU64(addr, word);
+        status = flashWriteU64((uint32_t)addr, word);
 #endif
     }
     return (status != -1) ? size : 0;

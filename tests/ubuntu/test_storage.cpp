@@ -99,7 +99,7 @@ TEST(TestStorage, test_write_read_strings) {
     ASSERT_EQ(NULL, paramsGetStringValue(more_than_need_idx));
 }
 
-TEST(TestStorage, test_get_param_name) {
+TEST(TestStorage, test_paramsGetParamName) {
     init();
     size_t expected_param_name_length;
     char* read_param_name;
@@ -134,6 +134,17 @@ TEST(TestStorage, test_params_get_type) {
     for (auto data : data_set) {
         ASSERT_EQ(paramsGetType(data.first), data.second);
     }
+}
+
+TEST(TestStorage, test_paramsGetIndexByName) {
+    init();
+
+    ASSERT_EQ(1, paramsGetIndexByName((const uint8_t*)"uavcan.pub.mag.id", 18));
+}
+
+TEST(TestStorage, test_paramsResetToDefault) {
+    init();
+    ASSERT_EQ(0, paramsResetToDefault());
 }
 
 

@@ -94,16 +94,16 @@ void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, const StringParamVa
 }
 
 
-ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_len) {
+ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integer_params_amount; idx++) {
-        if (strncmp((char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
             return idx;
         }
     }
     for (idx = integer_params_amount; idx < all_params_amount; idx++) {
         size_t str_idx = idx - integer_params_amount;
-        if (strncmp((char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
             return idx;
         }
     }

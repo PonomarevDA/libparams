@@ -26,7 +26,8 @@ bool strCompareSafe(const char* first, const char* second, size_t len) {
 
 void init() {
     romInit(0, 1);
-    paramsInit(static_cast<uint8_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT), NUM_OF_STR_PARAMS);
+    paramsInit(static_cast<ParamIndex_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT),
+               static_cast<ParamIndex_t>(NUM_OF_STR_PARAMS));
     paramsLoadFromFlash();
 }
 
@@ -40,7 +41,7 @@ TEST(TestParamsGenerator, test_int_params_amount) {
 
 TEST(TestParamsGenerator, test_int_param) {
     init();
-    IntegerParamValue_t value = paramsGetValue((uint8_t)IntParamsIndexes::BAROMETER_PRESSURE_ID);
+    IntegerParamValue_t value = paramsGetIntegerValue((uint8_t)IntParamsIndexes::BAROMETER_PRESSURE_ID);
     ASSERT_EQ(value, 0);
 }
 

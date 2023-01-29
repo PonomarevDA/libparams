@@ -11,19 +11,16 @@
 #include "storage.h"
 #include "flash_driver.h"
 
-/**
- * @note Names of these params should not contain spaces, because Mavlink console can't handle them
- */
-
-// name                             min     max     default
-IntegerDesc_t __attribute__((weak)) integer_desc_pool[] = {
-    {(uint8_t*)"identifier",        0,      100,    50},
+IntegerDesc_t integer_desc_pool[] = {
+    {(uint8_t*)"uavcan.node.id",    0, 127,     50},
+    {(uint8_t*)"uavcan.pub.mag.id", 0, 65535,   65535},
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
-//   name                           default
-StringDesc_t __attribute__((weak)) string_desc_pool[] = {
-    {(uint8_t*)"name",              "default_name"},
+StringDesc_t string_desc_pool[] = {
+    {(uint8_t*)"name", "Unknown", false},
+    {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
+
 };
 StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
 

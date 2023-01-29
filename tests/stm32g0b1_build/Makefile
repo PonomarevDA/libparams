@@ -41,7 +41,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 C_DEFS = -DUSE_HAL_DRIVER -DSTM32G0B1xx
 
 # compile gcc flags
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -Wcast-align -MMD -MP -MF"$(@:%.o=%.d)"
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -Wpedantic -Werror -fdata-sections -ffunction-sections -Wcast-align -MMD -MP -MF"$(@:%.o=%.d)"
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
@@ -53,7 +53,7 @@ endif
 
 # libraries
 LIBS = -lc -lm -lnosys
-LDFLAGS = $(MCU) -specs=nano.specs -specs=nosys.specs -Wall $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs -specs=nosys.specs -Wall -Wpedantic -Werror $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin

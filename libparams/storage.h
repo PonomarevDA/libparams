@@ -21,12 +21,12 @@
 
 
 typedef enum {
-    CELL_TYPE_UNDEFINED,
-    CELL_TYPE_INTEGER,
-    CELL_TYPE_REAL,
-    CELL_TYPE_BOOLEAN,
-    CELL_TYPE_STRING,
-} StorageCellType_t;
+    PARAM_TYPE_UNDEFINED,
+    PARAM_TYPE_INTEGER,
+    PARAM_TYPE_REAL,
+    PARAM_TYPE_BOOLEAN,
+    PARAM_TYPE_STRING,
+} ParamType_t;
 
 
 typedef int32_t IntegerParamValue_t;
@@ -52,25 +52,34 @@ extern "C" {
 #endif
 
 /**
- * @note Main Get/Set API
+ * @note Common functions
  */
-void paramsInit(uint8_t int_params_amount, uint8_t str_params_amount);
-const IntegerDesc_t* paramsGetIntDesc(ParamIndex_t param_id);
-IntegerParamValue_t paramsGetValue(ParamIndex_t param_idx);
-StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
-
-void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);
-void paramsSetStringValue(ParamIndex_t param_idx,
-                          uint8_t str_len,
-                          const StringParamValue_t param_value);
-
-char* paramsGetParamName(ParamIndex_t param_idx);
-ParamIndex_t paramsGetIndexByName(uint8_t* name, uint16_t name_length);
-StorageCellType_t paramsGetType(ParamIndex_t param_idx);
-
+void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount);
 void paramsLoadFromFlash();
 int8_t paramsLoadToFlash();
 int8_t paramsResetToDefault();
+
+/**
+ * @note Common parameters getters
+ */
+char* paramsGetParamName(ParamIndex_t param_idx);
+ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_length);
+ParamType_t paramsGetType(ParamIndex_t param_idx);
+
+/**
+ * @note Integer parameters specific setters/getters
+ */
+const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx);
+IntegerParamValue_t paramsGetIntegerValue(ParamIndex_t param_idx);
+void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);
+
+/**
+ * @note String parameters specific setters/getters
+ */
+StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
+uint8_t paramsSetStringValue(ParamIndex_t param_idx,
+                             uint8_t str_len,
+                             const StringParamValue_t param_value);
 
 #ifdef __cplusplus
 }

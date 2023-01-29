@@ -1,5 +1,6 @@
 REPOSITORY_PATH=../..
-BUILD_PATH=../../build/tests/ubuntu
+BUILD_PATH=.
+EXECUTABLE_PATH=${BUILD_PATH}/shell
 
 INC =
 SRC =
@@ -16,22 +17,35 @@ SRC+=$(wildcard ${REPOSITORY_PATH}/platform_specific/ubuntu/*.cpp)
 SRC+=${REPOSITORY_PATH}/tests/params.c
 
 COMMON_LIBS=-lpthread -pthread -lgtest
-CPPFLAGS = -Wall -std=c++11
-COMPILE = g++ $(CPPFLAGS) $(INC) -o shell
+CPPFLAGS = -Wall -Wpedantic -Werror -std=c++11
+COMPILE = g++ $(CPPFLAGS) $(INC) -o ${EXECUTABLE_PATH}
 
 all: flash_driver rom storage
 
-flash_driver:
+create_build_dir:
+	mkdir -p ${BUILD_PATH}
+
+coverage:
+	$(COMPILE) --coverage $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
+	$(COMPILE) --coverage $(SRC) test_rom.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
+	$(COMPILE) --coverage $(SRC) test_storage.cpp $(COMMON_LIBS)
+	./${EXECUTABLE_PATH}
+
+flash_driver: create_build_dir
 	$(COMPILE) $(SRC) test_flash_driver.cpp $(COMMON_LIBS)
-	./shell
+	./${EXECUTABLE_PATH}
 
-rom:
+rom: create_build_dir
 	$(COMPILE) $(SRC) test_rom.cpp $(COMMON_LIBS)
-	./shell
+	./${EXECUTABLE_PATH}
 
-storage:
+storage: create_build_dir
 	$(COMPILE) $(SRC) test_storage.cpp $(COMMON_LIBS)
-	./shell
+	./${EXECUTABLE_PATH}
 
-clean:
-	rm -rf ${BUILD_PATH}
+# clean:
+# 	rm -rf ${BUILD_PATH}

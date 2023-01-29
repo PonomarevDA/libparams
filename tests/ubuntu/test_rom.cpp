@@ -11,9 +11,30 @@
 #include <iostream>
 #include "rom.h"
 
-TEST(TestRom, test_rom_init_ok) {
-    auto res = romInit(0, 1);
-    ASSERT_EQ(res, 0);
+TEST(TestRom, test_rom_init) {
+    ASSERT_EQ(romInit(0, 1), 0);
+    ASSERT_EQ(romInit(129, 129), -1);
+    ASSERT_EQ(romInit(0, 0), -1);
+}
+
+TEST(TestRom, test_rom_read) {
+    romInit(0, 1);
+    uint8_t data[4048];
+
+    // Wrong inputs
+    ASSERT_EQ(romRead(0, NULL, 8), 0);
+    ASSERT_EQ(romRead(4096, data, 8), 0);
+    ASSERT_EQ(romRead(0, data, 0), 0);
+
+    // Normal, full read
+    ASSERT_EQ(romRead(0, data, 8), 8);
+
+    // Normal, clamped read
+    ASSERT_EQ(romRead(0, data, 4096), 2048);
+    ASSERT_EQ(romRead(1000, data, 4096), 1048);
+    ASSERT_EQ(romRead(1000, data, 2048), 1048);
+    ASSERT_EQ(romRead(1000, data, 2000), 1048);
+
 }
 
 TEST(TestRom, test_rom_write_read_ok) {
@@ -21,6 +42,16 @@ TEST(TestRom, test_rom_write_read_ok) {
     auto res = romInit(0, 1);
     ASSERT_EQ(res, 0);
 
+    // Wrong inputs
+    ASSERT_EQ(romWrite(0, NULL, 8), 0);
+    ASSERT_EQ(romWrite(4096, WRITTEN_DATA, 8), 0);
+    ASSERT_EQ(romWrite(0, WRITTEN_DATA, 0), 0);
+    ASSERT_EQ(romWrite(1500, WRITTEN_DATA, 1500), 0);
+
+    // Normal inputs, but without romBeginWrite and romEndWrite()
+    ASSERT_EQ(romWrite(0, WRITTEN_DATA, 8), 0);
+
+    // Normal
     romBeginWrite();
     size_t write_res = romWrite(0, WRITTEN_DATA, 8);
     romEndWrite();

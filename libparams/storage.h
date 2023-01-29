@@ -77,9 +77,9 @@ void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_val
  * @note String parameters specific setters/getters
  */
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
-void paramsSetStringValue(ParamIndex_t param_idx,
-                          uint8_t str_len,
-                          const StringParamValue_t param_value);
+uint8_t paramsSetStringValue(ParamIndex_t param_idx,
+                             uint8_t str_len,
+                             const StringParamValue_t param_value);
 
 #ifdef __cplusplus
 }

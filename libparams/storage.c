@@ -36,91 +36,6 @@ void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) 
     all_params_amount = integer_params_amount + string_params_amount;
 }
 
-const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
-    if (param_idx >= integer_params_amount) {
-        return NULL;
-    }
-    return &integer_desc_pool[param_idx];
-}
-
-int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
-    return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
-}
-StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
-        return NULL;
-    }
-
-    ParamIndex_t str_param_idx = param_idx - integer_params_amount;
-
-    if (str_param_idx >= string_params_amount) {
-        return NULL;
-    }
-
-    StringParamValue_t* str;
-    if (string_desc_pool[str_param_idx].is_persistent) {
-        str = (StringParamValue_t*)string_desc_pool[str_param_idx].def;
-    } else {
-        str = (StringParamValue_t*)string_values_pool[str_param_idx];
-    }
-    return str;
-}
-
-char* paramsGetParamName(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
-        return (char*)integer_desc_pool[param_idx].name;
-    } else if (param_idx < all_params_amount) {
-        return (char*)string_desc_pool[param_idx - integer_params_amount].name;
-    }
-    return NULL;
-}
-
-void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value) {
-    if (param_idx >= integer_params_amount) {
-        return;
-    }
-    integer_values_pool[param_idx] = param_value;
-}
-
-void paramsSetStringValue(ParamIndex_t idx, uint8_t str_len, const StringParamValue_t param_value) {
-    if (str_len > MAX_STRING_LENGTH || idx < integer_params_amount || idx >= all_params_amount) {
-        return;
-    }
-
-    idx -= integer_params_amount;
-
-    memcpy(string_values_pool[idx], param_value, str_len);
-    memset(string_values_pool[idx] + str_len, 0x00, MAX_STRING_LENGTH - str_len);
-}
-
-
-ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
-    ParamIndex_t idx;
-    for (idx = 0; idx < integer_params_amount; idx++) {
-        if (strncmp((const char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
-            return idx;
-        }
-    }
-    for (idx = integer_params_amount; idx < all_params_amount; idx++) {
-        size_t str_idx = idx - integer_params_amount;
-        if (strncmp((const char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
-            return idx;
-        }
-    }
-    return all_params_amount;
-}
-
-ParamType_t paramsGetType(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
-        return PARAM_TYPE_INTEGER;
-    } else if (param_idx < all_params_amount) {
-        return PARAM_TYPE_STRING;
-    } else {
-        return PARAM_TYPE_UNDEFINED;
-    }
-}
-
-
 void paramsLoadFromFlash() {
     romRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
     romRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
@@ -156,4 +71,95 @@ int8_t paramsResetToDefault() {
         integer_values_pool[idx] = integer_desc_pool[idx].def;
     }
     return 0;
+}
+
+char* paramsGetParamName(ParamIndex_t param_idx) {
+    if (param_idx < integer_params_amount) {
+        return (char*)integer_desc_pool[param_idx].name;
+    } else if (param_idx < all_params_amount) {
+        return (char*)string_desc_pool[param_idx - integer_params_amount].name;
+    }
+    return NULL;
+}
+
+ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
+    ParamIndex_t idx;
+    for (idx = 0; idx < integer_params_amount; idx++) {
+        if (strncmp((const char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
+            return idx;
+        }
+    }
+    for (idx = integer_params_amount; idx < all_params_amount; idx++) {
+        size_t str_idx = idx - integer_params_amount;
+        if (strncmp((const char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
+            return idx;
+        }
+    }
+    return all_params_amount;
+}
+
+ParamType_t paramsGetType(ParamIndex_t param_idx) {
+    if (param_idx < integer_params_amount) {
+        return PARAM_TYPE_INTEGER;
+    } else if (param_idx < all_params_amount) {
+        return PARAM_TYPE_STRING;
+    } else {
+        return PARAM_TYPE_UNDEFINED;
+    }
+}
+
+const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
+    if (param_idx >= integer_params_amount) {
+        return NULL;
+    }
+    return &integer_desc_pool[param_idx];
+}
+
+int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
+    return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
+}
+
+void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value) {
+    if (param_idx >= integer_params_amount) {
+        return;
+    }
+    integer_values_pool[param_idx] = param_value;
+}
+
+StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
+    if (param_idx < integer_params_amount) {
+        return NULL;
+    }
+
+    ParamIndex_t str_param_idx = param_idx - integer_params_amount;
+
+    if (str_param_idx >= string_params_amount) {
+        return NULL;
+    }
+
+    StringParamValue_t* str;
+    if (string_desc_pool[str_param_idx].is_persistent) {
+        str = (StringParamValue_t*)string_desc_pool[str_param_idx].def;
+    } else {
+        str = (StringParamValue_t*)string_values_pool[str_param_idx];
+    }
+    return str;
+}
+
+uint8_t paramsSetStringValue(ParamIndex_t idx,
+                             uint8_t str_len,
+                             const StringParamValue_t param_value) {
+    if (str_len > MAX_STRING_LENGTH || idx < integer_params_amount || idx >= all_params_amount) {
+        return 0;
+    }
+
+    idx -= integer_params_amount;
+
+    if (string_desc_pool[idx].is_persistent == true) {
+        return 0;
+    }
+
+    memcpy(string_values_pool[idx], param_value, str_len);
+    memset(string_values_pool[idx] + str_len, 0x00, MAX_STRING_LENGTH - str_len);
+    return str_len;
 }

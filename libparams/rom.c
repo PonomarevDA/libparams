@@ -38,18 +38,21 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
     }
 
     size_t allowed_size = rom_size_bytes - offset;
-    size_t bytes_to_read = (allowed_size < requested_size) ? allowed_size : requested_size;
-    memcpy(data, &(flashGetPointer()[start_page_idx * PAGE_SIZE_BYTES + offset]), bytes_to_read);
+    size_t bytes_to_read;
+    if (allowed_size < requested_size) {
+        bytes_to_read = allowed_size;
+    } else {
+        bytes_to_read = requested_size;
+    }
+
+    const uint8_t* rom = &(flashGetPointer()[start_page_idx * PAGE_SIZE_BYTES + offset]);
+    memcpy(data, rom, bytes_to_read);
     return bytes_to_read;
 }
 
 void romBeginWrite() {
     flashUnlock();
     flashErase(start_page_idx, (uint32_t)rom_size_pages);
-}
-
-void romEndWrite() {
-    flashLock();
 }
 
 size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
@@ -70,4 +73,8 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
 #endif
     }
     return (status != -1) ? size : 0;
+}
+
+void romEndWrite() {
+    flashLock();
 }

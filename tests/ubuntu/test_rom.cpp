@@ -32,6 +32,8 @@ TEST(TestRom, test_rom_read) {
     // Normal, clamped read
     ASSERT_EQ(romRead(0, data, 4096), 2048);
     ASSERT_EQ(romRead(1000, data, 4096), 1048);
+    ASSERT_EQ(romRead(1000, data, 2048), 1048);
+    ASSERT_EQ(romRead(1000, data, 2000), 1048);
 
 }
 

@@ -37,6 +37,51 @@ void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
     ASSERT_EQ(memcmp(str, read_str_param, string_length), 0);
 }
 
+TEST(TestStorage, test_paramsLoadToFlash) {
+    // Normal
+    romInit(0, 1);
+    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT);
+    ASSERT_EQ(0, paramsLoadToFlash());
+
+    // Write Integer to ROM failed
+    romInit(0, 1);
+    paramsInit(0, STRING_PARAMS_AMOUNT);
+    ASSERT_EQ(-1, paramsLoadToFlash());
+
+    // Write String to ROM failed
+    romInit(0, 1);
+    paramsInit(INTEGER_PARAMS_AMOUNT, 0);
+    ASSERT_EQ(-1, paramsLoadToFlash());
+}
+
+TEST(TestStorage, test_paramsLoadFromFlash) {
+    init();
+    int32_t data;
+
+    // Out of range value in flash (more than max)
+    data = 128;
+    romBeginWrite();
+    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite();
+    paramsLoadFromFlash();
+    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
+
+    // Out of range value in flash (less than min)
+    data = -1;
+    romBeginWrite();
+    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite();
+    paramsLoadFromFlash();
+    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
+
+    // Normal
+    data = 42;
+    romBeginWrite();
+    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite();
+    paramsLoadFromFlash();
+    ASSERT_EQ(42, paramsGetIntegerValue(NODE_ID));
+}
 
 TEST(TestStorage, test_write_read_integers) {
     init();
@@ -75,6 +120,17 @@ TEST(TestStorage, test_get_integer_desc) {
     // Out of parameters range
     ASSERT_EQ(NULL, paramsGetIntegerDesc(INTEGER_PARAMS_AMOUNT));
 }
+
+TEST(TestStorage, test_paramsSetStringValue) {
+    init();
+    auto test_string = (const uint8_t*)"test_string";
+
+    // Wrong inputs
+    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + NODE_NAME, 100, test_string));
+    ASSERT_EQ(0, paramsSetStringValue(0, 12, test_string));
+    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, 12, test_string));
+}
+
 
 TEST(TestStorage, test_write_read_strings) {
     init();
@@ -140,6 +196,8 @@ TEST(TestStorage, test_paramsGetIndexByName) {
     init();
 
     ASSERT_EQ(1, paramsGetIndexByName((const uint8_t*)"uavcan.pub.mag.id", 18));
+    ASSERT_EQ(2, paramsGetIndexByName((const uint8_t*)"name", 4));
+    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, paramsGetIndexByName((const uint8_t*)"none", 4));
 }
 
 TEST(TestStorage, test_paramsResetToDefault) {

@@ -2,7 +2,8 @@
 
 class CppHeader:
     INTEGER_HEAD = """#pragma once
-enum class IntParamsIndexes {
+#include "storage.h"
+enum IntParamsIndexes : ParamIndex_t {
 """
     INTEGER_TAIL="""
     INTEGER_PARAMS_AMOUNT

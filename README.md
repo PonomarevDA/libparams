@@ -128,7 +128,7 @@ A minimal usage example is shown below.
 ```c++
 #include "storage.h"
 
-enum class IntParamsIndexes {
+enum IntParamsIndexes : ParamIndex_t {
     NODE_ID,
     MAGNETOMETER_ID,
     INTEGER_PARAMS_AMOUNT
@@ -154,9 +154,7 @@ StringDesc_t string_desc_pool[] = {
 StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
 
 void application_example() {
-    paramsInit(static_cast<ParamIndex_t>(IntParamsIndexes::INTEGER_PARAMS_AMOUNT),
-               static_cast<ParamIndex_t>(StrParamsIndexes::STRING_PARAMS_AMOUNT));
+    paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, StrParamsIndexes::STRING_PARAMS_AMOUNT);
     paramsLoadFromFlash();
 }
-
 ```

@@ -104,7 +104,7 @@ class CppGenerator(ParamsGenerator):
         self.generated_header_file_name = f"{output_file_name}.hpp"
         self.end_hdr_line = "};"
         self.include_storage_line = "extern \"C\" {\n    #include \"storage.h\"\n}\n\n"
-        self.start_hdr_line = "enum class IntParamsIndexes {"
+        self.start_hdr_line = "enum IntParamsIndexes : ParamIndex_t {"
 
 def print_help():
     usage_line = "python3 params_generate_array.py [input_dir] [output_dir] [language: `c++` or `c`] [output_file_name]"

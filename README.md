@@ -7,7 +7,20 @@ libparams is a C-written hardware abstract library that consist of 2 things:
 
 It also has an example of flash memory driver implementation for stm32f103 based on Stm32CubeIDE HAL.
 
-![scope_of_libparams](doc/scope_of_libparams.png?raw=true "scope_of_libparams")
+```
++-------+----------------+---------------+-------+
+|       Parameters (storage.c, storage.h)        |
++-------+----------------+---------------+-------+
+                         |
++-------+----------------+---------------+-------+
+|       Abstract ROM driver (rom.c, rom.h)       |
++-------+----------------+-----------------------+
+        |                |                |
++-------+------+ +-------+------+ +-------+------+
+|    STM32f1   | |    STM32g0   | |      ...     |
+| Flash Driver | | Flash Driver | |              |
++--------------+ +--------------+ +--------------+
+```
 
 This library is suitable for Cyphal and DroneCAN applications.
 
@@ -158,3 +171,9 @@ void application_example() {
     paramsLoadFromFlash();
 }
 ```
+
+More application examples:
+
+- [DroneCAN RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/dronecan_application)
+- [Cyphal RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/cyphal_application)
+- [Cyphal ubuntu example](https://github.com/RaccoonlabDev/libcanard_cyphal_application)

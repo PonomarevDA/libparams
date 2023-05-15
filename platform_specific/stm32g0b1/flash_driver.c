@@ -18,6 +18,8 @@ void flashLock() {
     HAL_FLASH_Lock();
 }
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
+    // bank 1: pages 0-127,   memory 0x0800.0000 - 0x0803.FFFF
+    // bank 2: pages 256-383, memory 0x0804.0000 - 0x0807.FFFF
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
         .Banks = FLASH_BANK_2,
@@ -26,13 +28,14 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     };
     uint32_t page_error = 0;
     HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &page_error);
-    int8_t res = (page_error == 0xFFFFFFFF && status == HAL_OK) ? 0 : -1;
-    return res;
+    if (page_error == 0xFFFFFFFF) {
+        return -4;
+    }
+    return -status;
 }
 
 int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
-    return (hal_status != HAL_OK) ? -1 : 0;
+    return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
 }
 
 uint8_t* flashGetPointer() {

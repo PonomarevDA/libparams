@@ -26,12 +26,12 @@ void flashLock();
 /**
  * @param start_page_idx starts from 0 up to maximum number of pages
  * @param num_of_pages last page should not be above FLASH_NUM_OF_PAGES
- * @return 0 if success, otherwise -1
+ * @return 0 if success, otherwise < 0
  */
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
 
 /**
- * @return 0 if success, otherwise -1
+ * @return 0 if success, otherwise < 0
  */
 int8_t flashWriteU64(uint32_t address, uint64_t data);
 

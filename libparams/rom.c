@@ -20,7 +20,7 @@ static size_t rom_size_bytes = PAGE_SIZE_BYTES;
 static size_t rom_size_pages = 1;
 
 
-int8_t romInit(uint8_t first_page_idx, uint8_t pages_amount) {
+int8_t romInit(size_t first_page_idx, size_t pages_amount) {
     if (first_page_idx + pages_amount > FLASH_NUM_OF_PAGES || pages_amount == 0) {
         return -1;
     }
@@ -71,8 +71,12 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
         status = flashWriteU64((uint32_t)addr, word);
 #endif
+        if (status < 0) {
+            break;
+        }
     }
-    return (status != -1) ? size : 0;
+
+    return (status >= 0) ? size : 0;
 }
 
 void romEndWrite() {

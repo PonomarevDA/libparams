@@ -23,7 +23,7 @@ extern "C" {
 /**
  * @brief By default it is initialized as last page only.
  */
-int8_t romInit(uint8_t first_page_idx, uint8_t pages_amount);
+int8_t romInit(size_t first_page_idx, size_t pages_amount);
 
 /**
  * @brief Return the number of bytes read (may be less than size).

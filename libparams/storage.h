@@ -80,6 +80,7 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
 uint8_t paramsSetStringValue(ParamIndex_t param_idx,
                              uint8_t str_len,
                              const StringParamValue_t param_value);
+const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx);
 
 #ifdef __cplusplus
 }

@@ -24,6 +24,7 @@ static ParamIndex_t integer_params_amount = 0;
 static ParamIndex_t string_params_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
+static bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx);
 
 #define INT_VAL_POOL_SIZE           integer_params_amount * sizeof(IntegerParamValue_t)
 #define STR_VAL_POOL_SIZE           MAX_STRING_LENGTH * string_params_amount
@@ -146,20 +147,34 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     return str;
 }
 
-uint8_t paramsSetStringValue(ParamIndex_t idx,
+bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
+    return param_idx < integer_params_amount || param_idx >= all_params_amount;
+}
+
+uint8_t paramsSetStringValue(ParamIndex_t param_idx,
                              uint8_t str_len,
                              const StringParamValue_t param_value) {
-    if (str_len > MAX_STRING_LENGTH || idx < integer_params_amount || idx >= all_params_amount) {
+    if (str_len > MAX_STRING_LENGTH || paramsIsCorrectStringParamIndex(param_idx)) {
         return 0;
     }
 
-    idx -= integer_params_amount;
+    param_idx -= integer_params_amount;
 
-    if (string_desc_pool[idx].is_persistent == true) {
+    if (string_desc_pool[param_idx].is_persistent == true) {
         return 0;
     }
 
-    memcpy(string_values_pool[idx], param_value, str_len);
-    memset(string_values_pool[idx] + str_len, 0x00, MAX_STRING_LENGTH - str_len);
+    memcpy(string_values_pool[param_idx], param_value, str_len);
+    memset(string_values_pool[param_idx] + str_len, 0x00, MAX_STRING_LENGTH - str_len);
     return str_len;
+}
+
+const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
+    if (paramsIsCorrectStringParamIndex(param_idx)) {
+        return NULL;
+    }
+
+    param_idx -= integer_params_amount;
+
+    return &string_desc_pool[param_idx];
 }

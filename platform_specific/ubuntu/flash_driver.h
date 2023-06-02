@@ -17,7 +17,7 @@
 #define FLASH_NUM_OF_PAGES          256
 #define FLASH_WORD_SIZE             8
 
-#define FLASH_SIZE_KBYTES           (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)
+#define FLASH_SIZE_BYTES            (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)
 #define FLASH_LAST_PAGE_ADDR        (FLASH_START_ADDR + PAGE_SIZE_BYTES * (FLASH_NUM_OF_PAGES - 1))
 
 #ifdef __cplusplus

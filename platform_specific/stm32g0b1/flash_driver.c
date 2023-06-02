@@ -9,6 +9,7 @@
 
 #include "flash_driver.h"
 #include "main.h"
+#include "libparams_error_codes.h"
 
 
 void flashUnlock() {
@@ -29,7 +30,7 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     uint32_t page_error = 0;
     HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &page_error);
     if (page_error == 0xFFFFFFFF) {
-        return -4;
+        return LIBPARAMS_UNKNOWN_HAL_ERROR;
     }
     return -status;
 }

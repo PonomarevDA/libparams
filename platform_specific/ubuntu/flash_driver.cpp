@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "libparams_error_codes.h"
 
 static uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;
@@ -27,20 +28,20 @@ void flashLock() {
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     if (is_locked || start_page_idx != 0 || num_of_pages != 1) {
-        return -1;
+        return LIBPARAMS_WRONG_ARGS;
     }
     memset(flash_memory, 0x00, PAGE_SIZE_BYTES);
-    return 0;
+    return LIBPARAMS_OK;
 }
 
 int8_t flashWriteU64(uint32_t address, uint64_t data) {
     if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
-        return -1;
+        return LIBPARAMS_WRONG_ARGS;
     }
     memcpy(flash_memory + (address - FLASH_START_ADDR),
            (void*)(&data),
            FLASH_WORD_SIZE);
-    return 0;
+    return LIBPARAMS_OK;
 }
 
 void flashLoadBufferFromFile() {

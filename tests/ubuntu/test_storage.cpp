@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "storage.h"
+#include "libparams_error_codes.h"
 
 typedef enum {
     NODE_ID,
@@ -41,17 +42,17 @@ TEST(TestStorage, test_paramsLoadToFlash) {
     // Normal
     romInit(0, 1);
     paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT);
-    ASSERT_EQ(0, paramsLoadToFlash());
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // Write Integer to ROM failed
     romInit(0, 1);
     paramsInit(0, STRING_PARAMS_AMOUNT);
-    ASSERT_EQ(-1, paramsLoadToFlash());
+    ASSERT_TRUE(paramsLoadToFlash() < 0);
 
     // Write String to ROM failed
     romInit(0, 1);
     paramsInit(INTEGER_PARAMS_AMOUNT, 0);
-    ASSERT_EQ(-1, paramsLoadToFlash());
+    ASSERT_TRUE(paramsLoadToFlash() < 0);
 }
 
 TEST(TestStorage, test_paramsLoadFromFlash) {

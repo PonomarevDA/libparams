@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "flash_driver.h"
+#include "libparams_error_codes.h"
 
 ///< Default values correspond to the last page access only.
 static size_t rom_addr = FLASH_LAST_PAGE_ADDR;
@@ -22,14 +23,14 @@ static size_t rom_size_pages = 1;
 
 int8_t romInit(size_t first_page_idx, size_t pages_amount) {
     if (first_page_idx + pages_amount > FLASH_NUM_OF_PAGES || pages_amount == 0) {
-        return -1;
+        return LIBPARAMS_WRONG_ARGS;
     }
 
     rom_addr = FLASH_START_ADDR + (size_t)first_page_idx * PAGE_SIZE_BYTES;
     start_page_idx = first_page_idx;
     rom_size_bytes = pages_amount * PAGE_SIZE_BYTES;
     rom_size_pages = pages_amount;
-    return 0;
+    return LIBPARAMS_OK;
 }
 
 size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {

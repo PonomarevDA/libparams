@@ -10,6 +10,7 @@
 
 #include "flash_driver.h"
 #include "main.h"
+#include "libparams_error_codes.h"
 
 
 void flashUnlock() {

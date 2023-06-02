@@ -10,11 +10,12 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "rom.h"
+#include "libparams_error_codes.h"
 
 TEST(TestRom, test_rom_init) {
-    ASSERT_EQ(romInit(0, 1), 0);
-    ASSERT_EQ(romInit(129, 129), -1);
-    ASSERT_EQ(romInit(0, 0), -1);
+    ASSERT_EQ(romInit(0, 1), LIBPARAMS_OK);
+    ASSERT_TRUE(romInit(129, 129) < 0);
+    ASSERT_TRUE(romInit(0, 0) < 0);
 }
 
 TEST(TestRom, test_rom_read) {
@@ -40,7 +41,7 @@ TEST(TestRom, test_rom_read) {
 TEST(TestRom, test_rom_write_read_ok) {
     const uint8_t WRITTEN_DATA[] = {1, 2, 3, 4, 5, 6, 7, 8};
     auto res = romInit(0, 1);
-    ASSERT_EQ(res, 0);
+    ASSERT_EQ(res, LIBPARAMS_OK);
 
     // Wrong inputs
     ASSERT_EQ(romWrite(0, NULL, 8), 0);

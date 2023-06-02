@@ -21,21 +21,29 @@
 #define FLASH_SIZE_KBYTES           (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)
 #define FLASH_LAST_PAGE_ADDR        (FLASH_START_ADDR + PAGE_SIZE_BYTES * (FLASH_NUM_OF_PAGES - 1))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void flashUnlock();
 void flashLock();
 
 /**
  * @param start_page_idx starts from 0 up to maximum number of pages
  * @param num_of_pages last page should not be above FLASH_NUM_OF_PAGES
- * @return 0 if success, otherwise -1
+ * @return 0 if success, otherwise < 0
  */
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
 
 /**
- * @return 0 if success, otherwise -1
+ * @return 0 if success, otherwise < 0
  */
 int8_t flashWriteU32(uint32_t address, uint32_t data);
 
 uint8_t* flashGetPointer();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // PLATFORM_SPECIFIC_STM32F103_FLASH_DRIVER_H_

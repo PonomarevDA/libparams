@@ -12,6 +12,7 @@
 #include <string.h>
 #include "flash_driver.h"
 #include "rom.h"
+#include "libparams_error_codes.h"
 
 
 extern IntegerDesc_t integer_desc_pool[];
@@ -54,13 +55,13 @@ int8_t paramsLoadToFlash() {
 
     int8_t res;
     if (0 == romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
-        res = -1;
+        res = LIBPARAMS_UNKNOWN_ERROR;
     } else if (0 == romWrite(STR_VAL_POOL_FIRST_ADDR,
                              (uint8_t*)string_values_pool,
                              STR_VAL_POOL_SIZE)) {
-        res = -1;
+        res = LIBPARAMS_UNKNOWN_ERROR;
     } else {
-        res = 0;
+        res = LIBPARAMS_OK;
     }
 
     romEndWrite();
@@ -71,7 +72,7 @@ int8_t paramsResetToDefault() {
     for (ParamIndex_t idx = 0; idx < integer_params_amount; idx++) {
         integer_values_pool[idx] = integer_desc_pool[idx].def;
     }
-    return 0;
+    return LIBPARAMS_OK;
 }
 
 char* paramsGetParamName(ParamIndex_t param_idx) {

@@ -12,7 +12,8 @@
 
 #define FLASH_TYPEERASE_PAGES         0x00U
 #define FLASH_TYPEPROGRAM_DOUBLEWORD  0x02U
-#define FLASH_BANK_2                  0x0
+#define FLASH_BANK_1                  1
+#define FLASH_BANK_2                  2
 
 #include <stdint.h>
 

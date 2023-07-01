@@ -7,8 +7,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef PLATFORM_SPECIFIC_STM32G0B1_FLASH_DRIVER_H_
-#define PLATFORM_SPECIFIC_STM32G0B1_FLASH_DRIVER_H_
+#ifndef PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_
+#define PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_
 
 #include <stdint.h>
 
@@ -45,4 +45,4 @@ uint8_t* flashGetPointer();
 }
 #endif
 
-#endif  // PLATFORM_SPECIFIC_STM32G0B1_FLASH_DRIVER_H_
+#endif  // PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_

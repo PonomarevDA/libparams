@@ -11,26 +11,35 @@
 #include "main.h"
 #include "libparams_error_codes.h"
 
-
 void flashUnlock() {
     HAL_FLASH_Unlock();
 }
 void flashLock() {
     HAL_FLASH_Lock();
 }
-int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
-    // bank 1: pages 0-127,   memory 0x0800.0000 - 0x0803.FFFF
-    // bank 2: pages 256-383, memory 0x0804.0000 - 0x0807.FFFF
+int8_t flashErase(uint32_t continuous_page_idx, uint32_t num_of_pages) {
+    uint32_t actual_page_index;
+    uint32_t flash_bank;
+    if (continuous_page_idx < 128) {
+        actual_page_index = continuous_page_idx;
+        flash_bank = FLASH_BANK_1;
+    } else if (continuous_page_idx < 256) {
+        actual_page_index = 128 + continuous_page_idx;
+        flash_bank = FLASH_BANK_2;
+    } else {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
-        .Banks = FLASH_BANK_2,
-        .Page = start_page_idx,
+        .Banks = flash_bank,
+        .Page = actual_page_index,
         .NbPages = num_of_pages
     };
     uint32_t page_error = 0;
     HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&FLASH_EraseInitStruct, &page_error);
     if (page_error == 0xFFFFFFFF) {
-        return LIBPARAMS_UNKNOWN_HAL_ERROR;
+        return LIBPARAMS_OK;
     }
     return -status;
 }

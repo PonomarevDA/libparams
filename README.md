@@ -112,16 +112,10 @@ So, we have 512 Kbytes dual-bank device.
 
 The main memory is:
 
-| Name          | hex address               | Size        |
-| ------------- | ------------------------- | ----------- |
-| Page 383      | 0x0807 F804 - 0x0807 FFFF | 2 KByte     |
-| Page 258-382  | ...                       | ...         |
-| Page 257      | 0x0804 0800 - 0x0804 0FFF | 2 KByte     |
-| Page 256      | 0x0804 0000 - 0x0804 07FF | 2 KByte     |
-| Page 127      | 0x0803 F800 - 0x0803 FFFF | 2 KByte     |
-| Page 2-126    | ...                       | ...         |
-| Page 1        | 0x0800 0800 - 0x0800 0FFF | 2 KByte     |
-| Page 0        | 0x0800 0000 - 0x0800 07FF | 2 KByte     |
+| Area    | Name          | hex address               | Size        |
+| ------- | ------------- | ------------------------- | ----------- |
+| Blank 1 | Page 383 <br /> Page 258-382 <br /> Page 257 <br /> Page 256 | 0x0807 F800 - 0x0807 FFFF <br /> ... <br /> 0x0804 0800 - 0x0804 0FFF <br /> 0x0804 0000 - 0x0804 07FF | 2 KByte <br /> ... <br /> 2 KByte <br /> 2 KByte |
+| Blank 2 | Page 127 <br /> Page 2-126 <br /> Page 1 <br /> Page 0 | 0x0803 F800 - 0x0803 FFFF <br /> ... <br /> 0x0800 0800 - 0x0800 0FFF <br /> 0x0800 0000 - 0x0800 07FF | 2 KByte <br /> ... <br /> 2 KByte <br /> 2 KByte |
 
 </details>
 

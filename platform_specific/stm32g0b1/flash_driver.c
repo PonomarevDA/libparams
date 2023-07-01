@@ -11,23 +11,53 @@
 #include "main.h"
 #include "libparams_error_codes.h"
 
+
+static int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages);
+
+
 void flashUnlock() {
     HAL_FLASH_Unlock();
 }
 void flashLock() {
     HAL_FLASH_Lock();
 }
-int8_t flashErase(uint32_t continuous_page_idx, uint32_t num_of_pages) {
+int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
+    uint32_t last_page_idx = first_page_idx + num_of_pages;
+    if (last_page_idx > FLASH_NUM_OF_PAGES || num_of_pages == 0) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
+    int8_t res;
+    if (first_page_idx <= 127 && last_page_idx >= 128) {
+        res = flashErasePagessInSingleBank(first_page_idx, 128 - first_page_idx);
+        if (res < 0) {
+            return res;
+        }
+        res = flashErasePagessInSingleBank(128, last_page_idx - 128);
+    } else {
+        res = flashErasePagessInSingleBank(first_page_idx, num_of_pages);
+    }
+
+    return res;
+}
+
+int8_t flashWriteU64(uint32_t address, uint64_t data) {
+    return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
+}
+
+uint8_t* flashGetPointer() {
+    return (uint8_t*) FLASH_START_ADDR;
+}
+
+int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages) {
     uint32_t actual_page_index;
     uint32_t flash_bank;
-    if (continuous_page_idx < 128) {
-        actual_page_index = continuous_page_idx;
+    if (first_page_idx < 128) {
+        actual_page_index = first_page_idx;
         flash_bank = FLASH_BANK_1;
-    } else if (continuous_page_idx < 256) {
-        actual_page_index = 128 + continuous_page_idx;
-        flash_bank = FLASH_BANK_2;
     } else {
-        return LIBPARAMS_WRONG_ARGS;
+        actual_page_index = 128 + first_page_idx;
+        flash_bank = FLASH_BANK_2;
     }
 
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
@@ -42,12 +72,4 @@ int8_t flashErase(uint32_t continuous_page_idx, uint32_t num_of_pages) {
         return LIBPARAMS_OK;
     }
     return -status;
-}
-
-int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
-}
-
-uint8_t* flashGetPointer() {
-    return (uint8_t*) FLASH_START_ADDR;
 }

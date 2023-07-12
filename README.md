@@ -34,17 +34,23 @@ There are 4 types of parameters that we may want to store (they are defined in [
 
 Each integer/real parameter has following fields:
 - value (volatile)
-- default value (hardcoded)
-- min (hardcoded)
-- max (hardcoded)
+- default value (persistent)
+- min (persistent)
+- max (persistent)
+- is_persistent (persistent)
 
 Each string/boolean parameter has the following fields:
 - value
-- default value (hardcoded)
+- default value (persistent)
+- is_persistent (persistent)
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
 
 The library allows to have a read/write access to these parameters by their index or name, reset them to default values and other features.
+
+Access to a parameter can be done by index. Since paramters are stored as an array, the access complexity is O(1).
+
+Writing or reading from the external application should be done by name of the parameter. These operations have O(n) complexity, where n - is the total number of the parameters.
 
 Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparams/storage.c](libparams/storage.c) for the implementation details.
 

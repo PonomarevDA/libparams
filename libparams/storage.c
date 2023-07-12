@@ -118,11 +118,19 @@ const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
 }
 
 int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
-    return (param_idx < integer_params_amount) ? integer_values_pool[param_idx] : 1000;
+    if (param_idx >= integer_params_amount) {
+        return -1;
+    }
+
+    if (integer_desc_pool[param_idx].is_persistent) {
+        return integer_desc_pool[param_idx].def;
+    }
+
+    return integer_values_pool[param_idx];
 }
 
 void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value) {
-    if (param_idx >= integer_params_amount) {
+    if (param_idx >= integer_params_amount || integer_desc_pool[param_idx].is_persistent) {
         return;
     }
     integer_values_pool[param_idx] = param_value;

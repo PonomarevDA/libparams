@@ -1,2 +1,2 @@
-uavcan.pub.mag.id :   ["Integer", "MAGNETOMETER_ID",    True,  65535,  0,  65535]
+uavcan.pub.mag.id :   ["Integer", "MAGNETOMETER_ID",    False,  65535,  0,  65535]
 uavcan.pub.mag.type : ["String",  "MAGNETOMETER_TYPE",  True, "uavcan.si.sample.magnetic_field_strength.Vector3"]

@@ -35,6 +35,7 @@ typedef struct {
     IntegerParamValue_t min;
     IntegerParamValue_t max;
     IntegerParamValue_t def;
+    bool is_persistent;
 } IntegerDesc_t;
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];

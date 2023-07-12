@@ -41,7 +41,8 @@ TEST(TestParamsGenerator, test_int_params_amount) {
 
 TEST(TestParamsGenerator, test_int_param) {
     init();
-    IntegerParamValue_t value = paramsGetIntegerValue((uint8_t)IntParamsIndexes::BAROMETER_PRESSURE_ID);
+    ParamIndex_t idx = IntParamsIndexes::BAROMETER_PRESSURE_ID;
+    IntegerParamValue_t value = paramsGetIntegerValue(idx);
     ASSERT_EQ(value, 0);
 }
 

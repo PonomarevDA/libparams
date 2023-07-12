@@ -12,8 +12,9 @@
 #include "flash_driver.h"
 
 IntegerDesc_t integer_desc_pool[] = {
-    {(uint8_t*)"uavcan.node.id",    0, 127,     50},
-    {(uint8_t*)"uavcan.pub.mag.id", 0, 65535,   65535},
+    {(uint8_t*)"uavcan.node.id",        0,      127,     50},
+    {(uint8_t*)"uavcan.pub.mag.id",     0,      65535,   65535},
+    {(uint8_t*)"uavcan.can.baudrate",   100000, 8000000, 1000000, true},
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 

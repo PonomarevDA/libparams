@@ -1,5 +1,5 @@
-uavcan.pub.baro.press.id : ["Integer", "BAROMETER_PRESSURE_ID",      True,   65535,  0,  65535]
-uavcan.pub.baro.temp.id :  ["Integer", "BAROMETER_TEMPERATURE_ID",   True,   65535,  0,  65535]
+uavcan.pub.baro.press.id : ["Integer", "BAROMETER_PRESSURE_ID",      False,   65535,  0,  65535]
+uavcan.pub.baro.temp.id :  ["Integer", "BAROMETER_TEMPERATURE_ID",   False,   65535,  0,  65535]
 
 uavcan.pub.baro.press.type: ["String", "BAROMETER_PRESSURE_TYPE",    True, "uavcan.si.sample.pressure.Scalar"]
 uavcan.pub.baro.temp.type:  ["String", "BAROMETER_TEMPERATURE_TYPE", True, "uavcan.si.sample.temperature.Scalar"]

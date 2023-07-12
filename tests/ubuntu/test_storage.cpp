@@ -15,6 +15,7 @@
 typedef enum {
     NODE_ID,
     MAGNETOMETER_ID,
+    PERSISTENT_INTEGET_ID,
     INTEGER_PARAMS_AMOUNT
 } IntParamsIndexes;
 
@@ -107,7 +108,16 @@ TEST(TestStorage, test_write_read_integers) {
 
     // Read out of parameters range
     param_value = paramsGetIntegerValue(INTEGER_PARAMS_AMOUNT);
-    ASSERT_EQ(param_value, 1000);  // magic number?
+    ASSERT_EQ(param_value, -1);
+}
+
+TEST(TestStorage, test_persistent_params) {
+    init();
+    IntegerParamValue_t param_value;
+
+    paramsSetIntegerValue(PERSISTENT_INTEGET_ID, 0);
+    param_value = paramsGetIntegerValue(PERSISTENT_INTEGET_ID);
+    ASSERT_EQ(param_value, 1000000);
 }
 
 TEST(TestStorage, test_get_integer_desc) {
@@ -196,8 +206,8 @@ TEST(TestStorage, test_params_get_type) {
 TEST(TestStorage, test_paramsGetIndexByName) {
     init();
 
-    ASSERT_EQ(1, paramsGetIndexByName((const uint8_t*)"uavcan.pub.mag.id", 18));
-    ASSERT_EQ(2, paramsGetIndexByName((const uint8_t*)"name", 4));
+    ASSERT_EQ(MAGNETOMETER_ID, paramsGetIndexByName((const uint8_t*)"uavcan.pub.mag.id", 18));
+    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + NODE_ID, paramsGetIndexByName((const uint8_t*)"name", 4));
     ASSERT_EQ(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, paramsGetIndexByName((const uint8_t*)"none", 4));
 }
 

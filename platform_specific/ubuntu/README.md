@@ -1,4 +1,4 @@
-# Ubuntu Dummy Flash Driver
+# Ubuntu stm32 emulation Flash Driver
 
 The Ubuntu flash driver emulates a real flash memory of an stm32 microcontroller.
 
@@ -9,3 +9,8 @@ If a string named `FLASH_DRIVER_STORAGE_FILE` is defined, the driver will read t
 The Ubuntu flash driver allows you to run an application based on libparams on Ubuntu. For example, it allows you to run a Cyphal/DroneCAN SITL node.
 
 This driver is also used as a mock driver for hardware related things to provide unit tests for storage and rom drivers.
+
+There are a few tests based on this driver:
+- [tests/ubuntu](../../tests/ubuntu/)
+- [tests/params_generator_c](../../tests/params_generator_c/)
+- [tests/params_generator_cpp](../../tests/params_generator_cpp/)

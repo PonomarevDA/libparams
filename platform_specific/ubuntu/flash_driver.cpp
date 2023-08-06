@@ -11,12 +11,19 @@
 #include <stdbool.h>
 #include <string.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include "libparams_error_codes.h"
 
 static uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;
+
+static void flashLoadBufferFromFile();
+
+void flashInit() {
+    flashLoadBufferFromFile();
+}
 
 void flashUnlock() {
     is_locked = false;
@@ -59,7 +66,7 @@ void flashLoadBufferFromFile() {
         } else {
             std::string mystring;
             myfile >> mystring;
-            std::cout << mystring;
+            std::cout << std::setfill(' ') << std::setw(30) << mystring << " ";
         }
         read_counter++;
     }
@@ -68,6 +75,5 @@ void flashLoadBufferFromFile() {
 }
 
 uint8_t* flashGetPointer() {
-    flashLoadBufferFromFile();
     return (uint8_t*) flash_memory;
 }

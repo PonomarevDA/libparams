@@ -28,6 +28,8 @@ extern "C" {
 void flashUnlock();
 void flashLock();
 
+void flashInit();
+
 /**
  * @param start_page_idx starts from 0 up to maximum number of pages
  * @param num_of_pages last page should not be above FLASH_NUM_OF_PAGES

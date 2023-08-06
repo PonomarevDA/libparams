@@ -14,6 +14,8 @@
 
 static int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages);
 
+void flashInit() {
+}
 
 void flashUnlock() {
     HAL_FLASH_Unlock();

@@ -26,6 +26,8 @@ int8_t romInit(size_t first_page_idx, size_t pages_amount) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
+    flashInit();
+
     rom_addr = FLASH_START_ADDR + (size_t)first_page_idx * PAGE_SIZE_BYTES;
     start_page_idx = first_page_idx;
     rom_size_bytes = pages_amount * PAGE_SIZE_BYTES;

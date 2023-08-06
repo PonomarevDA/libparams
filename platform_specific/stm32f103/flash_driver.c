@@ -13,6 +13,9 @@
 #include "libparams_error_codes.h"
 
 
+void flashInit() {
+}
+
 void flashUnlock() {
     HAL_FLASH_Unlock();
 }

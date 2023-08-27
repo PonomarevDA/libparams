@@ -4,3 +4,5 @@ build/
 shell
 scripts/__pycache__/
 code_style/
+.scannerwork/
+bw-output/

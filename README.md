@@ -119,3 +119,11 @@ More application examples:
 - [DroneCAN RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/dronecan_application)
 - [Cyphal RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/cyphal_application)
 - [Cyphal ubuntu example](https://github.com/RaccoonlabDev/libcanard_cyphal_application)
+
+## How to run SonarCloud Analysis manually:
+
+```bash
+export SONAR_TOKEN=<...>
+~/Downloads/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make coverage
+~/Downloads/sonar-scanner-cli-5.0.1.3006-linux/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
+```

@@ -14,8 +14,8 @@
 
 TEST(TestRom, test_rom_init) {
     ASSERT_EQ(romInit(0, 1), LIBPARAMS_OK);
-    ASSERT_TRUE(romInit(129, 129) < 0);
-    ASSERT_TRUE(romInit(0, 0) < 0);
+    ASSERT_EQ(romInit(129, 129), LIBPARAMS_WRONG_ARGS);
+    ASSERT_EQ(romInit(0, 0), LIBPARAMS_WRONG_ARGS);
 }
 
 TEST(TestRom, test_rom_read) {

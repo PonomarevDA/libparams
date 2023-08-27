@@ -216,6 +216,15 @@ TEST(TestStorage, test_paramsResetToDefault) {
     ASSERT_EQ(0, paramsResetToDefault());
 }
 
+TEST(TestStorage, test_paramsGetStringDesc) {
+    init();
+    ASSERT_EQ(NULL, paramsGetStringDesc(NODE_ID));
+
+    auto node_name_desc = paramsGetStringDesc(INTEGER_PARAMS_AMOUNT + NODE_NAME);
+    EXPECT_TRUE(std::string("Unknown") == std::string((const char*)node_name_desc->def));
+    EXPECT_TRUE(std::string("name") == std::string((const char*)node_name_desc->name));
+}
+
 
 int main (int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);

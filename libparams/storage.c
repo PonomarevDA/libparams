@@ -163,10 +163,6 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     return str;
 }
 
-bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
-    return param_idx < integer_params_amount || param_idx >= all_params_amount;
-}
-
 uint8_t paramsSetStringValue(ParamIndex_t param_idx,
                              uint8_t str_len,
                              const StringParamValue_t param_value) {
@@ -193,4 +189,8 @@ const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
     param_idx -= integer_params_amount;
 
     return &string_desc_pool[param_idx];
+}
+
+static bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
+    return param_idx < integer_params_amount || param_idx >= all_params_amount;
 }

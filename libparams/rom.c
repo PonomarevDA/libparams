@@ -16,7 +16,7 @@
 
 ///< Default values correspond to the last page access only.
 static size_t rom_addr = FLASH_LAST_PAGE_ADDR;
-uint32_t start_page_idx = FLASH_NUM_OF_PAGES - 1;
+static size_t start_page_idx = FLASH_NUM_OF_PAGES - 1;
 static size_t rom_size_bytes = PAGE_SIZE_BYTES;
 static size_t rom_size_pages = 1;
 
@@ -28,7 +28,7 @@ int8_t romInit(size_t first_page_idx, size_t pages_amount) {
 
     flashInit();
 
-    rom_addr = FLASH_START_ADDR + (size_t)first_page_idx * PAGE_SIZE_BYTES;
+    rom_addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
     start_page_idx = first_page_idx;
     rom_size_bytes = pages_amount * PAGE_SIZE_BYTES;
     rom_size_pages = pages_amount;
@@ -55,7 +55,7 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
 
 void romBeginWrite() {
     flashUnlock();
-    flashErase(start_page_idx, (uint32_t)rom_size_pages);
+    flashErase((uint32_t)start_page_idx, (uint32_t)rom_size_pages);
 }
 
 size_t romWrite(size_t offset, const uint8_t* data, size_t size) {

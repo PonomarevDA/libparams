@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-from color_logging import log_err
+from color_logging import log_warn, log_err
 import yaml
 from params import CppHeader, CHeader, CSource, CppSource
 
@@ -78,11 +78,20 @@ class Generator:
 
     def process_string_param(self, param_name):
         name = f"\"{param_name}\""
-        # enum_name = self.params[param_name][1]
-        is_mutable = str(self.params[param_name][2]).lower()
+        mutability_in = str(self.params[param_name][2])
+        if mutability_in in ["True", "immutable"]:
+            mutability = "true"
+        elif mutability_in in ["False", "mutable"]:
+            mutability = "false"
+        else:
+            log_err(f"Mutable flag is not set or unknown: {name} {mutability_in} ({type(mutability_in)})")
+            exit()
+        if mutability_in in ["True", "False"]:
+            log_warn(f"Mutability flag {mutability_in} will be deprecated soon. Use `mutable` or `immutable`.")
+
         def_value = "\"{}\"".format(self.params[param_name][3])
 
-        c_string = "    {}(uint8_t*){}, {}, {}{},\n".format("{", name, def_value, is_mutable, "}")
+        c_string = "    {}(uint8_t*){}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
 

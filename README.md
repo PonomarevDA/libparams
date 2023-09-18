@@ -30,7 +30,7 @@ There are 4 types of parameters that we may want to store (they are defined in [
 - PARAM_TYPE_INTEGER (int32)
 - PARAM_TYPE_REAL (float32)
 - PARAM_TYPE_BOOLEAN (uint8)
-- PARAM_TYPE_STRING (uint8[60])
+- PARAM_TYPE_STRING (uint8[56])
 
 Each integer/real parameter has following fields:
 - value

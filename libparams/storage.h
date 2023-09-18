@@ -13,11 +13,15 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "rom.h"
+#include "libparams_error_codes.h"
 
 
 #define MAX_PARAM_NAME_LENGTH   32
-#define MAX_STRING_LENGTH       60
+#define MAX_STRING_LENGTH       56
+
+static_assert(MAX_STRING_LENGTH % 8 == 0, "String size must be a multiple of 8");
 
 
 typedef enum {

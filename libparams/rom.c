@@ -59,7 +59,7 @@ void romBeginWrite() {
 }
 
 size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
-    if (data == NULL || offset >= rom_size_bytes || size == 0 || offset + size > rom_size_bytes ) {
+    if (data == NULL || offset >= rom_size_bytes || size == 0 || offset + size > rom_size_bytes) {
         return 0;
     }
 

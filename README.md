@@ -30,19 +30,19 @@ There are 4 types of parameters that we may want to store (they are defined in [
 - PARAM_TYPE_INTEGER (int32)
 - PARAM_TYPE_REAL (float32)
 - PARAM_TYPE_BOOLEAN (uint8)
-- PARAM_TYPE_STRING (uint8[20])
+- PARAM_TYPE_STRING (uint8[60])
 
 Each integer/real parameter has following fields:
-- value (volatile)
-- default value (persistent)
-- min (persistent)
-- max (persistent)
-- is_persistent (persistent)
+- value
+- default value (const)
+- min (const)
+- max (const)
+- flags.is_mutable (const)
 
 Each string/boolean parameter has the following fields:
 - value
-- default value (persistent)
-- is_persistent (persistent)
+- default value (const)
+- flags.is_mutable (const)
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
 

@@ -38,6 +38,8 @@ void romBeginWrite();
 size_t romWrite(size_t offset, const uint8_t* data, size_t size);
 void romEndWrite();
 
+uint32_t romGetAvailableMemory();
+
 #ifdef __cplusplus
 }
 #endif

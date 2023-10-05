@@ -59,7 +59,7 @@ extern "C" {
 /**
  * @note Common functions
  */
-void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount);
+int8_t paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount);
 void paramsLoadFromFlash();
 int8_t paramsLoadToFlash();
 int8_t paramsResetToDefault();

@@ -82,6 +82,10 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
     return (status >= 0) ? size : 0;
 }
 
+uint32_t romGetAvailableMemory() {
+    return rom_size_bytes;
+}
+
 void romEndWrite() {
     flashLock();
 }

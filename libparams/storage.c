@@ -25,22 +25,31 @@ static ParamIndex_t integer_params_amount = 0;
 static ParamIndex_t string_params_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
+
 static bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx);
+static uint32_t paramsGetStringMemoryPoolAddress();
+
 
 #define INT_VAL_POOL_SIZE           integer_params_amount * sizeof(IntegerParamValue_t)
 #define STR_VAL_POOL_SIZE           MAX_STRING_LENGTH * string_params_amount
-#define STR_VAL_POOL_FIRST_ADDR     PAGE_SIZE_BYTES - STR_VAL_POOL_SIZE
 
 
-void paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) {
+int8_t paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) {
+    uint32_t required_flash_memory = sizeof(IntegerParamValue_t) * int_params_amount +\
+                                     MAX_STRING_LENGTH * str_params_amount;
+    if (romGetAvailableMemory() < required_flash_memory) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
     integer_params_amount = int_params_amount;
     string_params_amount = str_params_amount;
     all_params_amount = integer_params_amount + string_params_amount;
+    return LIBPARAMS_OK;
 }
 
 void paramsLoadFromFlash() {
     romRead(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE);
-    romRead(STR_VAL_POOL_FIRST_ADDR, (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
+    romRead(paramsGetStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_VAL_POOL_SIZE);
 
     for (uint_fast8_t idx = 0; idx < integer_params_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
@@ -56,7 +65,7 @@ int8_t paramsLoadToFlash() {
     int8_t res;
     if (0 == romWrite(0, (uint8_t*)integer_values_pool, INT_VAL_POOL_SIZE)) {
         res = LIBPARAMS_UNKNOWN_ERROR;
-    } else if (0 == romWrite(STR_VAL_POOL_FIRST_ADDR,
+    } else if (0 == romWrite(paramsGetStringMemoryPoolAddress(),
                              (uint8_t*)string_values_pool,
                              STR_VAL_POOL_SIZE)) {
         res = LIBPARAMS_UNKNOWN_ERROR;
@@ -191,6 +200,12 @@ const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
     return &string_desc_pool[param_idx];
 }
 
+/************************************ PRIVATE FUNCTIONS AREA *************************************/
+
 static bool paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integer_params_amount || param_idx >= all_params_amount;
+}
+
+static uint32_t paramsGetStringMemoryPoolAddress() {
+    return romGetAvailableMemory() - MAX_STRING_LENGTH * string_params_amount;
 }

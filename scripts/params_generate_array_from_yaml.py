@@ -80,9 +80,9 @@ class Generator:
         name = f"\"{param_name}\""
         mutability_in = str(self.params[param_name][2])
         if mutability_in in ["True", "immutable"]:
-            mutability = "true"
+            mutability = "IMMUTABLE"
         elif mutability_in in ["False", "mutable"]:
-            mutability = "false"
+            mutability = "MUTABLE"
         else:
             log_err(f"Mutable flag is not set or unknown: {name} {mutability_in} ({type(mutability_in)})")
             exit()

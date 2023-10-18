@@ -51,7 +51,6 @@ StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDe
 
 class CppSource:
     INTEGER_HEAD="""#include "params.hpp"
-#include "storage.h"
 IntegerDesc_t integer_desc_pool[] = {
 """
 

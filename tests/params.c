@@ -12,15 +12,15 @@
 #include "flash_driver.h"
 
 IntegerDesc_t integer_desc_pool[] = {
-    {(uint8_t*)"uavcan.node.id",        0,      127,     50},
-    {(uint8_t*)"uavcan.pub.mag.id",     0,      65535,   65535},
-    {(uint8_t*)"uavcan.can.baudrate",   100000, 8000000, 1000000, true},
+    {"uavcan.node.id",        0,      127,     50,        MUTABLE},
+    {"uavcan.pub.mag.id",     0,      65535,   65535,     MUTABLE},
+    {"uavcan.can.baudrate",   100000, 8000000, 1000000,   IMMUTABLE},
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
 StringDesc_t string_desc_pool[] = {
-    {(uint8_t*)"name", "Unknown", false},
-    {(uint8_t*)"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", true},
+    {"name", "Unknown", MUTABLE},
+    {"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", IMMUTABLE},
 
 };
 StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];

@@ -70,7 +70,7 @@ class Generator:
         min_value = self.params[param_name][4]
         max_value = self.params[param_name][5]
 
-        c_string = "    {}(uint8_t*){}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
+        c_string = "    {}{}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
         Generator.open_and_append(self.out_int_source_file, c_string)
 
         h_string = f"    {enum_name},\n"
@@ -91,7 +91,7 @@ class Generator:
 
         def_value = "\"{}\"".format(self.params[param_name][3])
 
-        c_string = "    {}(uint8_t*){}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
+        c_string = "    {}{}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
 

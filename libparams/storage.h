@@ -40,7 +40,7 @@ typedef enum {
 
 typedef int32_t IntegerParamValue_t;
 typedef struct {
-    uint8_t* name;
+    const char* name;
     IntegerParamValue_t min;
     IntegerParamValue_t max;
     IntegerParamValue_t def;
@@ -49,7 +49,7 @@ typedef struct {
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];
 typedef struct {
-    uint8_t* name;
+    const char* name;
     StringParamValue_t def;
     bool is_persistent;     // actually means is_immutable
 } StringDesc_t;

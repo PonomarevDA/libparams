@@ -66,6 +66,7 @@ class Generator:
     def process_integer_param(self, param_name):
         name = f"\"{param_name}\""
         enum_name = self.params[param_name][1]
+        self.is_mutable(param_name, str(self.params[param_name][2]))
         def_value = self.params[param_name][3]
         min_value = self.params[param_name][4]
         max_value = self.params[param_name][5]
@@ -78,22 +79,27 @@ class Generator:
 
     def process_string_param(self, param_name):
         name = f"\"{param_name}\""
-        mutability_in = str(self.params[param_name][2])
-        if mutability_in in ["True", "immutable"]:
-            mutability = "IMMUTABLE"
-        elif mutability_in in ["False", "mutable"]:
-            mutability = "MUTABLE"
-        else:
-            log_err(f"Mutable flag is not set or unknown: {name} {mutability_in} ({type(mutability_in)})")
-            exit()
-        if mutability_in in ["True", "False"]:
-            log_warn(f"Mutability flag {mutability_in} will be deprecated soon. Use `mutable` or `immutable`.")
-
+        mutability = self.is_mutable(param_name, str(self.params[param_name][2]))
         def_value = "\"{}\"".format(self.params[param_name][3])
 
         c_string = "    {}{}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
+
+    @staticmethod
+    def is_mutable(param_name : str, mutability_str : str):
+        name = f"\"{param_name}\""
+        if mutability_str in ["True", "immutable"]:
+            mutability = "IMMUTABLE"
+        elif mutability_str in ["False", "mutable"]:
+            mutability = "MUTABLE"
+        else:
+            log_err(f"Mutability of {name} can't be determined: {mutability_str} ({type(mutability_str)})")
+            exit()
+        if mutability_str in ["True", "False"]:
+            log_warn(f"Mutability of {name} will be deprecated soon: {mutability_str}. Use `mutable` or `immutable`.")
+
+        return mutability
 
     def process_param(self, param_name):
         param_type = self.params[param_name][0]

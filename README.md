@@ -37,12 +37,12 @@ Each integer/real parameter has following fields:
 - default value (const)
 - min (const)
 - max (const)
-- flags.is_mutable (const)
+- flags.is_mutable (const): the parameter can be written from the outside service
 
 Each string/boolean parameter has the following fields:
 - value
 - default value (const)
-- flags.is_mutable (const)
+- flags.is_mutable (const): the parameter can be written from the outside service
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
 
@@ -96,13 +96,13 @@ enum class StrParamsIndexes {
 };
 
 IntegerDesc_t integer_desc_pool[] = {
-    {"uavcan.node.id", 0, 127, 50, MUTABLE},
-    {"uavcan.pub.mag.id", 0, 65535, 65535, MUTABLE},
+    {"uavcan.node.id",      0, 127,     50,     MUTABLE},
+    {"uavcan.pub.mag.id",   0, 65535,   65535,  MUTABLE},
 };
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
 StringDesc_t string_desc_pool[] = {
-    {"name", "Unknown", MUTABLE},
+    {"name",                "Unknown",                                          MUTABLE},
     {"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", IMMUTABLE},
 
 };

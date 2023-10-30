@@ -1,9 +1,6 @@
 name: SonarCloud
 on: [push]
-# on:
-#   push:
-#     branches:
-#       - main
+
 jobs:
   build:
     name: Build and analyze
@@ -16,7 +13,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v1
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
 
       - name: Install gtest
         run: ./tests/install_gtest.sh

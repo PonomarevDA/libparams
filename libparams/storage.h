@@ -17,6 +17,9 @@
 #include "rom.h"
 #include "libparams_error_codes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAX_PARAM_NAME_LENGTH   32
 #define MAX_STRING_LENGTH       56
@@ -56,10 +59,6 @@ typedef struct {
 
 
 typedef uint8_t ParamIndex_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @note Common functions

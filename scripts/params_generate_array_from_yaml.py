@@ -63,6 +63,17 @@ class Generator:
         Generator.open_and_append(self.out_str_header_file, h_string)
         Generator.open_and_append(self.out_str_header_file, self.header.STRING_TAIL)
 
+    def process_cyphal_subject(self, param_name):
+        data_type = f"\"{self.params[param_name][0]}\""
+        base_enum = self.params[param_name][1]
+
+        id_register_name = f"\"{param_name}.id\""
+        id_enum_name = f"{base_enum}_ID"
+        self.append_integer(id_register_name, id_enum_name, 0, 65535, 65535)
+
+        type_register_name = f"\"{param_name}.type\""
+        self.append_string(type_register_name, data_type, "IMMUTABLE")
+
     def process_integer_param(self, param_name):
         name = f"\"{param_name}\""
         enum_name = self.params[param_name][1]
@@ -70,18 +81,22 @@ class Generator:
         def_value = self.params[param_name][3]
         min_value = self.params[param_name][4]
         max_value = self.params[param_name][5]
+        self.append_integer(name, enum_name, min_value, max_value, def_value)
 
+    def process_string_param(self, param_name):
+        name = f"\"{param_name}\""
+        mutability = self.is_mutable(param_name, str(self.params[param_name][2]))
+        def_value = "\"{}\"".format(self.params[param_name][3])
+        self.append_string(name, def_value, mutability)
+
+    def append_integer(self, name, enum_name, min_value, max_value, def_value):
         c_string = "    {}{}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
         Generator.open_and_append(self.out_int_source_file, c_string)
 
         h_string = f"    {enum_name},\n"
         Generator.open_and_append(self.out_int_header_file, h_string)
 
-    def process_string_param(self, param_name):
-        name = f"\"{param_name}\""
-        mutability = self.is_mutable(param_name, str(self.params[param_name][2]))
-        def_value = "\"{}\"".format(self.params[param_name][3])
-
+    def append_string(self, name, def_value, mutability):
         c_string = "    {}{}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
@@ -103,10 +118,15 @@ class Generator:
 
     def process_param(self, param_name):
         param_type = self.params[param_name][0]
-        if param_type == "Integer":
+        if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
+            self.process_cyphal_subject(param_name)
+            pass
+        elif param_type == "Integer":
             self.process_integer_param(param_name)
         elif param_type == "String":
             self.process_string_param(param_name)
+        else:
+            log_err(f"Can't parse string: {param_name} : {self.params[param_name]}")
 
     def process_yaml_file(self, input_dir):
         if not os.path.exists(input_dir):

@@ -4,9 +4,25 @@ import sys
 from color_logging import log_warn, log_err
 import yaml
 from params import CppHeader, CHeader, CSource, CppSource
+from dataclasses import dataclass
 
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
+
+@dataclass
+class IntegerParam:
+    name: str = ""
+    enum_name: str = ""
+    flags: str = ""
+    default: int = 0
+    min: int = 0
+    max: int = 0
+
+@dataclass
+class StringParam:
+    name: str = ""
+    default: str = ""
+    mutability: str = "IMMUTABLE"
 
 class Generator:
     def __init__(self, language, out_path, out_file_name) -> None:
@@ -64,40 +80,52 @@ class Generator:
         Generator.open_and_append(self.out_str_header_file, self.header.STRING_TAIL)
 
     def process_cyphal_subject(self, param_name):
-        data_type = f"\"{self.params[param_name][0]}\""
-        base_enum = self.params[param_name][1]
+        id_register = IntegerParam(
+            name=f"\"{param_name}.id\"",
+            flags="",
+            enum_name=f"{self.params[param_name][1]}_ID",
+            default=65535,
+            min=0,
+            max=65535,
+        )
+        self.append_integer(id_register)
 
-        id_register_name = f"\"{param_name}.id\""
-        id_enum_name = f"{base_enum}_ID"
-        self.append_integer(id_register_name, id_enum_name, 0, 65535, 65535)
-
-        type_register_name = f"\"{param_name}.type\""
-        self.append_string(type_register_name, data_type, "IMMUTABLE")
+        type_register = StringParam(
+            name=f"\"{param_name}.type\"",
+            default=f"\"{self.params[param_name][0]}\"",
+            mutability="IMMUTABLE"
+        )
+        self.append_string(type_register)
 
     def process_integer_param(self, param_name):
-        name = f"\"{param_name}\""
-        enum_name = self.params[param_name][1]
         self.is_mutable(param_name, str(self.params[param_name][2]))
-        def_value = self.params[param_name][3]
-        min_value = self.params[param_name][4]
-        max_value = self.params[param_name][5]
-        self.append_integer(name, enum_name, min_value, max_value, def_value)
+        integer_parameter = IntegerParam(
+            name=f"\"{param_name}\"",
+            flags="",
+            enum_name=self.params[param_name][1],
+            default=self.params[param_name][3],
+            min=self.params[param_name][4],
+            max=self.params[param_name][5],
+        )
+        self.append_integer(integer_parameter)
 
     def process_string_param(self, param_name):
-        name = f"\"{param_name}\""
-        mutability = self.is_mutable(param_name, str(self.params[param_name][2]))
-        def_value = "\"{}\"".format(self.params[param_name][3])
-        self.append_string(name, def_value, mutability)
+        string_param = StringParam(
+            name=f"\"{param_name}\"",
+            default="\"{}\"".format(self.params[param_name][3]),
+            mutability=self.is_mutable(param_name, str(self.params[param_name][2]))
+        )
+        self.append_string(string_param)
 
-    def append_integer(self, name, enum_name, min_value, max_value, def_value):
-        c_string = "    {}{}, {}, {}, {}{},\n".format("{", name, min_value, max_value, def_value, "}")
+    def append_integer(self, param : IntegerParam):
+        c_string = "    {}{}, {}, {}, {}{},\n".format("{", param.name, param.min, param.max, param.default, "}")
         Generator.open_and_append(self.out_int_source_file, c_string)
 
-        h_string = f"    {enum_name},\n"
+        h_string = f"    {param.enum_name},\n"
         Generator.open_and_append(self.out_int_header_file, h_string)
 
-    def append_string(self, name, def_value, mutability):
-        c_string = "    {}{}, {}, {}{},\n".format("{", name, def_value, mutability, "}")
+    def append_string(self, param : StringParam):
+        c_string = "    {}{}, {}, {}{},\n".format("{", param.name, param.default, param.mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
 

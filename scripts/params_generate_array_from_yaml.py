@@ -18,11 +18,79 @@ class IntegerParam:
     min: int = 0
     max: int = 0
 
+    @staticmethod
+    def create_from_dict(param_name, data : dict):
+        Generator.is_mutable(param_name, str(data['flags']))
+        integer_parameter = IntegerParam(
+            name=f"\"{param_name}\"",
+            flags="",
+            enum_name=data['enum'],
+            default=data['default'],
+            min=data['min'],
+            max=data['max'],
+        )
+        return integer_parameter
+
+    @staticmethod
+    def create_from_list_legacy(param_name, data : list):
+        assert(type(data) is list)
+        """Input example: param_name : ["Integer", "ENUM_NAME", "mutable", -1, -1, 31]"""
+        Generator.is_mutable(param_name, str(data[2]))
+        integer_parameter = IntegerParam(
+            name=f"\"{param_name}\"",
+            flags="",
+            enum_name=data[1],
+            default=data[3],
+            min=data[4],
+            max=data[5],
+        )
+        return integer_parameter
+
+    @staticmethod
+    def create_cyphal_port_id(param_name, enum_base : str):
+        id_register = IntegerParam(
+            name=f"\"{param_name}.id\"",
+            flags="",
+            enum_name=f"{enum_base}_ID",
+            default=65535,
+            min=0,
+            max=65535,
+        )
+        return id_register
+
 @dataclass
 class StringParam:
     name: str = ""
     default: str = ""
     mutability: str = "IMMUTABLE"
+
+    @staticmethod
+    def create_from_dict(param_name, data : dict):
+        string_param = StringParam(
+            name=f"\"{param_name}\"",
+            default="\"{}\"".format(data['default']),
+            mutability=Generator.is_mutable(param_name, str(data['flags']))
+        )
+        return string_param
+
+    @staticmethod
+    def create_from_list_legacy(param_name, data : list):
+        """Input example: param_name : ["data_type",  "ENUM_NAME"]"""
+        string_param = StringParam(
+            name=f"\"{param_name}\"",
+            default="\"{}\"".format(data[3]),
+            mutability=Generator.is_mutable(param_name, str(data[2]))
+        )
+        return string_param
+
+    @staticmethod
+    def create_cyphal_port_type(param_name, data_type : str):
+        type_register = StringParam(
+            name=f"\"{param_name}.type\"",
+            default=f"\"{data_type}\"",
+            mutability="IMMUTABLE"
+        )
+        return type_register
 
 class Generator:
     def __init__(self, language, out_path, out_file_name) -> None:
@@ -79,44 +147,6 @@ class Generator:
         Generator.open_and_append(self.out_str_header_file, h_string)
         Generator.open_and_append(self.out_str_header_file, self.header.STRING_TAIL)
 
-    def process_cyphal_subject(self, param_name):
-        id_register = IntegerParam(
-            name=f"\"{param_name}.id\"",
-            flags="",
-            enum_name=f"{self.params[param_name][1]}_ID",
-            default=65535,
-            min=0,
-            max=65535,
-        )
-        self.append_integer(id_register)
-
-        type_register = StringParam(
-            name=f"\"{param_name}.type\"",
-            default=f"\"{self.params[param_name][0]}\"",
-            mutability="IMMUTABLE"
-        )
-        self.append_string(type_register)
-
-    def process_integer_param(self, param_name):
-        self.is_mutable(param_name, str(self.params[param_name][2]))
-        integer_parameter = IntegerParam(
-            name=f"\"{param_name}\"",
-            flags="",
-            enum_name=self.params[param_name][1],
-            default=self.params[param_name][3],
-            min=self.params[param_name][4],
-            max=self.params[param_name][5],
-        )
-        self.append_integer(integer_parameter)
-
-    def process_string_param(self, param_name):
-        string_param = StringParam(
-            name=f"\"{param_name}\"",
-            default="\"{}\"".format(self.params[param_name][3]),
-            mutability=self.is_mutable(param_name, str(self.params[param_name][2]))
-        )
-        self.append_string(string_param)
-
     def append_integer(self, param : IntegerParam):
         c_string = "    {}{}, {}, {}, {}{},\n".format("{", param.name, param.min, param.max, param.default, "}")
         Generator.open_and_append(self.out_int_source_file, c_string)
@@ -144,17 +174,28 @@ class Generator:
 
         return mutability
 
-    def process_param(self, param_name):
-        param_type = self.params[param_name][0]
-        if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
-            self.process_cyphal_subject(param_name)
-            pass
-        elif param_type == "Integer":
-            self.process_integer_param(param_name)
-        elif param_type == "String":
-            self.process_string_param(param_name)
+    def process_param(self, param_name : str, data):
+        if type(data) is list:
+            param_type = data[0]
+            if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
+                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data[1]))
+                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data[0]))
+            elif param_type == "Integer":
+                self.append_integer(IntegerParam.create_from_list_legacy(param_name, data))
+            elif param_type == "String":
+                self.append_string(StringParam.create_from_list_legacy(param_name, data))
+            else:
+                log_err(f"Can't parse string: {param_name} : {self.params[param_name]}")
+        elif type(data) is dict:
+            if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
+                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
+                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
+            elif data['type'] == "Integer":
+                self.append_integer(IntegerParam.create_from_dict(param_name, data))
+            elif data['type'] == "String":
+                self.append_integer(StringParam.create_from_dict(param_name, data))
         else:
-            log_err(f"Can't parse string: {param_name} : {self.params[param_name]}")
+            log_err(f"{param_name}, {type(data)}")
 
     def process_yaml_file(self, input_dir):
         if not os.path.exists(input_dir):
@@ -164,7 +205,7 @@ class Generator:
         params = yaml.safe_load(file_with_params)
         params_generator.set_params(params)
         for param_name in params:
-            params_generator.process_param(param_name)
+            params_generator.process_param(param_name, params[param_name])
 
 def print_usage_help():
     log_err(f"Usage: {sys.argv[0]} <out_path> <language> <out_file_name> <input_dir>")

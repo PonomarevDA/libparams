@@ -19,7 +19,17 @@ class IntegerParam:
     max: int = 0
 
     @staticmethod
-    def create_from_dict(param_name, data : dict):
+    def create(param_name, data):
+        if type(data) is dict:
+            integer_parameter = IntegerParam._create_from_dict(param_name, data)
+        elif type(data) is list:
+            integer_parameter = IntegerParam._create_from_list_legacy(param_name, data)
+        else:
+            integer_parameter = None
+        return integer_parameter
+
+    @staticmethod
+    def _create_from_dict(param_name, data : dict):
         Generator.is_mutable(param_name, str(data['flags']))
         integer_parameter = IntegerParam(
             name=f"\"{param_name}\"",
@@ -32,8 +42,7 @@ class IntegerParam:
         return integer_parameter
 
     @staticmethod
-    def create_from_list_legacy(param_name, data : list):
-        assert(type(data) is list)
+    def _create_from_list_legacy(param_name, data : list):
         """Input example: param_name : ["Integer", "ENUM_NAME", "mutable", -1, -1, 31]"""
         Generator.is_mutable(param_name, str(data[2]))
         integer_parameter = IntegerParam(
@@ -65,7 +74,17 @@ class StringParam:
     mutability: str = "IMMUTABLE"
 
     @staticmethod
-    def create_from_dict(param_name, data : dict):
+    def create(param_name, data):
+        if type(data) is dict:
+            string_param = StringParam._create_from_dict(param_name, data)
+        elif type(data) is list:
+            string_param = StringParam._create_from_list_legacy(param_name, data)
+        else:
+            string_param = None
+        return string_param
+
+    @staticmethod
+    def _create_from_dict(param_name, data : dict):
         string_param = StringParam(
             name=f"\"{param_name}\"",
             default="\"{}\"".format(data['default']),
@@ -74,7 +93,7 @@ class StringParam:
         return string_param
 
     @staticmethod
-    def create_from_list_legacy(param_name, data : list):
+    def _create_from_list_legacy(param_name, data : list):
         """Input example: param_name : ["data_type",  "ENUM_NAME"]"""
         string_param = StringParam(
             name=f"\"{param_name}\"",
@@ -175,25 +194,25 @@ class Generator:
         return mutability
 
     def process_param(self, param_name : str, data):
-        if type(data) is list:
+        if type(data) is dict:
+            if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
+                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
+                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
+            elif data['type'] == "Integer":
+                self.append_integer(IntegerParam.create(param_name, data))
+            elif data['type'] == "String":
+                self.append_string(StringParam.create(param_name, data))
+        elif type(data) is list:
             param_type = data[0]
             if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
                 self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data[1]))
                 self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data[0]))
             elif param_type == "Integer":
-                self.append_integer(IntegerParam.create_from_list_legacy(param_name, data))
+                self.append_integer(IntegerParam.create(param_name, data))
             elif param_type == "String":
-                self.append_string(StringParam.create_from_list_legacy(param_name, data))
+                self.append_string(StringParam.create(param_name, data))
             else:
                 log_err(f"Can't parse string: {param_name} : {self.params[param_name]}")
-        elif type(data) is dict:
-            if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
-                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
-                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
-            elif data['type'] == "Integer":
-                self.append_integer(IntegerParam.create_from_dict(param_name, data))
-            elif data['type'] == "String":
-                self.append_integer(StringParam.create_from_dict(param_name, data))
         else:
             log_err(f"{param_name}, {type(data)}")
 

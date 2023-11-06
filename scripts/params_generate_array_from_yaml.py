@@ -1,115 +1,13 @@
 #!/usr/bin/env python3
 import os
 import sys
-from color_logging import log_warn, log_err
+from color_logging import log_err
 import yaml
-from params import CppHeader, CHeader, CSource, CppSource
-from dataclasses import dataclass
+from _constants import CppHeader, CHeader, CSource, CppSource
+from params import IntegerParam, StringParam
 
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
-
-@dataclass
-class IntegerParam:
-    name: str = ""
-    enum_name: str = ""
-    flags: str = ""
-    default: int = 0
-    min: int = 0
-    max: int = 0
-
-    @staticmethod
-    def create(param_name, data):
-        if type(data) is dict:
-            integer_parameter = IntegerParam._create_from_dict(param_name, data)
-        elif type(data) is list:
-            integer_parameter = IntegerParam._create_from_list_legacy(param_name, data)
-        else:
-            integer_parameter = None
-        return integer_parameter
-
-    @staticmethod
-    def _create_from_dict(param_name, data : dict):
-        Generator.is_mutable(param_name, str(data['flags']))
-        integer_parameter = IntegerParam(
-            name=f"\"{param_name}\"",
-            flags="",
-            enum_name=data['enum'],
-            default=data['default'],
-            min=data['min'],
-            max=data['max'],
-        )
-        return integer_parameter
-
-    @staticmethod
-    def _create_from_list_legacy(param_name, data : list):
-        """Input example: param_name : ["Integer", "ENUM_NAME", "mutable", -1, -1, 31]"""
-        Generator.is_mutable(param_name, str(data[2]))
-        integer_parameter = IntegerParam(
-            name=f"\"{param_name}\"",
-            flags="",
-            enum_name=data[1],
-            default=data[3],
-            min=data[4],
-            max=data[5],
-        )
-        return integer_parameter
-
-    @staticmethod
-    def create_cyphal_port_id(param_name, enum_base : str):
-        id_register = IntegerParam(
-            name=f"\"{param_name}.id\"",
-            flags="",
-            enum_name=f"{enum_base}_ID",
-            default=65535,
-            min=0,
-            max=65535,
-        )
-        return id_register
-
-@dataclass
-class StringParam:
-    name: str = ""
-    default: str = ""
-    mutability: str = "IMMUTABLE"
-
-    @staticmethod
-    def create(param_name, data):
-        if type(data) is dict:
-            string_param = StringParam._create_from_dict(param_name, data)
-        elif type(data) is list:
-            string_param = StringParam._create_from_list_legacy(param_name, data)
-        else:
-            string_param = None
-        return string_param
-
-    @staticmethod
-    def _create_from_dict(param_name, data : dict):
-        string_param = StringParam(
-            name=f"\"{param_name}\"",
-            default="\"{}\"".format(data['default']),
-            mutability=Generator.is_mutable(param_name, str(data['flags']))
-        )
-        return string_param
-
-    @staticmethod
-    def _create_from_list_legacy(param_name, data : list):
-        """Input example: param_name : ["data_type",  "ENUM_NAME"]"""
-        string_param = StringParam(
-            name=f"\"{param_name}\"",
-            default="\"{}\"".format(data[3]),
-            mutability=Generator.is_mutable(param_name, str(data[2]))
-        )
-        return string_param
-
-    @staticmethod
-    def create_cyphal_port_type(param_name, data_type : str):
-        type_register = StringParam(
-            name=f"\"{param_name}.type\"",
-            default=f"\"{data_type}\"",
-            mutability="IMMUTABLE"
-        )
-        return type_register
 
 class Generator:
     def __init__(self, language, out_path, out_file_name) -> None:
@@ -177,21 +75,6 @@ class Generator:
         c_string = "    {}{}, {}, {}{},\n".format("{", param.name, param.default, param.mutability, "}")
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
-
-    @staticmethod
-    def is_mutable(param_name : str, mutability_str : str):
-        name = f"\"{param_name}\""
-        if mutability_str in ["True", "immutable"]:
-            mutability = "IMMUTABLE"
-        elif mutability_str in ["False", "mutable"]:
-            mutability = "MUTABLE"
-        else:
-            log_err(f"Mutability of {name} can't be determined: {mutability_str} ({type(mutability_str)})")
-            exit()
-        if mutability_str in ["True", "False"]:
-            log_warn(f"Mutability of {name} will be deprecated soon: {mutability_str}. Use `mutable` or `immutable`.")
-
-        return mutability
 
     def process_param(self, param_name : str, data):
         if type(data) is dict:

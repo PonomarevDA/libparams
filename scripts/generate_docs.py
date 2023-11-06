@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import os
+import sys
+from color_logging import log_err
+import yaml
+from params import IntegerParam, StringParam
+from datetime import date
+
+LANGUAGE_C = 0
+LANGUAGE_CPP = 1
+
+all_params = []
+ports = []
+
+if __name__=="__main__":
+    num_of_args = len(sys.argv)
+    for yaml_file_idx in range(1, num_of_args):
+        input_dir = sys.argv[yaml_file_idx]
+        if not os.path.exists(input_dir):
+            log_err(f"Input file with paths `{input_dir}` is not exist!")
+            exit()
+        file_with_params = open(input_dir, "r")
+        params = yaml.safe_load(file_with_params)
+        for param_name in params:
+            if type(params[param_name]) is not dict:
+                log_err(f"{param_name} has a legacy style. Support is deprecated.")
+                continue
+            if "type" not in params[param_name]:
+                log_err(f"{param_name} has not type.")
+            elif params[param_name]['type'] == 'Integer':
+                all_params.append(IntegerParam.create(param_name, params[param_name]))
+            elif params[param_name]['type'] == 'String':
+                all_params.append(StringParam.create(param_name, params[param_name]))
+            elif params[param_name]['type'] == 'Port':
+                ports.append(params[param_name])
+
+    for param in all_params:
+        if not hasattr(param, "note"):
+            param.note = ""
+
+    with open('docs.md', 'w') as f:
+        if len(all_params) >= 1:
+            today = date.today().strftime("%B %d, %Y")
+            f.write(f"> The table was automatically generated on {today}.\n\n")
+            f.write("The node has the following registers:\n\n")
+            f.write("| №  | Register name           | Description |\n")
+            f.write("| -- | ----------------------- | ----------- |\n")
+
+        counter = 1
+        for param in all_params:
+            param.name = param.name.replace('"', '')
+            f.write(f"|{counter :> 3} | {param.name.ljust(23)} | {param.note} |\n")
+            counter += 1
+        f.write("\n")

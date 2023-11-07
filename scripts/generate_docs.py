@@ -4,7 +4,6 @@ import sys
 from color_logging import log_err
 import yaml
 from params import IntegerParam, StringParam
-from datetime import date
 
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
@@ -38,7 +37,7 @@ if __name__=="__main__":
         if not hasattr(param, "note"):
             param.note = ""
 
-    with open('docs.md', 'w') as f:
+    with open('README.md', 'w') as f:
         if len(all_ports) >= 1:
             f.write("The node has the following interface:\n\n")
             f.write("| №  | Type | Message | Topic name  |\n")
@@ -54,7 +53,6 @@ if __name__=="__main__":
             f.write("\n")
 
         if len(all_params) >= 1:
-            today = date.today().strftime("%B %d, %Y")
             f.write("The node has the following registers:\n\n")
             f.write("| №  | Register name           | Description |\n")
             f.write("| -- | ----------------------- | ----------- |\n")
@@ -68,4 +66,4 @@ if __name__=="__main__":
         else:
             f.write("The node doesn't have registers:\n\n")
 
-        f.write(f"> This docs was automatically generated on {today}. Do not edit it manually.\n\n")
+        f.write(f"> This docs was automatically generated. Do not edit it manually.\n\n")

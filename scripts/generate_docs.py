@@ -10,7 +10,7 @@ LANGUAGE_C = 0
 LANGUAGE_CPP = 1
 
 all_params = []
-ports = []
+all_ports = {}
 
 if __name__=="__main__":
     num_of_args = len(sys.argv)
@@ -32,23 +32,40 @@ if __name__=="__main__":
             elif params[param_name]['type'] == 'String':
                 all_params.append(StringParam.create(param_name, params[param_name]))
             elif params[param_name]['type'] == 'Port':
-                ports.append(params[param_name])
+                all_ports[param_name] = params[param_name]
 
     for param in all_params:
         if not hasattr(param, "note"):
             param.note = ""
 
     with open('docs.md', 'w') as f:
+        if len(all_ports) >= 1:
+            f.write("The node has the following interface:\n\n")
+            f.write("| №  | Type | Message | Topic name  |\n")
+            f.write("| -- | ---- | ------- | ----------- |\n")
+
+            counter = 1
+            for port_name, port_info in all_ports.items():
+                port_type = port_name[7:10]
+                port_data_type = port_info['data_type']
+                topic_name = port_name[11:]
+                f.write(f"| {counter :> 3} | {port_type} | {port_data_type} | {topic_name} | {port_info}|\n")
+                counter += 1
+            f.write("\n")
+
         if len(all_params) >= 1:
             today = date.today().strftime("%B %d, %Y")
-            f.write(f"> The table was automatically generated on {today}.\n\n")
             f.write("The node has the following registers:\n\n")
             f.write("| №  | Register name           | Description |\n")
             f.write("| -- | ----------------------- | ----------- |\n")
 
-        counter = 1
-        for param in all_params:
-            param.name = param.name.replace('"', '')
-            f.write(f"|{counter :> 3} | {param.name.ljust(23)} | {param.note} |\n")
-            counter += 1
-        f.write("\n")
+            counter = 1
+            for param in all_params:
+                param.name = param.name.replace('"', '')
+                f.write(f"|{counter :> 3} | {param.name.ljust(23)} | {param.note} |\n")
+                counter += 1
+            f.write("\n")
+        else:
+            f.write("The node doesn't have registers:\n\n")
+
+        f.write(f"> This docs was automatically generated on {today}. Do not edit it manually.\n\n")

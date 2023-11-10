@@ -22,7 +22,7 @@ It also has an example of flash memory driver implementation for stm32f103 based
 +--------------+ +--------------+ +--------------+
 ```
 
-This library is suitable for Cyphal and DroneCAN applications.
+The library is suitable for Cyphal, DroneCAN and other applications where persistent storage is required.
 
 ## 1. High level interface. Parameters
 
@@ -32,17 +32,24 @@ There are 4 types of parameters that we may want to store (they are defined in [
 - PARAM_TYPE_BOOLEAN (uint8)
 - PARAM_TYPE_STRING (uint8[56])
 
-Each integer/real parameter has following fields:
+Each parameter has at least the following fields:
 - value
-- default value (const)
+- default value (immutable, that means in can't be changed in real time)
+- flags: mutability, persistence, visability.
+
+The parameter properties were inspired by the register properties in [Cyphal specification](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl). The following properties can be configured by the design of the library:
+
+| Property    | Meaning |
+| ----------- | ------- |
+| Mutability  | Mutability defines the write access. If the parameter is mutable, it can be written by a user for example via Cyphal register interface. Immutable paramters are not allowed to be written by such services, but that doesn't imply that their values are constant (unchanging), because internally the application still can do it. |
+| Persistence </br> (not yet*) | Persistence means that the parameter retains its value permanently across power cycles or any other changes in the state of the server, until it is explicitly overwritten. |
+| Visability </br> (not yet*) | If the parameter is visable, it means it can be accesed from the outside of the application. If the parameter is hidden, it is expected to use it for interal purposes only. The library itself doesn't rely on this property. It is reserved for higher level purposes. |
+
+> At the moment, all parameters are always persistent and visible. The only property you can configure is mutability.
+
+Beside the properties above the Integer and Real parameters have the following additional fields:
 - min (const)
 - max (const)
-- flags.is_mutable (const): the parameter can be written from the outside service
-
-Each string/boolean parameter has the following fields:
-- value
-- default value (const)
-- flags.is_mutable (const): the parameter can be written from the outside service
 
 A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
 
@@ -70,31 +77,41 @@ Look at [rom.h](rom.h) to get full API and [rom.c](rom.c) for the implementation
 
 Although storage and rom drivers are hardware abstract, they still need a hardware related flash driver. Just for an example, here are a few hardware specific flash driver implementations:
 
-1. [STM32F103 (128 Kbytes) flash driver](platform_specific/stm32f103)
-2. [STM32G0B1xx (512 Kbytes flash driver)](platform_specific/stm32g0b1)
-3. [Ubuntu flash memory emulation using a file)](platform_specific/ubuntu/)
+1. [STM32F103 (128 Kbytes) flash driver](platform_specific/stm32f103/README.md)
+2. [STM32G0B1xx (512 Kbytes flash driver)](platform_specific/stm32g0b1/README.md)
+3. [Ubuntu flash memory emulation (using a file)](platform_specific/ubuntu/README.md)
+
+For implementation details please refer to the corresponded folder.
 
 New drivers might be added in future.
 
 ## 4. Usage example
 
-A minimal usage example is shown below.
+Before using the library, you need to define the parameters first.
+
+You can create params.c and params.h files with the following content:
 
 ```c++
+// params.h
+#pragma once
 #include "storage.h"
 
 enum IntParamsIndexes : ParamIndex_t {
-    NODE_ID,
-    MAGNETOMETER_ID,
+    PARAM_NODE_ID,
+    PARAM_MAGNETOMETER_ID,
     INTEGER_PARAMS_AMOUNT
 };
 
+#define NUM_OF_STR_PARAMS 2
 enum class StrParamsIndexes {
-    NODE_NAME,
-    MAGNETOMETER_TYPE,
+    PARAM_SYSTEM_NAME,
+    PARAM_MAGNETOMETER_TYPE,
     STRING_PARAMS_AMOUNT
 };
+```
 
+```c++
+// params.c
 IntegerDesc_t integer_desc_pool[] = {
     {"uavcan.node.id",      0, 127,     50,     MUTABLE},
     {"uavcan.pub.mag.id",   0, 65535,   65535,  MUTABLE},
@@ -102,11 +119,41 @@ IntegerDesc_t integer_desc_pool[] = {
 IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
 
 StringDesc_t string_desc_pool[] = {
-    {"name",                "Unknown",                                          MUTABLE},
+    {"system.name", "", MUTABLE},
     {"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", IMMUTABLE},
 
 };
 StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
+```
+
+Alternatively, you can define your parameters in yaml file and call transpiler script to generate the files above:
+
+```yaml
+# params.yaml
+uavcan.node.id:
+  type: Integer
+  enum: PARAM_NODE_ID
+  flags: mutable
+  default: 50
+  min: 0
+  max: 127
+
+system.name:
+  type: String
+  enum: PARAM_SYSTEM_NAME
+  flags: mutable
+  default: ""
+
+uavcan.pub.mag:
+  type: Port
+  data_type: uavcan.si.sample.magnetic_field_strength.Vector3
+  enum_base: PARAM_MAGNETOMETER
+```
+
+The initialization of the application can be as shown below:
+
+```c++
+#include "params.h"
 
 void application_example() {
     paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, StrParamsIndexes::STRING_PARAMS_AMOUNT);
@@ -114,11 +161,15 @@ void application_example() {
 }
 ```
 
+Please, refer to the [libparams/storage.h](libparams/storage.h) for the high level usage details because it is self-documented.
+
 More application examples:
 
 - [DroneCAN RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/dronecan_application)
 - [Cyphal RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/cyphal_application)
-- [Cyphal ubuntu example](https://github.com/RaccoonlabDev/libcanard_cyphal_application)
+- [Cyphal ubuntu minimal example](https://github.com/RaccoonlabDev/cyphal_application/tree/devel/examples/ubuntu_minimal)
+- [Cyphal ubuntu publisher example](https://github.com/RaccoonlabDev/cyphal_application/tree/devel/examples/ubuntu_publisher_example)
+- [Cyphal UAV HITL communicator ubuntu](https://github.com/RaccoonlabDev/cyphal_communicator/tree/master/src)
 
 ## How to run SonarCloud Analysis manually:
 

@@ -28,8 +28,8 @@ static_assert(MAX_STRING_LENGTH % 8 == 0, "String size must be a multiple of 8")
 
 // Mutable means that the register can be written using this service.
 // Immutable registers cannot be written, but that doesn't imply that their values are constant.
-#define MUTABLE                 false
-#define IMMUTABLE               true
+#define MUTABLE                 true
+#define IMMUTABLE               false
 
 
 typedef enum {
@@ -47,14 +47,14 @@ typedef struct {
     IntegerParamValue_t min;
     IntegerParamValue_t max;
     IntegerParamValue_t def;
-    bool is_persistent;     // actually means is_immutable
+    bool is_mutable;
 } IntegerDesc_t;
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];
 typedef struct {
     const char* name;
     StringParamValue_t def;
-    bool is_persistent;     // actually means is_immutable
+    bool is_mutable;
 } StringDesc_t;
 
 

@@ -1,2 +1,4 @@
-uavcan.pub.mag.id :   ["Integer", "MAGNETOMETER_ID",    False,  65535,  0,  65535]
-uavcan.pub.mag.type : ["String",  "MAGNETOMETER_TYPE",  True, "uavcan.si.sample.magnetic_field_strength.Vector3"]
+uavcan.pub.mag:
+  type: Port
+  data_type: uavcan.si.sample.magnetic_field_strength.Vector3
+  enum_base: PARAM_MAGNETOMETER

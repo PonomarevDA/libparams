@@ -132,7 +132,7 @@ int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
         return -1;
     }
 
-    if (integer_desc_pool[param_idx].is_persistent) {
+    if (!integer_desc_pool[param_idx].is_mutable) {
         return integer_desc_pool[param_idx].def;
     }
 
@@ -145,7 +145,7 @@ void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t value) {
     }
 
     const IntegerDesc_t* desc = &integer_desc_pool[param_idx];
-    if (desc->is_persistent || value > desc->max || value < desc->min) {
+    if (!desc->is_mutable || value > desc->max || value < desc->min) {
         return;
     }
 
@@ -164,7 +164,7 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     }
 
     StringParamValue_t* str;
-    if (string_desc_pool[str_param_idx].is_persistent) {
+    if (!string_desc_pool[str_param_idx].is_mutable) {
         str = (StringParamValue_t*)string_desc_pool[str_param_idx].def;
     } else {
         str = (StringParamValue_t*)string_values_pool[str_param_idx];
@@ -181,7 +181,7 @@ uint8_t paramsSetStringValue(ParamIndex_t param_idx,
 
     param_idx -= integer_params_amount;
 
-    if (string_desc_pool[param_idx].is_persistent == true) {
+    if (!string_desc_pool[param_idx].is_mutable == true) {
         return 0;
     }
 

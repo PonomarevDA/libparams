@@ -65,14 +65,14 @@ class Generator:
         Generator.open_and_append(self.out_str_header_file, self.header.STRING_TAIL)
 
     def append_integer(self, param : IntegerParam):
-        c_string = "    {}{}, {}, {}, {}{},\n".format("{", param.name, param.min, param.max, param.default, "}")
+        c_string = f"    {{{param.name :<32}, {param.min}, {param.max}, {param.default}, MUTABLE}},\n"
         Generator.open_and_append(self.out_int_source_file, c_string)
 
         h_string = f"    {param.enum_name},\n"
         Generator.open_and_append(self.out_int_header_file, h_string)
 
     def append_string(self, param : StringParam):
-        c_string = "    {}{}, {}, {}{},\n".format("{", param.name, param.default, param.mutability, "}")
+        c_string = f"    {{{param.name :<32}, {param.default}, {param.mutability}}},\n"
         Generator.open_and_append(self.out_str_source_file, c_string)
         self.num_of_str_params += 1
 

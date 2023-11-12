@@ -11,6 +11,7 @@ class IntegerParam:
     default: int = 0
     min: int = 0
     max: int = 0
+    mutability: str = "MUTABLE"
 
     @staticmethod
     def create(param_name, data):
@@ -24,7 +25,6 @@ class IntegerParam:
 
     @staticmethod
     def _create_from_dict(param_name, data : dict):
-        is_mutable(param_name, str(data['flags']))
         integer_parameter = IntegerParam(
             name=f"\"{param_name}\"",
             flags="",
@@ -32,6 +32,7 @@ class IntegerParam:
             default=data['default'],
             min=data['min'],
             max=data['max'],
+            mutability=is_mutable(param_name, str(data['flags']))
         )
         if 'note' in data:
             integer_parameter.note = data['note']

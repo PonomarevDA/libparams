@@ -12,7 +12,6 @@
 #include <gtest/gtest.h>
 #include "storage.h"
 #include "params.hpp"
-#include "string_params.hpp"
 
 bool strCompareSafe(const char* first, const char* second, size_t len) {
     for (size_t idx = 0; idx < len; idx++) {

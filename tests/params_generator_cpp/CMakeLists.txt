@@ -20,7 +20,6 @@ add_executable(${PROJECT_NAME} test.cpp
                                ${LIBPARAMS_PATH}/storage.c
                                ${LIBPARAMS_PATH}/rom.c
                                ${PARAMS_PATH}/params.cpp
-                               ${PARAMS_PATH}/string_params.cpp
                                ${PLATFORM_SPECIFIC_PATH}/flash_driver.cpp)
 target_link_libraries(${PROJECT_NAME} GTest::GTest GTest::Main)
 gtest_discover_tests(${PROJECT_NAME})

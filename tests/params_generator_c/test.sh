@@ -11,7 +11,7 @@ ${SCRIPTS_DIR}/params_generate_array_from_yaml.py \
     ${BUILD_DIR} \
     c \
     params \
-    ${TESTS_DIR}/baro.yaml ${TESTS_DIR}/mag.yaml
+    ${THIS_SCRIPT_DIR}/baro.yaml ${THIS_SCRIPT_DIR}/mag.yaml
 
 cd $THIS_SCRIPT_DIR
 cmake -S . -B ${BUILD_DIR}

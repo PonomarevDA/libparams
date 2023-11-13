@@ -5,7 +5,7 @@ jobs:
   build:
     strategy:
       matrix:
-        target: [stm32f103_build, stm32g0b1_build, ubuntu]
+        target: [stm32f103, stm32g0b1]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +15,7 @@ jobs:
       - name: Install gtest
         run: ./tests/install_gtest.sh
 
-      - run: mkdir -p build/tests/${{ matrix.target }} && cd tests/${{ matrix.target }} && make
+      - run: mkdir -p build/tests/platform_specific/${{ matrix.target }} && cd tests/platform_specific/${{ matrix.target }} && make
 
   test_params_generator:
     strategy:

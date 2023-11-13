@@ -1,25 +1,26 @@
 TARGET = libparams
 DEBUG = 1
 OPT = -Og
-BUILD_DIR = ../../build/tests/stm32g0b1_build
+ROOT_DIR = ../../..
+BUILD_DIR = ${ROOT_DIR}/build/tests/stm32g0b1_build
 
 ######################################
 # source
 ######################################
-C_SOURCES =                     	\
-../../libparams/rom.c             	\
-../../platform_specific/stm32g0b1/flash_driver.c       \
-../../libparams/storage.c           \
-../params.c                         \
-main.c                  			\
+C_SOURCES =                         \
+${ROOT_DIR}/libparams/rom.c         \
+${ROOT_DIR}/platform_specific/stm32g0b1/flash_driver.c       \
+${ROOT_DIR}/libparams/storage.c     \
+../../params.c                      \
+main.c                              \
 application.c
 
 # C includes
 C_INCLUDES =    \
--I../../libparams/	\
--I../../platform_specific/stm32g0b1/ \
+-I${ROOT_DIR}/libparams/	\
+-I${ROOT_DIR}/platform_specific/stm32g0b1/ \
 -I./ \
--I../ 
+-I../../
 
 #######################################
 # binaries

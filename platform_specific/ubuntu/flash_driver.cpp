@@ -14,12 +14,15 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <cassert>
 #include "libparams_error_codes.h"
+#include "storage.h"
 
-static uint8_t flash_memory[PAGE_SIZE_BYTES];
+uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;
 
 static void flashLoadBufferFromFile();
+static uint8_t* flashGetPointer();
 
 void flashInit() {
     flashLoadBufferFromFile();
@@ -53,20 +56,35 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 
 void flashLoadBufferFromFile() {
 #ifdef FLASH_DRIVER_STORAGE_FILE
-    std::ifstream myfile;
-    myfile.open(FLASH_DRIVER_STORAGE_FILE, std::ios::in);
+    std::cout << "Flash driver: load data from " << FLASH_DRIVER_STORAGE_FILE << "..." << std::endl;
+    std::ifstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios::in);
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE << " been found!" << std::endl;
+    }
     size_t read_counter = 0;
-    while (myfile) {
-        if (read_counter % 2) {
-            uint32_t param_value;
-            uint32_t param_idx = read_counter / 2;
-            myfile >> param_value;
-            memcpy(flash_memory + 4*param_idx, &param_value, 4);
-            std::cout << param_value << std::endl;
-        } else {
+    size_t int_param_idx = 0;
+    size_t str_param_idx = 0;
+    while (params_storage_file) {
+        if (read_counter % 2 == 0) {
             std::string mystring;
-            myfile >> mystring;
+            params_storage_file >> mystring;
             std::cout << std::setfill(' ') << std::setw(30) << mystring << " ";
+        } else {
+            std::string param_value;
+            params_storage_file >> param_value;
+            try {
+                uint32_t int_param_value = std::stoi(param_value);
+                memcpy(flash_memory + 4*int_param_idx, &int_param_value, 4);
+                std::cout << "(offset=" << 4*int_param_idx << ") ";
+                int_param_idx++;
+            } catch (std::invalid_argument const& ex) {
+                size_t offset = PAGE_SIZE_BYTES - MAX_STRING_LENGTH*(1 + str_param_idx);
+                memcpy(flash_memory + offset, param_value.c_str(), MAX_STRING_LENGTH);
+                std::cout << "(offset=" << offset << ") ";
+                str_param_idx++;
+            }
+            std::cout << param_value << std::endl;
         }
         read_counter++;
     }
@@ -74,6 +92,17 @@ void flashLoadBufferFromFile() {
 #endif
 }
 
-uint8_t* flashGetPointer() {
+static uint8_t* flashGetPointer() {
     return (uint8_t*) flash_memory;
+}
+
+size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
+    assert(data != NULL && "libparams internal error");
+    assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
+    assert(bytes_to_read <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
+    assert(offset + bytes_to_read <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
+
+    const uint8_t* rom = &(flashGetPointer()[offset]);
+    memcpy(data, rom, bytes_to_read);
+    return bytes_to_read;
 }

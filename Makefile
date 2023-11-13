@@ -1,4 +1,5 @@
 BUILD_PATH=build
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 GCOV_REPORT_PATH=${BUILD_PATH}/report
 BUILD_PARAMS_GENERATOR=${BUILD_PATH}/tests/params_generator
 
@@ -38,6 +39,20 @@ cpp_generator: clean
 	cmake -S tests/params_generator -B ${BUILD_CPP_GENERATOR}
 	cd tests/params_generator && cmake --build ../../${BUILD_CPP_GENERATOR}
 	cd ${BUILD_CPP_GENERATOR} && ctest --verbose
+
+stm32f103: clean
+	mkdir -p build/tests/platform_specific/stm32f103
+	cd tests/platform_specific/stm32f103 && make
+
+stm32g0b1: clean
+	mkdir -p build/tests/platform_specific/stm32g0b1
+	cd tests/platform_specific/stm32g0b1 && make
+
+UBUNTU_BUILD_DIR=${ROOT_DIR}/build/tests/platform_specific/ubuntu
+UBUNTU_CMAKE_DIR=${ROOT_DIR}/tests/platform_specific/ubuntu
+ubuntu: clean
+	mkdir -p ${UBUNTU_BUILD_DIR}
+	cd ${UBUNTU_BUILD_DIR} && cmake -S ${UBUNTU_CMAKE_DIR} -B . && $(MAKE) && ./application
 
 clean:
 	rm -rf ${BUILD_PATH}

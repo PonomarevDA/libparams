@@ -11,6 +11,7 @@
 #define PLATFORM_SPECIFIC_STM32G0B1_FLASH_DRIVER_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define FLASH_START_ADDR            0x08000000
 #define PAGE_SIZE_BYTES             2048
@@ -41,7 +42,10 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
  */
 int8_t flashWriteU64(uint32_t address, uint64_t data);
 
-uint8_t* flashGetPointer();
+/**
+ * @return bytes_to_read if success, otherwise 0
+ */
+size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read);
 
 #ifdef __cplusplus
 }

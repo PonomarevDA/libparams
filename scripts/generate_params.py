@@ -86,7 +86,7 @@ if __name__=="__main__":
     for yaml_file_path in args.files:
         if not os.path.exists(yaml_file_path):
             log_err(f"Input file with paths `{yaml_file_path}` is not exist!")
-            exit()
+            exit(1)
 
     gen = Generator(args.out_dir, args.out_file_name)
 
@@ -96,12 +96,18 @@ if __name__=="__main__":
         for param_name in params:
             data = params[param_name]
             assert isinstance(data, dict), "Legacy style detected. Abort."
-            if data['type'] == "Port":
+            if 'type' not in data:
+                log_err(f"Type is not exist: {param_name}!")
+                exit(1)
+            elif data['type'].lower() == "port":
                 gen.add_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
                 gen.add_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
-            elif data['type'] == "Integer":
+            elif data['type'].lower() == "integer":
                 gen.add_integer(IntegerParam.create(param_name, data))
-            elif data['type'] == "String":
+            elif data['type'].lower() == "string":
                 gen.add_string(StringParam.create(param_name, data))
+            else:
+                log_err(f"Unknown type: {param_name}.type={data['type']}!")
+                exit(1)
 
     gen.generate()

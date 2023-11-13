@@ -9,8 +9,11 @@
  */
 
 #include "flash_driver.h"
+#include <string.h>
 #include "main.h"
 #include "libparams_error_codes.h"
+
+static uint8_t* flashGetPointer();
 
 
 void flashInit() {
@@ -40,6 +43,16 @@ int8_t flashWriteU32(uint32_t address, uint32_t data) {
     return (hal_status != HAL_OK) ? -1 : 0;
 }
 
-uint8_t* flashGetPointer() {
+static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
+}
+
+size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
+    if (data == NULL) {
+        return 0;
+    }
+
+    const uint8_t* rom = &(flashGetPointer()[offset]);
+    memcpy(data, rom, bytes_to_read);
+    return bytes_to_read;
 }

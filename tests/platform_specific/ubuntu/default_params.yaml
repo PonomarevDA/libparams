@@ -1,0 +1,10 @@
+uavcan.node.id: 27
+uavcan.can.baudrate: 125000
+uavcan.pub.baro.press.id: 2000
+uavcan.pub.baro.temp.id: 2001
+uavcan.pub.mag.id: 2002
+
+uavcan.pub.mag.type: mag.type.is.const.anyway
+uavcan.pub.baro.temp.type: baro.temp.type.is.const.anyway
+uavcan.pub.baro.press.type: baro.press.type.is.const.anyway
+system.description: description.is.here

@@ -5,7 +5,7 @@ jobs:
   build:
     strategy:
       matrix:
-        target: [stm32f103, stm32g0b1]
+        target: [stm32f103, stm32g0b1, ubuntu]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -17,7 +17,7 @@ jobs:
           wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh && chmod +x install_gtest_ubuntu.sh && ./install_gtest_ubuntu.sh
           sudo apt-get install -y make gcc-arm-none-eabi
 
-      - run: mkdir -p build/tests/platform_specific/${{ matrix.target }} && cd tests/platform_specific/${{ matrix.target }} && make
+      - run: make -s ${{ matrix.target }}
 
   test_params_generator:
     strategy:

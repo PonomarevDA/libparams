@@ -8,10 +8,12 @@
  */
 
 #include "flash_driver.h"
+#include <string.h>
 #include "main.h"
 #include "libparams_error_codes.h"
 
 
+static uint8_t* flashGetPointer();
 static int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages);
 
 void flashInit() {
@@ -47,8 +49,18 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
     return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
 }
 
-uint8_t* flashGetPointer() {
+static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
+}
+
+size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
+    if (data == NULL) {
+        return 0;
+    }
+
+    const uint8_t* rom = &(flashGetPointer()[offset]);
+    memcpy(data, rom, bytes_to_read);
+    return bytes_to_read;
 }
 
 int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages) {

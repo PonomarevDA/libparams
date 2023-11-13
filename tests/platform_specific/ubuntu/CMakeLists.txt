@@ -1,0 +1,42 @@
+# Copyright (c) 2023 Dmitry Ponomarev
+# Distributed under the MIT License, available in the file LICENSE.
+# Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
+
+cmake_minimum_required(VERSION 3.15.3)
+project(libparams_ubuntu_target)
+
+# Path variables
+cmake_path(GET CMAKE_CURRENT_LIST_DIR PARENT_PATH PLATFORM_SPECIFIC_DIR)
+cmake_path(GET PLATFORM_SPECIFIC_DIR PARENT_PATH TESTS_DIR)
+cmake_path(GET TESTS_DIR PARENT_PATH ROOT_DIR)
+
+# Build options
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "-Wall") # -Wextra -pedantic -Werror
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+# Libraries
+set(LIBPARAMS_PLATFORM ubuntu)
+include(${ROOT_DIR}/CMakeLists.txt)
+
+add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_LIST_DIR}/default_params.yaml")
+
+add_executable(application
+    ${libparamsSrc}
+    ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+)
+
+execute_process(
+    COMMAND ${ROOT_DIR}/scripts/generate_params.py --out-dir . -f ${CMAKE_CURRENT_LIST_DIR}/params.yaml
+    RESULT_VARIABLE ret
+)
+if(NOT ret EQUAL 0)
+    message( FATAL_ERROR "Params Generator has been failed. Abort.")
+endif()
+
+include_directories(
+    ${libparamsHeaders}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)

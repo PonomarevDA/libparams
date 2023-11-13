@@ -17,10 +17,10 @@ jobs:
 
       - run: mkdir -p build/tests/${{ matrix.target }} && cd tests/${{ matrix.target }} && make
 
-  test_generator:
+  test_params_generator:
     strategy:
       matrix:
-        target: [params_generator_c, params_generator_cpp]
+        target: [c_generator, cpp_generator]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -30,4 +30,4 @@ jobs:
       - name: Install gtest
         run: ./tests/install_gtest.sh
 
-      - run: ./tests/${{ matrix.target }}/test.sh
+      - run: make -s ${{ matrix.target }}

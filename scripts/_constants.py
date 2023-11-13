@@ -3,6 +3,7 @@
 class CppHeader:
     INTEGER_HEAD = """#pragma once
 #include "storage.h"
+#include "string_params.hpp"
 enum IntParamsIndexes : ParamIndex_t {
 """
     INTEGER_TAIL="""
@@ -17,6 +18,7 @@ enum IntParamsIndexes : ParamIndex_t {
 
 class CHeader:
     INTEGER_HEAD="""#pragma once
+#include "string_params.h"
 typedef enum {
 """
     INTEGER_TAIL="""

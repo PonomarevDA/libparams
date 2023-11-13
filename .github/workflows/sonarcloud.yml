@@ -16,7 +16,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-c-cpp@v2
 
       - name: Install gtest
-        run: ./tests/install_gtest.sh
+        run: wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh && chmod +x install_gtest_ubuntu.sh && ./install_gtest_ubuntu.sh
 
       - name: Run build-wrapper
         run: |

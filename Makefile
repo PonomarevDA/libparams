@@ -8,13 +8,13 @@ create_build_dir:
 	mkdir -p ${BUILD_PATH}
 
 coverage:
-	cd tests/ubuntu && $(MAKE) -s coverage
+	cd tests/unit_tests && $(MAKE) -s coverage
 
 	mkdir -p ${GCOV_REPORT_PATH}
 	cd ${BUILD_PATH} &&	gcov shell-storage.gcda shell-rom.gcda
 
 unit_tests: clean
-	cd tests/ubuntu && $(MAKE) -s unit_tests && cd ..
+	cd tests/unit_tests && $(MAKE) -s unit_tests && cd ..
 
 
 BUILD_C_GENERATOR=${BUILD_PATH}/tests/params_generator/c

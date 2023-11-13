@@ -1,4 +1,4 @@
-# Ubuntu stm32 emulation Flash Driver
+# Ubuntu stm32 Flash Driver emulator
 
 The Ubuntu flash driver emulates a real flash memory of an stm32 microcontroller.
 
@@ -12,5 +12,5 @@ This driver is also used as a mock driver for hardware related things to provide
 
 There are a few tests based on this driver:
 - [tests/ubuntu](../../tests/ubuntu/)
-- [tests/params_generator_c](../../tests/params_generator_c/)
-- [tests/params_generator_cpp](../../tests/params_generator_cpp/)
+- [tests/params_generator/c](../../tests/params_generator/c/)
+- [tests/params_generator/cpp](../../tests/params_generator/cpp/)

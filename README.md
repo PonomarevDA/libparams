@@ -17,8 +17,8 @@ It also has an example of flash memory driver implementation for stm32f103 based
 +-------+----------------+-----------------------+
         |                |                |
 +-------+------+ +-------+------+ +-------+------+
-|    STM32f1   | |    STM32g0   | |      ...     |
-| Flash Driver | | Flash Driver | |              |
+|    STM32f1   | |    STM32g0   | |    Ubuntu    |
+| Flash Driver | | Flash Driver | | SITL Driver  |
 +--------------+ +--------------+ +--------------+
 ```
 

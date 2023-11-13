@@ -48,9 +48,7 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
         bytes_to_read = requested_size;
     }
 
-    const uint8_t* rom = &(flashGetPointer()[start_page_idx * PAGE_SIZE_BYTES + offset]);
-    memcpy(data, rom, bytes_to_read);
-    return bytes_to_read;
+    return flashMemcpy(data, start_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
 }
 
 void romBeginWrite() {

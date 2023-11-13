@@ -87,7 +87,11 @@ New drivers might be added in future.
 
 ## 4. Usage example
 
-Before using the library, you need to define the parameters first.
+It is expected aither to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
+
+You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [CMakeLists.txt](CMakeLists.txt).
+
+If it is SITL mode, you need additionally to specify the define `FLASH_DRIVER_STORAGE_FILE` with path to the yaml file with parameters values.
 
 You can create params.c and params.h files with the following content:
 

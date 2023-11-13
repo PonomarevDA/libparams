@@ -1,5 +1,6 @@
 BUILD_PATH=build
-GCOV_REPORT_PATH=build/report
+GCOV_REPORT_PATH=${BUILD_PATH}/report
+BUILD_PARAMS_GENERATOR=${BUILD_PATH}/tests/params_generator
 
 all: coverage
 
@@ -12,8 +13,31 @@ coverage:
 	mkdir -p ${GCOV_REPORT_PATH}
 	cd ${BUILD_PATH} &&	gcov shell-storage.gcda shell-rom.gcda
 
-unit_test: clean
+unit_tests: clean
 	cd tests/ubuntu && $(MAKE) -s unit_tests && cd ..
+
+
+BUILD_C_GENERATOR=${BUILD_PATH}/tests/params_generator/c
+c_generator: clean
+	mkdir -p ${BUILD_C_GENERATOR}
+	./scripts/params_generate_array_from_yaml.py ${BUILD_PARAMS_GENERATOR} c params \
+		tests/params_generator/c/baro.yaml \
+		tests/params_generator/c/mag.yaml
+	cp ${BUILD_PARAMS_GENERATOR}/params.h ${BUILD_PARAMS_GENERATOR}/params.hpp
+	cmake -S tests/params_generator -B ${BUILD_C_GENERATOR}
+	cd tests/params_generator && cmake --build ../../${BUILD_C_GENERATOR}
+	cd ${BUILD_C_GENERATOR} && ctest --verbose
+
+
+BUILD_CPP_GENERATOR=${BUILD_PATH}/tests/params_generator/cpp
+cpp_generator: clean
+	mkdir -p ${BUILD_CPP_GENERATOR}
+	./scripts/generate_params.py --out-dir ${BUILD_PARAMS_GENERATOR} -f \
+		tests/params_generator/cpp/baro.yaml \
+		tests/params_generator/cpp/mag.yaml
+	cmake -S tests/params_generator -B ${BUILD_CPP_GENERATOR}
+	cd tests/params_generator && cmake --build ../../${BUILD_CPP_GENERATOR}
+	cd ${BUILD_CPP_GENERATOR} && ctest --verbose
 
 clean:
 	rm -rf ${BUILD_PATH}

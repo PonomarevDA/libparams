@@ -1,0 +1,5 @@
+uavcan.pub.baro.press.id : ["Integer", "PARAM_BARO_PRESSURE_ID",      "mutable",   65535,  0,  65535]
+uavcan.pub.baro.temp.id :  ["Integer", "PARAM_BARO_TEMPERATURE_ID",   "mutable",   65535,  0,  65535]
+
+uavcan.pub.baro.press.type: ["String", "PARAM_BARO_PRESSURE_TYPE",    "immutable", "uavcan.si.sample.pressure.Scalar"]
+uavcan.pub.baro.temp.type:  ["String", "PARAM_BARO_TEMPERATURE_TYPE", "immutable", "uavcan.si.sample.temperature.Scalar"]

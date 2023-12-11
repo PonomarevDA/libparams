@@ -79,8 +79,11 @@ int8_t paramsLoadToFlash() {
 
 int8_t paramsResetToDefault() {
     for (ParamIndex_t idx = 0; idx < integer_params_amount; idx++) {
-        integer_values_pool[idx] = integer_desc_pool[idx].def;
+        if (!integer_desc_pool[idx].is_required) {
+            integer_values_pool[idx] = integer_desc_pool[idx].def;
+        }
     }
+
     memset(string_values_pool, 0x00, STR_VAL_POOL_SIZE);
     return LIBPARAMS_OK;
 }

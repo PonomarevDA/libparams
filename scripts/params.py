@@ -12,6 +12,7 @@ class IntegerParam:
     min: int = 0
     max: int = 0
     mutability: str = "MUTABLE"
+    is_required: str = "false"
 
     @staticmethod
     def create(param_name, data):
@@ -34,10 +35,14 @@ class IntegerParam:
             max=data['max'],
             mutability=is_mutable(param_name, str(data['flags']))
         )
-        if 'note' in data:
-            integer_parameter.note = data['note']
+
+        integer_parameter.note = data['note'] if 'note' in data else ""
+
+        if 'is_required' in data and data['is_required']:
+            integer_parameter.is_required = "true"
         else:
-            integer_parameter.note = ""
+            integer_parameter.is_required = "false"
+
         return integer_parameter
 
     @staticmethod

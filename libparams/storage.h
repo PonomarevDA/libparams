@@ -22,7 +22,10 @@ extern "C" {
 #endif
 
 #define MAX_PARAM_NAME_LENGTH   32
-#define MAX_STRING_LENGTH       56
+
+#ifndef MAX_STRING_LENGTH
+    #define MAX_STRING_LENGTH 56
+#endif
 static_assert(MAX_STRING_LENGTH % 8 == 0, "String size must be a multiple of 8");
 
 
@@ -47,7 +50,14 @@ typedef struct {
     IntegerParamValue_t min;
     IntegerParamValue_t max;
     IntegerParamValue_t def;
+
     bool is_mutable;
+
+    /**
+     * @note The flag means that the parameter's default value is not essential.
+     * Practically, it means that the paramter will not be reset during the paramsResetToDefault().
+     */
+    bool is_required;
 } IntegerDesc_t;
 
 typedef uint8_t StringParamValue_t[MAX_STRING_LENGTH];

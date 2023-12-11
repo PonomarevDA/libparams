@@ -21,7 +21,7 @@ class Generator:
     def add_integer(self, param : IntegerParam):
         assert isinstance(param, IntegerParam)
 
-        c_string = f"    {{{param.name :<32}, {param.min}, {param.max}, {param.default}, {param.mutability}}},\n"
+        c_string = f"    {{{param.name :<32}, {param.min}, {param.max}, {param.default}, {param.mutability}, {param.is_required}}},\n"
         h_string = f"    {param.enum_name},\n"
 
         self.integers_array += c_string

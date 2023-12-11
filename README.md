@@ -35,17 +35,18 @@ There are 4 types of parameters that we may want to store (they are defined in [
 Each parameter has at least the following fields:
 - value
 - default value (immutable, that means in can't be changed in real time)
-- flags: mutability, persistence, visability.
+- flags: mutability, required, persistence, visability.
 
 The parameter properties were inspired by the register properties in [Cyphal specification](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl). The following properties can be configured by the design of the library:
 
 | Property    | Meaning |
 | ----------- | ------- |
 | Mutability  | Mutability defines the write access. If the parameter is mutable, it can be written by a user for example via Cyphal register interface. Immutable paramters are not allowed to be written by such services, but that doesn't imply that their values are constant (unchanging), because internally the application still can do it. |
+| Required  | Required means that the parameter's default value is not essential. Practically, it means that the paramter will not be reset during the paramsResetToDefault(). |
 | Persistence </br> (not yet*) | Persistence means that the parameter retains its value permanently across power cycles or any other changes in the state of the server, until it is explicitly overwritten. |
 | Visability </br> (not yet*) | If the parameter is visable, it means it can be accesed from the outside of the application. If the parameter is hidden, it is expected to use it for interal purposes only. The library itself doesn't rely on this property. It is reserved for higher level purposes. |
 
-> At the moment, all parameters are always persistent and visible. The only property you can configure is mutability.
+> At the moment, all parameters are always persistent and visible. The only property you can configure is mutability and required.
 
 Beside the properties above the Integer and Real parameters have the following additional fields:
 - min (const)

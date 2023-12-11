@@ -24,7 +24,7 @@ extern "C" {
 #define MAX_PARAM_NAME_LENGTH   32
 
 #ifndef MAX_STRING_LENGTH
-    #define MAX_STRING_LENGTH 56
+#define MAX_STRING_LENGTH 56
 #endif
 static_assert(MAX_STRING_LENGTH % 8 == 0, "String size must be a multiple of 8");
 
@@ -68,7 +68,7 @@ typedef struct {
 } StringDesc_t;
 
 
-typedef uint8_t ParamIndex_t;
+typedef uint16_t ParamIndex_t;
 
 /**
  * @note Common functions

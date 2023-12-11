@@ -12,6 +12,7 @@
 #define LIBPARAMS_OK                    0
 #define LIBPARAMS_WRONG_ARGS            -2
 #define LIBPARAMS_UNKNOWN_HAL_ERROR     -4
+#define LIBPARAMS_NOT_INITIALIZED       -8
 #define LIBPARAMS_UNKNOWN_ERROR         -128
 
 #endif  // LIBPARAMS_ERROR_CODES_H_

@@ -42,18 +42,29 @@ void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
 TEST(TestStorage, test_paramsLoadToFlash) {
     // Normal
     romInit(0, 1);
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT);
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
-    // Write Integer to ROM failed
+    // Zero integers is ok
     romInit(0, 1);
-    paramsInit(0, STRING_PARAMS_AMOUNT);
-    ASSERT_TRUE(paramsLoadToFlash() < 0);
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT));
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
-    // Write String to ROM failed
+    // Zero strings is ok
     romInit(0, 1);
-    paramsInit(INTEGER_PARAMS_AMOUNT, 0);
-    ASSERT_TRUE(paramsLoadToFlash() < 0);
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0));
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
+
+    // Full storage is ok
+    romInit(0, 1);
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0));
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
+
+    // More paramters than possible is not ok
+    romInit(0, 1);
+    paramsInit(0, 0);  // reset the storage
+    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0));
+    ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsLoadToFlash());
 }
 
 TEST(TestStorage, test_paramsLoadFromFlash) {

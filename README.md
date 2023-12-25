@@ -5,7 +5,11 @@ libparams is a C-written hardware abstract library that consist of 2 things:
 - Parameters Storage - an interface under ROM that allows to store integers and strings with O(1) access complexity.
 - Abstract ROM Driver - an interface under your flash memory that allows to write and read sequence of bytes.
 
-It also has an example of flash memory driver implementation for stm32f103 based on Stm32CubeIDE HAL.
+It also has an example of flash memory driver implementation for stm32f103 (128 KBytes of flash memory), stm32f103g0 (512 KBytes) based on Stm32CubeIDE HAL and simple Ubuntu flash memory emulation (for SITL usege).
+
+The library is intended for real-time embedded applications with small memory such as stm32f103 where persistent storage is required. It is suitable for Cyphal, DroneCAN and other applications as [Register interface](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl).
+
+The design of the library can be illustrated as shown below:
 
 ```
 +-------+----------------+---------------+-------+
@@ -22,7 +26,6 @@ It also has an example of flash memory driver implementation for stm32f103 based
 +--------------+ +--------------+ +--------------+
 ```
 
-The library is suitable for Cyphal, DroneCAN and other applications where persistent storage is required.
 
 ## 1. High level interface. Parameters
 

@@ -184,6 +184,10 @@ export SONAR_TOKEN=<...>
 ~/Downloads/sonar-scanner-cli-5.0.1.3006-linux/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
 ```
 
+## License
+
+The project is distributed under term of MPL v2.0 license.
+
 ## Acknowledgements
 
 This project has been supported by funds from The Foundation for Assistance to Small Innovative Enterprises (FASIE). Moreover, we are honored to be distinguished as laureates of the "Digital Technologies Code" competition, under the federal project "Digital Technologies". We express our profound gratitude for their invaluable support and endorsement.

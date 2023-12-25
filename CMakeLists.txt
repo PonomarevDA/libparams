@@ -1,6 +1,8 @@
-# Copyright (c) 2023 Dmitry Ponomarev
-# Distributed under the MIT License, available in the file LICENSE.
-# Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
+# Copyright (c) 2023 Dmitry Ponomarev <ponomarevda96@gmail.com>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 if(NOT LIBPARAMS_PLATFORM)
   message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified")

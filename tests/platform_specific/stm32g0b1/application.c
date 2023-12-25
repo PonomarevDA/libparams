@@ -10,7 +10,7 @@
 #include "flash_driver.h"
 
 void test_flash_wr() {
-    romInit(127, 1);
+    romInit(255, 1);
 
     const uint8_t first_buf[PAGE_SIZE_BYTES];
     romWrite(0, first_buf, PAGE_SIZE_BYTES);

@@ -91,7 +91,7 @@ New drivers might be added in future.
 
 ## 4. Usage example
 
-It is expected aither to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
+It is expected either to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
 
 You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [CMakeLists.txt](CMakeLists.txt).
 
@@ -171,7 +171,19 @@ void application_example() {
 
 Please, refer to the [libparams/storage.h](libparams/storage.h) for the high level usage details because it is self-documented.
 
-More application examples:
+## Usage examples [![make build](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml)
+
+In [tests](tests) folder you can find a few examples about how to use the library:
+
+| Example | Brief descrtiption | How to try |
+| ------- | ------------------ | ---------- |
+| [params_generator/c](tests/params_generator/c/README.md) | An example how to generate C-parameters with python script | `make c_generator` |
+| [params_generator/cpp](tests/params_generator/cpp/README.md) | An example how to generate C++ parameters with python script | `make cpp_generator` |
+| [platform_specific/stm32f103](tests/platform_specific/stm32f103/README.md) | Just to test that the library can be build without Warnings and Errors | `make stm32f103` |
+| [platform_specific/stm32g0b1](tests/platform_specific/stm32g0b1/README.md) | Just to test that the library can be build without Warnings and Errors | `make stm32g0b1` |
+| [platform_specific/ubuntu](tests/platform_specific/ubuntu/README.md) | Just to test that the library can be build without Warnings and Errors | `make ubuntu` |
+
+A few real external applications based on this library:
 
 - [DroneCAN RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/dronecan_application)
 - [Cyphal RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/cyphal_application)

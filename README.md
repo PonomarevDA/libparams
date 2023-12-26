@@ -7,7 +7,17 @@ libparams is a C-written hardware abstract library that consist of 2 things:
 
 It also has an example of flash memory driver implementation for stm32f103 (128 KBytes of flash memory), stm32f103g0 (512 KBytes) based on Stm32CubeIDE HAL and simple Ubuntu flash memory emulation (for SITL usege).
 
+**Purpose**
+
 The library is intended for real-time embedded applications with small memory such as stm32f103 where persistent storage is required. It is suitable for Cyphal, DroneCAN and other applications as [Register interface](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl).
+
+**Minimum technical requirements**
+
+The codebase is implemented in C99/C11.
+
+The library was tested on stm32f103 (128 Kbytes) and stm32g0 (512 Kbytes). These hardware can be considered as minimum required.
+
+**Design**
 
 The design of the library can be illustrated as shown below:
 

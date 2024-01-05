@@ -4,8 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-if(NOT LIBPARAMS_PLATFORM)
-  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified")
+if(LIBPARAMS_PLATFORM STREQUAL "stm32f103")
+elseif(LIBPARAMS_PLATFORM STREQUAL "stm32g0b1")
+elseif(LIBPARAMS_PLATFORM STREQUAL "ubuntu")
+else()
+  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified! Options: stm32f103, stm32g0b1, ubuntu.")
 endif()
 
 FILE(GLOB libparamsPlatformSpecificSrc

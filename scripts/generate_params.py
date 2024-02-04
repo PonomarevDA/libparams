@@ -42,37 +42,35 @@ class Generator:
         self.strings_amount += 1
 
     def generate(self):
-        fd = open(f"{self.dir}/{self.name}.cpp", 'w')
-        cpp_content = f"""{LICENSE_HEADER}
+        with open(f"{self.dir}/{self.name}.cpp", 'w') as fd:
+            cpp_content = (
+                f"{LICENSE_HEADER}\n"
+                "#include \"params.hpp\"\n"
+                "\n"
+                "IntegerDesc_t integer_desc_pool[] = {\n"
+                f"{self.integers_array}"
+                "};\n"
+                "IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
+                "\n"
+                "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
+                f"{self.strings_array}"
+                "};\n"
+                "StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
+            )
+            fd.write(cpp_content)
 
-#include "params.hpp"
-
-IntegerDesc_t integer_desc_pool[] = {{
-{self.integers_array}}};
-IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
-
-StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {{
-{self.strings_array}}};
-StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
-"""
-        fd.write(cpp_content)
-        fd.close()
-
-        fd = open(f"{self.dir}/{self.name}.hpp", 'w')
-        hpp_content = f"""{LICENSE_HEADER}
-
-#pragma once
-#include "storage.h"
-
-enum IntParamsIndexes : ParamIndex_t {{
-{self.integers_enums}
-    INTEGER_PARAMS_AMOUNT
-}};
-
-#define NUM_OF_STR_PARAMS {self.strings_amount}
-"""
-        fd.write(hpp_content)
-        fd.close()
+        with open(f"{self.dir}/{self.name}.hpp", 'w') as fd:
+            hpp_content = (
+                f"{LICENSE_HEADER}\n"
+                "#pragma once\n"
+                "#include \"storage.h\"\n\n"
+                "enum IntParamsIndexes : ParamIndex_t {\n"
+                f"{self.integers_enums}\n"
+                "    INTEGER_PARAMS_AMOUNT\n"
+                "};\n"
+                f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
+            )
+            fd.write(hpp_content)
 
 if __name__=="__main__":
     from argparse import ArgumentParser

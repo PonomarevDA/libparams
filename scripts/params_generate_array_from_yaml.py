@@ -86,8 +86,8 @@ class Generator:
     def process_param(self, param_name : str, data):
         if type(data) is dict:
             if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
-                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
-                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
+                self.append_integer(IntegerParam.create_port_id(param_name, enum_base=data['enum_base']))
+                self.append_string(StringParam.create_port_type(param_name, data_type=data['data_type']))
             elif data['type'] == "Integer":
                 self.append_integer(IntegerParam.create(param_name, data))
             elif data['type'] == "String":
@@ -95,8 +95,8 @@ class Generator:
         elif type(data) is list:
             param_type = data[0]
             if param_name.startswith(("uavcan.sub.", "uavcan.pub.", "uavcan.cln.", "uavcan.srv.")) and not param_name.endswith((".id", ".type")):
-                self.append_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data[1]))
-                self.append_string(StringParam.create_cyphal_port_type(param_name, data_type=data[0]))
+                self.append_integer(IntegerParam.create_port_id(param_name, enum_base=data[1]))
+                self.append_string(StringParam.create_port_type(param_name, data_type=data[0]))
             elif param_type == "Integer":
                 self.append_integer(IntegerParam.create(param_name, data))
             elif param_type == "String":

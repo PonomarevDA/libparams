@@ -6,7 +6,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""Parameters generator."""
+
 import os
+import sys
 from color_logging import log_err
 import yaml
 from params import IntegerParam, StringParam
@@ -17,8 +20,8 @@ LICENSE_HEADER = """// This file was automatically generated. Do not edit it man
 // file, You can obtain one at https://mozilla.org/MPL/2.0/."""
 
 class Generator:
-    def __init__(self, dir, name) -> None:
-        self.dir = dir
+    def __init__(self, directory, name) -> None:
+        self.dir = directory
         self.name = name
         self.integers_array = ""
         self.integers_enums = ""
@@ -28,7 +31,14 @@ class Generator:
     def add_integer(self, param : IntegerParam):
         assert isinstance(param, IntegerParam)
 
-        c_string = f"    {{{param.name :<32}, {param.min}, {param.max}, {param.default}, {param.mutability}, {param.is_required}}},\n"
+        c_string = (
+            f"    {{{param.name :<32}, "
+            f"{param.min}, "
+            f"{param.max}, "
+            f"{param.default}, "
+            f"{param.mutability}, "
+            f"{param.is_required}}},\n"
+        )
         h_string = f"    {param.enum_name},\n"
 
         self.integers_array += c_string
@@ -42,7 +52,7 @@ class Generator:
         self.strings_amount += 1
 
     def generate(self):
-        with open(f"{self.dir}/{self.name}.cpp", 'w') as fd:
+        with open(f"{self.dir}/{self.name}.cpp", 'w', encoding="utf-8") as cpp_file:
             cpp_content = (
                 f"{LICENSE_HEADER}\n"
                 "#include \"params.hpp\"\n"
@@ -50,16 +60,18 @@ class Generator:
                 "IntegerDesc_t integer_desc_pool[] = {\n"
                 f"{self.integers_array}"
                 "};\n"
-                "IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
+                "IntegerParamValue_t "
+                "integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
                 "\n"
                 "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
                 f"{self.strings_array}"
                 "};\n"
-                "StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
+                "StringParamValue_t "
+                "string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
             )
-            fd.write(cpp_content)
+            cpp_file.write(cpp_content)
 
-        with open(f"{self.dir}/{self.name}.hpp", 'w') as fd:
+        with open(f"{self.dir}/{self.name}.hpp", 'w', encoding="utf-8") as hpp_file:
             hpp_content = (
                 f"{LICENSE_HEADER}\n"
                 "#pragma once\n"
@@ -70,11 +82,11 @@ class Generator:
                 "};\n"
                 f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
             )
-            fd.write(hpp_content)
+            hpp_file.write(hpp_content)
 
 if __name__=="__main__":
     from argparse import ArgumentParser
-    parser = ArgumentParser(description='Parameters generator.')
+    parser = ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir",        type=str, required=True,    help="")
     parser.add_argument("--out-file-name",  type=str, default='params', help="")
     parser.add_argument("--language",       type=str, default="c++",    help="", choices=["c++"])
@@ -91,28 +103,28 @@ if __name__=="__main__":
     for yaml_file_path in args.files:
         if not os.path.exists(yaml_file_path):
             log_err(f"Input file with paths `{yaml_file_path}` is not exist!")
-            exit(1)
+            sys.exit(1)
 
     gen = Generator(args.out_dir, args.out_file_name)
 
     for yaml_file_path in args.files:
-        fd = open(yaml_file_path, "r")
-        params = yaml.safe_load(fd)
-        for param_name in params:
-            data = params[param_name]
-            assert isinstance(data, dict), "Legacy style detected. Abort."
-            if 'type' not in data:
-                log_err(f"Type is not exist: {param_name}!")
-                exit(1)
-            elif data['type'].lower() == "port":
-                gen.add_integer(IntegerParam.create_cyphal_port_id(param_name, enum_base=data['enum_base']))
-                gen.add_string(StringParam.create_cyphal_port_type(param_name, data_type=data['data_type']))
-            elif data['type'].lower() == "integer":
-                gen.add_integer(IntegerParam.create(param_name, data))
-            elif data['type'].lower() == "string":
-                gen.add_string(StringParam.create(param_name, data))
-            else:
-                log_err(f"Unknown type: {param_name}.type={data['type']}!")
-                exit(1)
+        with open(yaml_file_path, "r", encoding="utf-8") as yaml_fd:
+            params = yaml.safe_load(yaml_fd)
+            for param_name in params:
+                data = params[param_name]
+                assert isinstance(data, dict), "Legacy style detected. Abort."
+                if 'type' not in data:
+                    log_err(f"Type is not exist: {param_name}!")
+                    sys.exit(1)
+                elif data['type'].lower() == "port":
+                    gen.add_integer(IntegerParam.create_port_id(param_name, data['enum_base']))
+                    gen.add_string(StringParam.create_port_type(param_name, data['data_type']))
+                elif data['type'].lower() == "integer":
+                    gen.add_integer(IntegerParam.create(param_name, data))
+                elif data['type'].lower() == "string":
+                    gen.add_string(StringParam.create(param_name, data))
+                else:
+                    log_err(f"Unknown type: {param_name}.type={data['type']}!")
+                    sys.exit(1)
 
     gen.generate()

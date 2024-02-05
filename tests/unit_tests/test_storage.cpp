@@ -55,13 +55,13 @@ TEST(TestStorage, test_paramsLoadToFlash) {
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // Full storage is ok
-    romInit(0, 1);
+    ASSERT_EQ(LIBPARAMS_OK, romInit(0, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // More paramters than possible is not ok
-    romInit(0, 1);
-    paramsInit(0, 0);  // reset the storage
+    ASSERT_EQ(LIBPARAMS_OK, romInit(0, 1));
+    paramsInit(0, 0);  // Reset the storage
     ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0));
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsLoadToFlash());
 }

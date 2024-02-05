@@ -6,7 +6,6 @@
 
 BUILD_PATH=build
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-GCOV_REPORT_PATH=${BUILD_PATH}/report
 BUILD_PARAMS_GENERATOR=${BUILD_PATH}/tests/params_generator
 
 all: coverage
@@ -16,9 +15,6 @@ create_build_dir:
 
 coverage:
 	cd tests/unit_tests && $(MAKE) -s coverage
-
-	mkdir -p ${GCOV_REPORT_PATH}
-	cd ${BUILD_PATH} &&	gcov shell-storage.gcda shell-rom.gcda
 
 unit_tests: clean
 	cd tests/unit_tests && $(MAKE) -s unit_tests && cd ..

@@ -10,18 +10,15 @@
 #include "storage.h"
 #include "flash_driver.h"
 
-IntegerDesc_t integer_desc_pool[] = {
+IntegerDesc_t integer_desc_pool[512] = {
     {"uavcan.node.id",        0,      127,     50,        MUTABLE},
     {"uavcan.pub.mag.id",     0,      65535,   65535,     MUTABLE},
     {"uavcan.can.baudrate",   100000, 8000000, 1000000,   IMMUTABLE},
 };
-IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
+IntegerParamValue_t integer_values_pool[512];
 
-StringDesc_t string_desc_pool[] = {
+StringDesc_t string_desc_pool[512] = {
     {"name", "Unknown", MUTABLE},
     {"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", IMMUTABLE},
-
 };
-StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
-
-static_assert(sizeof(integer_desc_pool) + sizeof(string_desc_pool) < PAGE_SIZE_BYTES, "Params are out of mem.");
+StringParamValue_t string_values_pool[512];

@@ -179,12 +179,11 @@ TEST(TestStorage, test_write_read_strings) {
 TEST(TestStorage, test_paramsGetParamName) {
     init();
     size_t expected_param_name_length;
-    char* read_param_name;
 
     ParamIndex_t int_param_idx = NODE_ID;
     auto int_param_expected_name = "uavcan.node.id";
     expected_param_name_length = strlen(int_param_expected_name);
-    read_param_name = paramsGetParamName(int_param_idx);
+    auto read_param_name = paramsGetParamName(int_param_idx);
     ASSERT_EQ(memcmp(int_param_expected_name, read_param_name, expected_param_name_length), 0);
 
     ParamIndex_t str_param_idx = INTEGER_PARAMS_AMOUNT + NODE_NAME;

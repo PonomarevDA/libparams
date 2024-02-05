@@ -79,7 +79,7 @@ int8_t paramsResetToDefault();
 /**
  * @note Common parameters getters
  */
-char* paramsGetParamName(ParamIndex_t param_idx);
+const char* paramsGetParamName(ParamIndex_t param_idx);
 ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_length);
 ParamType_t paramsGetType(ParamIndex_t param_idx);
 

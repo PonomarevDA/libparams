@@ -12,36 +12,33 @@
 #include "rom.h"
 #include "libparams_error_codes.h"
 
-
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];
-
 extern StringDesc_t string_desc_pool[];
 extern StringParamValue_t string_values_pool[];
 
-static ParamIndex_t integer_params_amount = 0;
-static ParamIndex_t string_params_amount = 0;
+static ParamIndex_t integers_amount = 0;
+static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
-
 
 static bool _paramsIsCorrectStringParamIndex(ParamIndex_t param_idx);
 static uint32_t _paramsGetStringMemoryPoolAddress();
 static int8_t _paramsLoadToFlash();
 
-#define INT_POOL_SIZE           integer_params_amount * sizeof(IntegerParamValue_t)
-#define STR_POOL_SIZE           MAX_STRING_LENGTH * string_params_amount
+#define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
+#define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
 
 
-int8_t paramsInit(ParamIndex_t int_params_amount, ParamIndex_t str_params_amount) {
-    uint32_t required_flash_memory = sizeof(IntegerParamValue_t) * int_params_amount +\
-                                     MAX_STRING_LENGTH * str_params_amount;
-    if (romGetAvailableMemory() < required_flash_memory) {
+int8_t paramsInit(ParamIndex_t integers_requested, ParamIndex_t strings_requested) {
+    uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * integers_requested +\
+                                 MAX_STRING_LENGTH * strings_requested;
+    if (romGetAvailableMemory() < need_memory_bytes) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
-    integer_params_amount = int_params_amount;
-    string_params_amount = str_params_amount;
-    all_params_amount = integer_params_amount + string_params_amount;
+    integers_amount = integers_requested;
+    strings_amount = strings_requested;
+    all_params_amount = integers_amount + strings_amount;
     return LIBPARAMS_OK;
 }
 
@@ -49,7 +46,7 @@ void paramsLoadFromFlash() {
     romRead(0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
     romRead(_paramsGetStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
-    for (uint_fast8_t idx = 0; idx < integer_params_amount; idx++) {
+    for (uint_fast8_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
         if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
@@ -73,7 +70,7 @@ int8_t paramsResetToDefault() {
         return LIBPARAMS_NOT_INITIALIZED;
     }
 
-    for (ParamIndex_t idx = 0; idx < integer_params_amount; idx++) {
+    for (ParamIndex_t idx = 0; idx < integers_amount; idx++) {
         if (!integer_desc_pool[idx].is_required) {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
@@ -83,24 +80,24 @@ int8_t paramsResetToDefault() {
     return LIBPARAMS_OK;
 }
 
-char* paramsGetParamName(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
-        return (char*)integer_desc_pool[param_idx].name;
+const char* paramsGetParamName(ParamIndex_t param_idx) {
+    if (param_idx < integers_amount) {
+        return integer_desc_pool[param_idx].name;
     } else if (param_idx < all_params_amount) {
-        return (char*)string_desc_pool[param_idx - integer_params_amount].name;
+        return string_desc_pool[param_idx - integers_amount].name;
     }
     return NULL;
 }
 
 ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
-    for (idx = 0; idx < integer_params_amount; idx++) {
+    for (idx = 0; idx < integers_amount; idx++) {
         if (strncmp((const char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
             return idx;
         }
     }
-    for (idx = integer_params_amount; idx < all_params_amount; idx++) {
-        size_t str_idx = idx - integer_params_amount;
+    for (idx = integers_amount; idx < all_params_amount; idx++) {
+        size_t str_idx = idx - integers_amount;
         if (strncmp((const char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
             return idx;
         }
@@ -109,7 +106,7 @@ ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
 }
 
 ParamType_t paramsGetType(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
+    if (param_idx < integers_amount) {
         return PARAM_TYPE_INTEGER;
     } else if (param_idx < all_params_amount) {
         return PARAM_TYPE_STRING;
@@ -119,14 +116,14 @@ ParamType_t paramsGetType(ParamIndex_t param_idx) {
 }
 
 const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
-    if (param_idx >= integer_params_amount) {
+    if (param_idx >= integers_amount) {
         return NULL;
     }
     return &integer_desc_pool[param_idx];
 }
 
 int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
-    if (param_idx >= integer_params_amount) {
+    if (param_idx >= integers_amount) {
         return -1;
     }
 
@@ -138,7 +135,7 @@ int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
 }
 
 void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t value) {
-    if (param_idx >= integer_params_amount) {
+    if (param_idx >= integers_amount) {
         return;
     }
 
@@ -151,13 +148,13 @@ void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t value) {
 }
 
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
-    if (param_idx < integer_params_amount) {
+    if (param_idx < integers_amount) {
         return NULL;
     }
 
-    ParamIndex_t str_param_idx = param_idx - integer_params_amount;
+    ParamIndex_t str_param_idx = param_idx - integers_amount;
 
-    if (str_param_idx >= string_params_amount) {
+    if (str_param_idx >= strings_amount) {
         return NULL;
     }
 
@@ -177,7 +174,7 @@ uint8_t paramsSetStringValue(ParamIndex_t param_idx,
         return 0;
     }
 
-    param_idx -= integer_params_amount;
+    param_idx -= integers_amount;
 
     if (!string_desc_pool[param_idx].is_mutable == true) {
         return 0;
@@ -193,7 +190,7 @@ const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
         return NULL;
     }
 
-    param_idx -= integer_params_amount;
+    param_idx -= integers_amount;
 
     return &string_desc_pool[param_idx];
 }
@@ -201,11 +198,11 @@ const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
 /************************************ PRIVATE FUNCTIONS AREA *************************************/
 
 static bool _paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
-    return param_idx < integer_params_amount || param_idx >= all_params_amount;
+    return param_idx < integers_amount || param_idx >= all_params_amount;
 }
 
 static uint32_t _paramsGetStringMemoryPoolAddress() {
-    return romGetAvailableMemory() - MAX_STRING_LENGTH * string_params_amount;
+    return romGetAvailableMemory() - MAX_STRING_LENGTH * strings_amount;
 }
 
 /**

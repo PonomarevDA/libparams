@@ -92,13 +92,13 @@ const char* paramsGetParamName(ParamIndex_t param_idx) {
 ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integers_amount; idx++) {
-        if (strncmp((const char*)name, (char*)integer_desc_pool[idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, integer_desc_pool[idx].name, name_len) == 0) {
             return idx;
         }
     }
     for (idx = integers_amount; idx < all_params_amount; idx++) {
         size_t str_idx = idx - integers_amount;
-        if (strncmp((const char*)name, (char*)string_desc_pool[str_idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, string_desc_pool[str_idx].name, name_len) == 0) {
             return idx;
         }
     }

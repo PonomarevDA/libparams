@@ -13,10 +13,12 @@
 #include "libparams_error_codes.h"
 
 ///< Default values correspond to the last page access only.
-static size_t rom_addr = FLASH_LAST_PAGE_ADDR;
-static size_t start_page_idx = FLASH_NUM_OF_PAGES - 1;
-static size_t rom_size_bytes = PAGE_SIZE_BYTES;
-static size_t rom_size_pages = 1;
+static RomDriver rom = {
+    .addr = FLASH_LAST_PAGE_ADDR,
+    .start_page_idx = FLASH_NUM_OF_PAGES - 1,
+    .size_bytes = PAGE_SIZE_BYTES,
+    .size_pages = 1,
+};
 
 
 int8_t romInit(size_t first_page_idx, size_t pages_amount) {
@@ -26,19 +28,19 @@ int8_t romInit(size_t first_page_idx, size_t pages_amount) {
 
     flashInit();
 
-    rom_addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
-    start_page_idx = first_page_idx;
-    rom_size_bytes = pages_amount * PAGE_SIZE_BYTES;
-    rom_size_pages = pages_amount;
+    rom.addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
+    rom.start_page_idx = first_page_idx;
+    rom.size_bytes = pages_amount * PAGE_SIZE_BYTES;
+    rom.size_pages = pages_amount;
     return LIBPARAMS_OK;
 }
 
 size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
-    if (data == NULL || offset >= rom_size_bytes || requested_size == 0) {
+    if (data == NULL || offset >= rom.size_bytes || requested_size == 0) {
         return 0;
     }
 
-    size_t allowed_size = rom_size_bytes - offset;
+    size_t allowed_size = rom.size_bytes - offset;
     size_t bytes_to_read;
     if (allowed_size < requested_size) {
         bytes_to_read = allowed_size;
@@ -46,23 +48,23 @@ size_t romRead(size_t offset, uint8_t* data, size_t requested_size) {
         bytes_to_read = requested_size;
     }
 
-    return flashMemcpy(data, start_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
+    return flashMemcpy(data, rom.start_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
 }
 
 void romBeginWrite() {
     flashUnlock();
-    flashErase((uint32_t)start_page_idx, (uint32_t)rom_size_pages);
+    flashErase((uint32_t)rom.start_page_idx, (uint32_t)rom.size_pages);
 }
 
 size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
-    if (data == NULL || offset >= rom_size_bytes || size == 0 || offset + size > rom_size_bytes) {
+    if (data == NULL || offset >= rom.size_bytes || size == 0 || offset + size > rom.size_bytes) {
         return 0;
     }
 
     int8_t status = 0;
 
     for (size_t idx = 0; idx < (size + FLASH_WORD_SIZE - 1) / FLASH_WORD_SIZE; idx++) {
-        size_t addr = rom_addr + offset + FLASH_WORD_SIZE * idx;
+        size_t addr = rom.addr + offset + FLASH_WORD_SIZE * idx;
 #if FLASH_WORD_SIZE == 4
         uint32_t word = ((const uint32_t*)(const void*)data)[idx];
         status = flashWriteU32((uint32_t)addr, word);
@@ -79,7 +81,7 @@ size_t romWrite(size_t offset, const uint8_t* data, size_t size) {
 }
 
 uint32_t romGetAvailableMemory() {
-    return rom_size_bytes;
+    return rom.size_bytes;
 }
 
 void romEndWrite() {

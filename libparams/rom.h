@@ -18,6 +18,13 @@
 extern "C" {
 #endif
 
+typedef struct {
+    size_t addr;
+    size_t start_page_idx;
+    size_t size_bytes;
+    size_t size_pages;
+} RomDriver;
+
 /**
  * @brief By default it is initialized as last page only.
  * @return 0 if success, otherwise < 0

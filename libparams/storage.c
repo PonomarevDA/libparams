@@ -21,18 +21,34 @@ static ParamIndex_t integers_amount = 0;
 static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
-static bool _paramsIsCorrectStringParamIndex(ParamIndex_t param_idx);
-static uint32_t _paramsGetStringMemoryPoolAddress();
-static int8_t _paramsLoadToFlash();
+static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
+static uint32_t _getStringMemoryPoolAddress();
+static int8_t _save();
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
 
 
-int8_t paramsInit(ParamIndex_t integers_requested, ParamIndex_t strings_requested) {
+///< Default values correspond to the last page access only.
+static RomDriver rom = {
+    .addr = FLASH_LAST_PAGE_ADDR,
+    .start_page_idx = FLASH_NUM_OF_PAGES - 1,
+    .size_bytes = PAGE_SIZE_BYTES,
+    .size_pages = 1,
+};
+
+
+int8_t paramsInit(ParamIndex_t integers_requested,
+                  ParamIndex_t strings_requested,
+                  uint8_t first_page_idx,
+                  size_t pages_amount) {
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * integers_requested +\
                                  MAX_STRING_LENGTH * strings_requested;
-    if (romGetAvailableMemory() < need_memory_bytes) {
+    if (romInit(&rom, 0, 1) < 0) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
+
+    if (romGetAvailableMemory(&rom) < need_memory_bytes) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
@@ -43,8 +59,8 @@ int8_t paramsInit(ParamIndex_t integers_requested, ParamIndex_t strings_requeste
 }
 
 void paramsLoadFromFlash() {
-    romRead(0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
-    romRead(_paramsGetStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+    romRead(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(&rom, _getStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
     for (uint_fast8_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
@@ -59,9 +75,9 @@ int8_t paramsLoadToFlash() {
         return LIBPARAMS_NOT_INITIALIZED;
     }
 
-    romBeginWrite();
-    int8_t res = _paramsLoadToFlash();
-    romEndWrite();
+    romBeginWrite(&rom);
+    int8_t res = _save();
+    romEndWrite(&rom);
     return res;
 }
 
@@ -170,7 +186,7 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
 uint8_t paramsSetStringValue(ParamIndex_t param_idx,
                              uint8_t str_len,
                              const StringParamValue_t param_value) {
-    if (str_len > MAX_STRING_LENGTH || _paramsIsCorrectStringParamIndex(param_idx)) {
+    if (str_len > MAX_STRING_LENGTH || _isCorrectStringParamIndex(param_idx)) {
         return 0;
     }
 
@@ -186,7 +202,7 @@ uint8_t paramsSetStringValue(ParamIndex_t param_idx,
 }
 
 const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
-    if (_paramsIsCorrectStringParamIndex(param_idx)) {
+    if (_isCorrectStringParamIndex(param_idx)) {
         return NULL;
     }
 
@@ -197,12 +213,12 @@ const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx) {
 
 /************************************ PRIVATE FUNCTIONS AREA *************************************/
 
-static bool _paramsIsCorrectStringParamIndex(ParamIndex_t param_idx) {
+static bool _isCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integers_amount || param_idx >= all_params_amount;
 }
 
-static uint32_t _paramsGetStringMemoryPoolAddress() {
-    return romGetAvailableMemory() - MAX_STRING_LENGTH * strings_amount;
+static uint32_t _getStringMemoryPoolAddress() {
+    return romGetAvailableMemory(&rom) - MAX_STRING_LENGTH * strings_amount;
 }
 
 /**
@@ -210,13 +226,15 @@ static uint32_t _paramsGetStringMemoryPoolAddress() {
  * An error means either a library internal error or the provided flash driver is incorrect.
  * If such errir is detected, stop writing immediately to avoid doing something wrong.
  */
-static int8_t _paramsLoadToFlash() {
-    if (INT_POOL_SIZE != 0 && 0 == romWrite(0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+static int8_t _save() {
+    if (INT_POOL_SIZE != 0 &&
+            0 == romWrite(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
-    size_t offset = _paramsGetStringMemoryPoolAddress();
-    if (STR_POOL_SIZE != 0 && 0 == romWrite(offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
+    size_t offset = _getStringMemoryPoolAddress();
+    if (STR_POOL_SIZE != 0 &&
+            0 == romWrite(&rom, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 

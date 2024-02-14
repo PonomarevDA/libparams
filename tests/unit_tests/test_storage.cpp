@@ -25,8 +25,7 @@ typedef enum {
 } StrParamsIndexes;
 
 void init() {
-    romInit(0, 1);
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT);
+    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
     paramsLoadFromFlash();
 }
 void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
@@ -40,57 +39,55 @@ void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
 
 TEST(TestStorage, test_paramsLoadToFlash) {
     // Normal
-    romInit(0, 1);
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // Zero integers is ok
-    romInit(0, 1);
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT, 0, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // Zero strings is ok
-    romInit(0, 1);
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0, 0, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // Full storage is ok
-    ASSERT_EQ(LIBPARAMS_OK, romInit(0, 1));
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, 0, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
 
     // More paramters than possible is not ok
-    ASSERT_EQ(LIBPARAMS_OK, romInit(0, 1));
-    paramsInit(0, 0);  // Reset the storage
-    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0));
+    paramsInit(0, 0, 0, 1);  // Reset the storage
+    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, 0, 1));
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsLoadToFlash());
 }
 
 TEST(TestStorage, test_paramsLoadFromFlash) {
-    init();
+    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
+    paramsLoadFromFlash();
+    RomDriver rom;
+    romInit(&rom, 0, 1);
     int32_t data;
 
     // Out of range value in flash (more than max)
     data = 128;
-    romBeginWrite();
-    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite();
+    romBeginWrite(&rom);
+    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite(&rom);
     paramsLoadFromFlash();
     ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
 
     // Out of range value in flash (less than min)
     data = -1;
-    romBeginWrite();
-    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite();
+    romBeginWrite(&rom);
+    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite(&rom);
     paramsLoadFromFlash();
     ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
 
     // Normal
     data = 42;
-    romBeginWrite();
-    ASSERT_EQ(4, romWrite(0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite();
+    romBeginWrite(&rom);
+    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
+    romEndWrite(&rom);
     paramsLoadFromFlash();
     ASSERT_EQ(42, paramsGetIntegerValue(NODE_ID));
 }

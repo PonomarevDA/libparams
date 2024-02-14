@@ -29,21 +29,21 @@ typedef struct {
  * @brief By default it is initialized as last page only.
  * @return 0 if success, otherwise < 0
  */
-int8_t romInit(size_t first_page_idx, size_t pages_amount);
+int8_t romInit(RomDriver* rom, size_t first_page_idx, size_t pages_amount);
 
 /**
  * @brief Return the number of bytes read (may be less than size).
  */
-size_t romRead(size_t offset, uint8_t* data, size_t size);
+size_t romRead(const RomDriver* rom, size_t offset, uint8_t* data, size_t size);
 
 /**
  * @brief Return the number of bytes wrote (0 in case of error).
  */
-void romBeginWrite();
-size_t romWrite(size_t offset, const uint8_t* data, size_t size);
-void romEndWrite();
+void romBeginWrite(const RomDriver* rom);
+size_t romWrite(const RomDriver* rom, size_t offset, const uint8_t* data, size_t size);
+void romEndWrite(const RomDriver* rom);
 
-uint32_t romGetAvailableMemory();
+uint32_t romGetAvailableMemory(const RomDriver* rom);
 
 #ifdef __cplusplus
 }

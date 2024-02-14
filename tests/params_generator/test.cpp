@@ -23,8 +23,7 @@ bool strCompareSafe(const char* first, const char* second, size_t len) {
 }
 
 void init() {
-    romInit(0, 1);
-    paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS);
+    paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, 0, 1);
     paramsLoadFromFlash();
 }
 

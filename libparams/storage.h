@@ -19,7 +19,9 @@
 extern "C" {
 #endif
 
-#define MAX_PARAM_NAME_LENGTH   32
+#ifndef MAX_PARAM_NAME_LENGTH
+#define MAX_PARAM_NAME_LENGTH 32
+#endif
 
 #ifndef MAX_STRING_LENGTH
 #define MAX_STRING_LENGTH 56
@@ -68,39 +70,75 @@ typedef struct {
 
 typedef uint16_t ParamIndex_t;
 
+
 /**
- * @note Common functions
+ * @brief           Initialize the parameters. Call this on startup.
  */
 int8_t paramsInit(ParamIndex_t int_params_amount,
                   ParamIndex_t str_params_amount,
-                  uint8_t first_page_idx,
+                  int32_t first_page_idx,
                   size_t pages_amount);
-void paramsLoadFromFlash();
-int8_t paramsLoadToFlash();
+
+/**
+ * @brief           Load parameters from a persistent memory: flash for stm32 and file for ubuntu.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsLoad();
+
+/**
+ * @brief           Save parameters to a persistent memory: flash for stm32 and file for ubuntu.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsSave();
+
+/**
+ * @brief           Reset all parameters to their default values.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
 int8_t paramsResetToDefault();
 
 /**
- * @note Common parameters getters
+ * @note            Get the parameter name
+ * @return          C-string on success, otherwise NULL.
  */
-const char* paramsGetParamName(ParamIndex_t param_idx);
-ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_length);
+const char* paramsGetName(ParamIndex_t param_idx);
+
+/**
+ * @brief           Find the index of the parameter by his name
+ * @param name      The name of the paramter
+ * @param len       The length of the parameter name
+ * @return          Tthe index of the parameter on success, otherwise the amount of parameters
+ */
+ParamIndex_t paramsFind(const uint8_t* name, uint16_t len);
+
+/**
+ * @brief           Get the type of the parameter
+ * @param param_idx The name of the parameter
+ * @return          The type of the paramter on success, otherwise PARAM_TYPE_UNDEFINED
+ */
 ParamType_t paramsGetType(ParamIndex_t param_idx);
 
 /**
- * @note Integer parameters specific setters/getters
+ * @brief           Get the descriptor of the parameter
+ * @return          Pointer to the structure on success, otherwise NULL
  */
 const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx);
-IntegerParamValue_t paramsGetIntegerValue(ParamIndex_t param_idx);
-void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);
+const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx);
 
 /**
- * @note String parameters specific setters/getters
+ * @brief           Get the parameter value
+ * @return          The value of success, otherwise NULL
  */
+IntegerParamValue_t paramsGetIntegerValue(ParamIndex_t param_idx);
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx);
+
+/**
+ * @brief           Set the parameter value
+ */
+void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value);
 uint8_t paramsSetStringValue(ParamIndex_t param_idx,
                              uint8_t str_len,
                              const StringParamValue_t param_value);
-const StringDesc_t* paramsGetStringDesc(ParamIndex_t param_idx);
 
 #ifdef __cplusplus
 }

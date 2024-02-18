@@ -13,26 +13,35 @@
 #include "libparams_error_codes.h"
 
 
-int8_t romInit(RomDriver* rom, size_t first_page_idx, size_t pages_amount) {
-    if (rom == NULL || first_page_idx + pages_amount > FLASH_NUM_OF_PAGES || pages_amount == 0) {
-        return LIBPARAMS_WRONG_ARGS;
+RomDriverInstance romInit(int32_t first_page_idx, size_t pages_amount) {
+    if (first_page_idx < 0) {
+        first_page_idx += FLASH_NUM_OF_PAGES;
+    }
+
+    RomDriverInstance rom = {0};
+
+    if (first_page_idx < 0 ||
+            first_page_idx + pages_amount > FLASH_NUM_OF_PAGES ||
+            pages_amount == 0) {
+        return rom;
     }
 
     flashInit();
 
-    rom->addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
-    rom->start_page_idx = first_page_idx;
-    rom->size_bytes = pages_amount * PAGE_SIZE_BYTES;
-    rom->size_pages = pages_amount;
-    return LIBPARAMS_OK;
+    rom.addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
+    rom.first_page_idx = first_page_idx;
+    rom.total_size = pages_amount * PAGE_SIZE_BYTES;
+    rom.pages_amount = pages_amount;
+    rom.inited = true;
+    return rom;
 }
 
-size_t romRead(const RomDriver* rom, size_t offset, uint8_t* data, size_t requested_size) {
-    if (rom == NULL || data == NULL || offset >= rom->size_bytes || requested_size == 0) {
+size_t romRead(const RomDriverInstance* rom, size_t offset, uint8_t* data, size_t requested_size) {
+    if (rom == NULL || data == NULL || offset >= rom->total_size || requested_size == 0) {
         return 0;
     }
 
-    size_t allowed_size = rom->size_bytes - offset;
+    size_t allowed_size = rom->total_size - offset;
     size_t bytes_to_read;
     if (allowed_size < requested_size) {
         bytes_to_read = allowed_size;
@@ -40,21 +49,21 @@ size_t romRead(const RomDriver* rom, size_t offset, uint8_t* data, size_t reques
         bytes_to_read = requested_size;
     }
 
-    return flashMemcpy(data, rom->start_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
+    return flashMemcpy(data, rom->first_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
 }
 
-void romBeginWrite(const RomDriver* rom) {
+void romBeginWrite(const RomDriverInstance* rom) {
     if (rom == NULL) {
         return;
     }
 
     flashUnlock();
-    flashErase((uint32_t)rom->start_page_idx, (uint32_t)rom->size_pages);
+    flashErase((uint32_t)rom->first_page_idx, (uint32_t)rom->pages_amount);
 }
 
-size_t romWrite(const RomDriver* rom, size_t offset, const uint8_t* data, size_t size) {
+size_t romWrite(const RomDriverInstance* rom, size_t offset, const uint8_t* data, size_t size) {
     if (rom == NULL || data == NULL ||
-            offset >= rom->size_bytes || size == 0 || offset + size > rom->size_bytes) {
+            offset >= rom->total_size || size == 0 || offset + size > rom->total_size) {
         return 0;
     }
 
@@ -77,15 +86,15 @@ size_t romWrite(const RomDriver* rom, size_t offset, const uint8_t* data, size_t
     return (status >= 0) ? size : 0;
 }
 
-uint32_t romGetAvailableMemory(const RomDriver* rom) {
+uint32_t romGetAvailableMemory(const RomDriverInstance* rom) {
     if (rom == NULL) {
         return 0;
     }
 
-    return (uint32_t)rom->size_bytes;
+    return (uint32_t)rom->total_size;
 }
 
-void romEndWrite(const RomDriver* rom) {
+void romEndWrite(const RomDriverInstance* rom) {
     if (rom == NULL) {
         return;
     }

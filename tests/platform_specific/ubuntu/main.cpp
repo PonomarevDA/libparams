@@ -17,7 +17,7 @@ extern uint8_t flash_memory[PAGE_SIZE_BYTES];
 
 int main (int argc, char *argv[]) {
     paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, 0, 1);
-    paramsLoadFromFlash();
+    paramsLoad();
 
     std::cout << "Integer parameters:" << std::endl;
     for (size_t int_idx = 0; int_idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; int_idx++) {

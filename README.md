@@ -79,7 +79,7 @@ Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparam
 
 ROM driver simply allows you to write and read sequence of bytes. Mainly, it consist of 3 operations.
 
-1. Initialization. It is necessary to call `romInit()` to configure the driver. Storage driver do it automatically. The library allocates the last page by default.
+1. Initialization. It is necessary to call `romInit()` to configure the driver. Storage driver do it automatically.
 
 2. Read operation. You just need to call `romRead` with corresponded arguments.
 
@@ -175,7 +175,7 @@ The initialization of the application can be as shown below:
 
 void application_example() {
     paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, StrParamsIndexes::STRING_PARAMS_AMOUNT);
-    paramsLoadFromFlash();
+    paramsLoad();
 }
 ```
 

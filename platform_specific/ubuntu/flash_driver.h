@@ -14,7 +14,7 @@
 
 #define FLASH_START_ADDR            0x08000000
 #define PAGE_SIZE_BYTES             2048
-#define FLASH_NUM_OF_PAGES          256
+#define FLASH_NUM_OF_PAGES          1
 #define FLASH_WORD_SIZE             8
 
 #define FLASH_SIZE_BYTES            (PAGE_SIZE_BYTES * FLASH_NUM_OF_PAGES)

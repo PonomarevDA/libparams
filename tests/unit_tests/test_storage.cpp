@@ -26,7 +26,7 @@ typedef enum {
 
 void init() {
     paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
-    paramsLoadFromFlash();
+    paramsLoad();
 }
 void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
     size_t string_length = strlen(str);
@@ -37,34 +37,15 @@ void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
     ASSERT_EQ(memcmp(str, read_str_param, string_length), 0);
 }
 
-TEST(TestStorage, test_paramsLoadToFlash) {
-    // Normal
+TEST(TestStorage, test_paramsInit) {
     ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1));
-    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
-
-    // Zero integers is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT, 0, 1));
-    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
-
-    // Zero strings is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0, 0, 1));
-    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
-
-    // Full storage is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, 0, 1));
-    ASSERT_EQ(LIBPARAMS_OK, paramsLoadToFlash());
-
-    // More paramters than possible is not ok
-    paramsInit(0, 0, 0, 1);  // Reset the storage
-    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, 0, 1));
-    ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsLoadToFlash());
 }
 
-TEST(TestStorage, test_paramsLoadFromFlash) {
+TEST(TestStorage, test_paramsLoad) {
     paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
-    paramsLoadFromFlash();
-    RomDriver rom;
-    romInit(&rom, 0, 1);
+    paramsLoad();
+    RomDriverInstance rom = romInit(0, 1);
+
     int32_t data;
 
     // Out of range value in flash (more than max)
@@ -72,7 +53,7 @@ TEST(TestStorage, test_paramsLoadFromFlash) {
     romBeginWrite(&rom);
     ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
     romEndWrite(&rom);
-    paramsLoadFromFlash();
+    paramsLoad();
     ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
 
     // Out of range value in flash (less than min)
@@ -80,7 +61,7 @@ TEST(TestStorage, test_paramsLoadFromFlash) {
     romBeginWrite(&rom);
     ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
     romEndWrite(&rom);
-    paramsLoadFromFlash();
+    paramsLoad();
     ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
 
     // Normal
@@ -88,11 +69,104 @@ TEST(TestStorage, test_paramsLoadFromFlash) {
     romBeginWrite(&rom);
     ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
     romEndWrite(&rom);
-    paramsLoadFromFlash();
+    paramsLoad();
     ASSERT_EQ(42, paramsGetIntegerValue(NODE_ID));
 }
 
-TEST(TestStorage, test_write_read_integers) {
+TEST(TestStorage, test_paramsSave) {
+    // Normal
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsSave());
+
+    // Zero integers is ok
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsSave());
+
+    // Zero strings is ok
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsSave());
+
+    // Full storage is ok
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsSave());
+
+    // More parameters than possible is not ok
+    paramsInit(0, 0, 0, 1);  // Reset the storage
+    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, 0, 1));
+    ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsSave());
+}
+
+TEST(TestStorage, test_paramsResetToDefault) {
+    init();
+    ASSERT_EQ(0, paramsResetToDefault());
+}
+
+TEST(TestStorage, test_paramsGetName) {
+    init();
+    size_t expected_param_name_length;
+
+    ParamIndex_t int_param_idx = NODE_ID;
+    auto int_param_expected_name = "uavcan.node.id";
+    expected_param_name_length = strlen(int_param_expected_name);
+    auto read_param_name = paramsGetName(int_param_idx);
+    ASSERT_EQ(memcmp(int_param_expected_name, read_param_name, expected_param_name_length), 0);
+
+    ParamIndex_t str_param_idx = INTEGER_PARAMS_AMOUNT + NODE_NAME;
+    auto str_param_expected_name = "name";
+    expected_param_name_length = strlen(str_param_expected_name);
+    read_param_name = paramsGetName(str_param_idx);
+    ASSERT_EQ(memcmp(str_param_expected_name, read_param_name, expected_param_name_length), 0);
+
+    // Out of bounds
+    ParamIndex_t wrong_param_idx = INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT;
+    read_param_name = paramsGetName(wrong_param_idx);
+    ASSERT_EQ(read_param_name, nullptr);
+}
+
+TEST(TestStorage, test_paramsFind) {
+    init();
+
+    ASSERT_EQ(MAGNETOMETER_ID, paramsFind((const uint8_t*)"uavcan.pub.mag.id", 18));
+    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + NODE_ID, paramsFind((const uint8_t*)"name", 4));
+    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, paramsFind((const uint8_t*)"none", 4));
+}
+
+TEST(TestStorage, test_paramsGetType) {
+    init();
+
+    std::vector<std::pair<ParamIndex_t, ParamType_t>> data_set = {
+        std::make_pair(NODE_ID,                                         PARAM_TYPE_INTEGER),
+        std::make_pair(INTEGER_PARAMS_AMOUNT + NODE_NAME,               PARAM_TYPE_STRING),
+        std::make_pair(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT,    PARAM_TYPE_UNDEFINED)
+    };
+
+    for (auto data : data_set) {
+        ASSERT_EQ(paramsGetType(data.first), data.second);
+    }
+}
+
+TEST(TestStorage, test_paramsGetIntegerDesc) {
+    init();
+
+    const IntegerDesc_t* desc = paramsGetIntegerDesc(NODE_ID);
+    ASSERT_EQ(desc->def, 50);
+    ASSERT_EQ(desc->min, 0);
+    ASSERT_EQ(desc->max, 127);
+
+    // Out of parameters range
+    ASSERT_EQ(NULL, paramsGetIntegerDesc(INTEGER_PARAMS_AMOUNT));
+}
+
+TEST(TestStorage, test_paramsGetStringDesc) {
+    init();
+    ASSERT_EQ(NULL, paramsGetStringDesc(NODE_ID));
+
+    auto node_name_desc = paramsGetStringDesc(INTEGER_PARAMS_AMOUNT + NODE_NAME);
+    EXPECT_TRUE(std::string("Unknown") == std::string((const char*)node_name_desc->def));
+    EXPECT_TRUE(std::string("name") == std::string((const char*)node_name_desc->name));
+}
+
+TEST(TestStorage, test_paramsGetSetIntegerValue) {
     init();
     IntegerParamValue_t param_value;
 
@@ -118,39 +192,7 @@ TEST(TestStorage, test_write_read_integers) {
     ASSERT_EQ(param_value, -1);
 }
 
-TEST(TestStorage, test_persistent_params) {
-    init();
-    IntegerParamValue_t param_value;
-
-    paramsSetIntegerValue(PERSISTENT_INTEGET_ID, 0);
-    param_value = paramsGetIntegerValue(PERSISTENT_INTEGET_ID);
-    ASSERT_EQ(param_value, 1000000);
-}
-
-TEST(TestStorage, test_get_integer_desc) {
-    init();
-
-    const IntegerDesc_t* desc = paramsGetIntegerDesc(NODE_ID);
-    ASSERT_EQ(desc->def, 50);
-    ASSERT_EQ(desc->min, 0);
-    ASSERT_EQ(desc->max, 127);
-
-    // Out of parameters range
-    ASSERT_EQ(NULL, paramsGetIntegerDesc(INTEGER_PARAMS_AMOUNT));
-}
-
-TEST(TestStorage, test_paramsSetStringValue) {
-    init();
-    auto test_string = (const uint8_t*)"test_string";
-
-    // Wrong inputs
-    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + NODE_NAME, 100, test_string));
-    ASSERT_EQ(0, paramsSetStringValue(0, 12, test_string));
-    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, 12, test_string));
-}
-
-
-TEST(TestStorage, test_write_read_strings) {
+TEST(TestStorage, test_paramsGetSetStringValue) {
     init();
 
     // Mutable string
@@ -173,62 +215,23 @@ TEST(TestStorage, test_write_read_strings) {
     ASSERT_EQ(NULL, paramsGetStringValue(more_than_need_idx));
 }
 
-TEST(TestStorage, test_paramsGetParamName) {
+TEST(TestStorage, test_paramsSetIntegerValue_persistent_param) {
     init();
-    size_t expected_param_name_length;
+    IntegerParamValue_t param_value;
 
-    ParamIndex_t int_param_idx = NODE_ID;
-    auto int_param_expected_name = "uavcan.node.id";
-    expected_param_name_length = strlen(int_param_expected_name);
-    auto read_param_name = paramsGetParamName(int_param_idx);
-    ASSERT_EQ(memcmp(int_param_expected_name, read_param_name, expected_param_name_length), 0);
-
-    ParamIndex_t str_param_idx = INTEGER_PARAMS_AMOUNT + NODE_NAME;
-    auto str_param_expected_name = "name";
-    expected_param_name_length = strlen(str_param_expected_name);
-    read_param_name = paramsGetParamName(str_param_idx);
-    ASSERT_EQ(memcmp(str_param_expected_name, read_param_name, expected_param_name_length), 0);
-
-    // Out of bounds
-    ParamIndex_t wrong_param_idx = INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT;
-    read_param_name = paramsGetParamName(wrong_param_idx);
-    ASSERT_EQ(read_param_name, nullptr);
+    paramsSetIntegerValue(PERSISTENT_INTEGET_ID, 0);
+    param_value = paramsGetIntegerValue(PERSISTENT_INTEGET_ID);
+    ASSERT_EQ(param_value, 1000000);
 }
 
-TEST(TestStorage, test_params_get_type) {
+TEST(TestStorage, test_paramsSetStringValue) {
     init();
+    auto test_string = (const uint8_t*)"test_string";
 
-    std::vector<std::pair<ParamIndex_t, ParamType_t>> data_set = {
-        std::make_pair(NODE_ID,                                         PARAM_TYPE_INTEGER),
-        std::make_pair(INTEGER_PARAMS_AMOUNT + NODE_NAME,               PARAM_TYPE_STRING),
-        std::make_pair(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT,    PARAM_TYPE_UNDEFINED)
-    };
-
-    for (auto data : data_set) {
-        ASSERT_EQ(paramsGetType(data.first), data.second);
-    }
-}
-
-TEST(TestStorage, test_paramsGetIndexByName) {
-    init();
-
-    ASSERT_EQ(MAGNETOMETER_ID, paramsGetIndexByName((const uint8_t*)"uavcan.pub.mag.id", 18));
-    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + NODE_ID, paramsGetIndexByName((const uint8_t*)"name", 4));
-    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, paramsGetIndexByName((const uint8_t*)"none", 4));
-}
-
-TEST(TestStorage, test_paramsResetToDefault) {
-    init();
-    ASSERT_EQ(0, paramsResetToDefault());
-}
-
-TEST(TestStorage, test_paramsGetStringDesc) {
-    init();
-    ASSERT_EQ(NULL, paramsGetStringDesc(NODE_ID));
-
-    auto node_name_desc = paramsGetStringDesc(INTEGER_PARAMS_AMOUNT + NODE_NAME);
-    EXPECT_TRUE(std::string("Unknown") == std::string((const char*)node_name_desc->def));
-    EXPECT_TRUE(std::string("name") == std::string((const char*)node_name_desc->name));
+    // Wrong inputs
+    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + NODE_NAME, 100, test_string));
+    ASSERT_EQ(0, paramsSetStringValue(0, 12, test_string));
+    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, 12, test_string));
 }
 
 

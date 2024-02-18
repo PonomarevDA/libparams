@@ -11,39 +11,56 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-#define PARAM_STRING_MAX_SIZE   20
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * @brief This structure keeps all ROM driver related internal veriables.
+ * Use rom->inited to verify is ROM driver has been initilized or not.
+ * Use romInit() to create an instance.
+ */
 typedef struct {
     size_t addr;
-    size_t start_page_idx;
-    size_t size_bytes;
-    size_t size_pages;
-} RomDriver;
+    size_t first_page_idx;
+    size_t total_size;
+    size_t pages_amount;
+    bool inited;
+} RomDriverInstance;
+
 
 /**
- * @brief By default it is initialized as last page only.
- * @return 0 if success, otherwise < 0
+ * @brief In order to use ROM driver, you should create an instance by calling this function.
+ * @param first_page_idx positive value counts from the beginning, negative from the end
+ * For example, 0 means the first page, -1 means the last page.
+ * @return ROM driver instance. It will have inited=true on success and inited=false on failure.
+ * @note A few recommendations:
+ * - For ubuntu we usually use first_page_idx=0 and pages_amount=1.
+ * - For stm32 we usually use the latest page, for example: first_page_idx=255 and pages_amount=1.
  */
-int8_t romInit(RomDriver* rom, size_t first_page_idx, size_t pages_amount);
+RomDriverInstance romInit(int32_t first_page_idx, size_t pages_amount);
 
 /**
  * @brief Return the number of bytes read (may be less than size).
  */
-size_t romRead(const RomDriver* rom, size_t offset, uint8_t* data, size_t size);
+size_t romRead(const RomDriverInstance* rom,
+               size_t                   offset,
+               uint8_t*                 data,
+               size_t                   size);
 
 /**
  * @brief Return the number of bytes wrote (0 in case of error).
  */
-void romBeginWrite(const RomDriver* rom);
-size_t romWrite(const RomDriver* rom, size_t offset, const uint8_t* data, size_t size);
-void romEndWrite(const RomDriver* rom);
+void romBeginWrite(const RomDriverInstance* rom);
+size_t romWrite(const RomDriverInstance*    rom,
+                size_t                      offset,
+                const uint8_t*              data,
+                size_t                      size);
+void romEndWrite(const RomDriverInstance*   rom);
 
-uint32_t romGetAvailableMemory(const RomDriver* rom);
+uint32_t romGetAvailableMemory(const RomDriverInstance* rom);
 
 #ifdef __cplusplus
 }

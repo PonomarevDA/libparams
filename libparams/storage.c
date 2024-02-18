@@ -30,21 +30,23 @@ static int8_t _save();
 
 
 ///< Default values correspond to the last page access only.
-static RomDriver rom = {
+static RomDriverInstance rom = {
     .addr = FLASH_LAST_PAGE_ADDR,
-    .start_page_idx = FLASH_NUM_OF_PAGES - 1,
-    .size_bytes = PAGE_SIZE_BYTES,
-    .size_pages = 1,
+    .first_page_idx = FLASH_NUM_OF_PAGES - 1,
+    .total_size = PAGE_SIZE_BYTES,
+    .pages_amount = 1,
 };
 
 
 int8_t paramsInit(ParamIndex_t integers_requested,
                   ParamIndex_t strings_requested,
-                  uint8_t first_page_idx,
+                  int32_t first_page_idx,
                   size_t pages_amount) {
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * integers_requested +\
                                  MAX_STRING_LENGTH * strings_requested;
-    if (romInit(&rom, 0, 1) < 0) {
+    rom = romInit(first_page_idx, pages_amount);
+
+    if (!rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
@@ -58,7 +60,7 @@ int8_t paramsInit(ParamIndex_t integers_requested,
     return LIBPARAMS_OK;
 }
 
-void paramsLoadFromFlash() {
+int8_t paramsLoad() {
     romRead(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
     romRead(&rom, _getStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
@@ -68,9 +70,11 @@ void paramsLoadFromFlash() {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
+
+    return LIBPARAMS_OK;
 }
 
-int8_t paramsLoadToFlash() {
+int8_t paramsSave() {
     if (all_params_amount == 0) {
         return LIBPARAMS_NOT_INITIALIZED;
     }
@@ -96,7 +100,7 @@ int8_t paramsResetToDefault() {
     return LIBPARAMS_OK;
 }
 
-const char* paramsGetParamName(ParamIndex_t param_idx) {
+const char* paramsGetName(ParamIndex_t param_idx) {
     if (param_idx < integers_amount) {
         return integer_desc_pool[param_idx].name;
     } else if (param_idx < all_params_amount) {
@@ -105,7 +109,7 @@ const char* paramsGetParamName(ParamIndex_t param_idx) {
     return NULL;
 }
 
-ParamIndex_t paramsGetIndexByName(const uint8_t* name, uint16_t name_len) {
+ParamIndex_t paramsFind(const uint8_t* name, uint16_t name_len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integers_amount; idx++) {
         if (strncmp((const char*)name, integer_desc_pool[idx].name, name_len) == 0) {

@@ -24,7 +24,7 @@ bool strCompareSafe(const char* first, const char* second, size_t len) {
 
 void init() {
     paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, 0, 1);
-    paramsLoadFromFlash();
+    paramsLoad();
 }
 
 TEST(TestParamsGenerator, test_str_params_amount) {

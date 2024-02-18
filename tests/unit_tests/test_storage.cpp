@@ -25,7 +25,7 @@ typedef enum {
 } StrParamsIndexes;
 
 void init() {
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
+    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
     paramsLoad();
 }
 void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
@@ -38,11 +38,11 @@ void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
 }
 
 TEST(TestStorage, test_paramsInit) {
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1));
 }
 
 TEST(TestStorage, test_paramsLoad) {
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1);
+    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
     paramsLoad();
     RomDriverInstance rom = romInit(0, 1);
 
@@ -75,24 +75,24 @@ TEST(TestStorage, test_paramsLoad) {
 
 TEST(TestStorage, test_paramsSave) {
     // Normal
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 
     // Zero integers is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, STRING_PARAMS_AMOUNT, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 
     // Zero strings is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 
     // Full storage is ok
-    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, 0, 1));
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 
     // More parameters than possible is not ok
-    paramsInit(0, 0, 0, 1);  // Reset the storage
-    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, 0, 1));
+    paramsInit(0, 0, -1, 1);  // Reset the storage
+    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsSave());
 }
 

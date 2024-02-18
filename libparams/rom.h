@@ -33,12 +33,13 @@ typedef struct {
 
 /**
  * @brief In order to use ROM driver, you should create an instance by calling this function.
- * @param first_page_idx positive value counts from the beginning, negative from the end
- * For example, 0 means the first page, -1 means the last page.
+ * @param first_page Index of the first page. Negative values are counted from the end.
+ * On stm32f103, -1 means the latest page (equal to idx=127).
+ * On stm32g0, -1 means the latest page (equal idx=255).
+ * On Ubuntu platform, it is safe to use -1 even if it has a single page (equal to idx=0).
+ * @param pages_num The amount of allocated pages. At least 1 page is required.
  * @return ROM driver instance. It will have inited=true on success and inited=false on failure.
- * @note A few recommendations:
- * - For ubuntu we usually use first_page_idx=0 and pages_amount=1.
- * - For stm32 we usually use the latest page, for example: first_page_idx=255 and pages_amount=1.
+ * @note Example of a single latest page allocation: romInit(-1, 1)
  */
 RomDriverInstance romInit(int32_t first_page_idx, size_t pages_amount);
 

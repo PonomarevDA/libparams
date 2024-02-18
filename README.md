@@ -174,7 +174,7 @@ The initialization of the application can be as shown below:
 #include "params.h"
 
 void application_example() {
-    paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, StrParamsIndexes::STRING_PARAMS_AMOUNT);
+    paramsInit(IntParamsIndexes::INTEGER_PARAMS_AMOUNT, StrParamsIndexes::STRING_PARAMS_AMOUNT, -1, 1);
     paramsLoad();
 }
 ```

@@ -12,11 +12,11 @@
 void test_flash_wr() {
     RomDriverInstance rom = romInit(255, 1);
 
-    const uint8_t first_buf[PAGE_SIZE_BYTES];
-    romWrite(&rom, 0, first_buf, PAGE_SIZE_BYTES);
+    const uint8_t first_buf[2048];
+    romWrite(&rom, 0, first_buf, flashGetPageSize());
 
-    uint8_t second_buf[PAGE_SIZE_BYTES];
-    romRead(&rom, 0, second_buf, PAGE_SIZE_BYTES);
+    uint8_t second_buf[2048];
+    romRead(&rom, 0, second_buf, flashGetPageSize());
 }
 
 int main() {

@@ -9,8 +9,8 @@
 #ifndef STM32F1XX_HAL_MOCK_H_
 #define STM32F1XX_HAL_MOCK_H_
 
-#define FLASH_TYPEERASE_PAGES     0x00U
-#define FLASH_TYPEPROGRAM_WORD    0x02U
+#define FLASH_TYPEERASE_PAGES         0x00U
+#define FLASH_TYPEPROGRAM_DOUBLEWORD  0x03U
 
 #include <stdint.h>
 

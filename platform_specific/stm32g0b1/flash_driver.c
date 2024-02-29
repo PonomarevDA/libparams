@@ -26,7 +26,7 @@ void flashLock() {
 }
 int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
     uint32_t last_page_idx = first_page_idx + num_of_pages;
-    if (last_page_idx > FLASH_NUM_OF_PAGES || num_of_pages == 0) {
+    if (last_page_idx > flashGetNumberOfPages() || num_of_pages == 0) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
@@ -85,4 +85,16 @@ int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pag
         return LIBPARAMS_OK;
     }
     return -status;
+}
+
+uint16_t flashGetNumberOfPages() {
+    return 256;
+}
+
+uint16_t flashGetPageSize() {
+    return 2048;
+}
+
+uint8_t flashGetWordSize() {
+    return 8;
 }

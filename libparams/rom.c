@@ -15,22 +15,22 @@
 
 RomDriverInstance romInit(int32_t first_page_idx, size_t pages_amount) {
     if (first_page_idx < 0) {
-        first_page_idx += FLASH_NUM_OF_PAGES;
+        first_page_idx += flashGetNumberOfPages();
     }
 
     RomDriverInstance rom = {0};
 
     if (first_page_idx < 0 ||
-            first_page_idx + pages_amount > FLASH_NUM_OF_PAGES ||
+            first_page_idx + pages_amount > flashGetNumberOfPages() ||
             pages_amount == 0) {
         return rom;
     }
 
     flashInit();
 
-    rom.addr = FLASH_START_ADDR + first_page_idx * PAGE_SIZE_BYTES;
+    rom.addr = FLASH_START_ADDR + first_page_idx * flashGetPageSize();
     rom.first_page_idx = first_page_idx;
-    rom.total_size = pages_amount * PAGE_SIZE_BYTES;
+    rom.total_size = pages_amount * flashGetPageSize();
     rom.pages_amount = pages_amount;
     rom.inited = true;
     return rom;
@@ -49,7 +49,7 @@ size_t romRead(const RomDriverInstance* rom, size_t offset, uint8_t* data, size_
         bytes_to_read = requested_size;
     }
 
-    return flashMemcpy(data, rom->first_page_idx * PAGE_SIZE_BYTES + offset, bytes_to_read);
+    return flashMemcpy(data, rom->first_page_idx * flashGetPageSize() + offset, bytes_to_read);
 }
 
 void romBeginWrite(const RomDriverInstance* rom) {
@@ -69,15 +69,10 @@ size_t romWrite(const RomDriverInstance* rom, size_t offset, const uint8_t* data
 
     int8_t status = 0;
 
-    for (size_t idx = 0; idx < (size + FLASH_WORD_SIZE - 1) / FLASH_WORD_SIZE; idx++) {
-        size_t addr = rom->addr + offset + FLASH_WORD_SIZE * idx;
-#if FLASH_WORD_SIZE == 4
-        uint32_t word = ((const uint32_t*)(const void*)data)[idx];
-        status = flashWriteU32((uint32_t)addr, word);
-#elif FLASH_WORD_SIZE == 8
+    for (size_t idx = 0; idx < (size + flashGetWordSize() - 1) / flashGetWordSize(); idx++) {
+        size_t addr = rom->addr + offset + flashGetWordSize() * idx;
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
         status = flashWriteU64((uint32_t)addr, word);
-#endif
         if (status < 0) {
             break;
         }

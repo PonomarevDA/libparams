@@ -12,7 +12,7 @@
 #include "params.hpp"
 
 extern StringParamValue_t string_values_pool[];
-extern uint8_t flash_memory[PAGE_SIZE_BYTES];
+extern uint8_t flash_memory[2048];
 
 
 int main (int argc, char *argv[]) {

@@ -17,6 +17,8 @@
 #include "libparams_error_codes.h"
 #include "storage.h"
 
+#define PAGE_SIZE_BYTES 2048
+
 uint8_t flash_memory[PAGE_SIZE_BYTES];
 static bool is_locked = true;
 
@@ -49,7 +51,7 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
     }
     memcpy(flash_memory + (address - FLASH_START_ADDR),
            (void*)(&data),
-           FLASH_WORD_SIZE);
+           flashGetWordSize());
     return LIBPARAMS_OK;
 }
 
@@ -104,4 +106,16 @@ size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
     return bytes_to_read;
+}
+
+uint16_t flashGetNumberOfPages() {
+    return 1;
+}
+
+uint16_t flashGetPageSize() {
+    return PAGE_SIZE_BYTES;
+}
+
+uint8_t flashGetWordSize() {
+    return 8;
 }

@@ -46,7 +46,7 @@ HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef *pEraseInit, uint32_t
 }
 
 HAL_StatusTypeDef HAL_FLASH_Program(uint32_t TypeProgram, uint32_t Address, uint64_t Data) {
-    if (TypeProgram != FLASH_TYPEPROGRAM_WORD ||
+    if (TypeProgram != FLASH_TYPEPROGRAM_DOUBLEWORD ||
             Address < initial_addr ||
             Address % 4 != 0 ||
             Address >= initial_addr + PAGE_SIZE) {

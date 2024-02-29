@@ -65,7 +65,7 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
 
-size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
+size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {
         return 0;
     }

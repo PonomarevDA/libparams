@@ -18,9 +18,10 @@
 extern "C" {
 #endif
 
-void flashUnlock();
-void flashLock();
 
+/**
+ * @brief Do nothing at the moment, but reserved for future possible updates
+ */
 void flashInit();
 
 /**
@@ -31,14 +32,20 @@ void flashInit();
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
 
 /**
+ * @brief Before writing you must call flashUnlock(), after writing you must call flashLock()
+ * @param[in] address - actual address on flash memory
+ * @param[in] data - 64 bit of data
  * @return 0 if success, otherwise < 0
  */
+void flashUnlock();
 int8_t flashWriteU64(uint32_t address, uint64_t data);
+void flashLock();
 
 /**
+ * @brief Read chunk of data like memcpy
  * @return bytes_to_read if success, otherwise 0
  */
-size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read);
+size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read);
 
 /**
  * @return Info about the flash memory

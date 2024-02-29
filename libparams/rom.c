@@ -49,7 +49,7 @@ size_t romRead(const RomDriverInstance* rom, size_t offset, uint8_t* data, size_
         bytes_to_read = requested_size;
     }
 
-    return flashMemcpy(data, rom->first_page_idx * flashGetPageSize() + offset, bytes_to_read);
+    return flashRead(data, rom->first_page_idx * flashGetPageSize() + offset, bytes_to_read);
 }
 
 void romBeginWrite(const RomDriverInstance* rom) {

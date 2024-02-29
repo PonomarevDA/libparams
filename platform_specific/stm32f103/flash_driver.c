@@ -23,8 +23,9 @@ void flashUnlock() {
 void flashLock() {
     HAL_FLASH_Lock();
 }
+
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
-    uint32_t page_address = FLASH_START_ADDR + PAGE_SIZE_BYTES * start_page_idx;
+    uint32_t page_address = FLASH_START_ADDR + flashGetPageSize() * start_page_idx;
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
         .TypeErase = FLASH_TYPEERASE_PAGES,
         .Banks = 0,
@@ -36,8 +37,8 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     return (page_error == 0xFFFFFFFF) ? 0 : -1;
 }
 
-int8_t flashWriteU32(uint32_t address, uint32_t data) {
-    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data);
+int8_t flashWriteU64(uint32_t address, uint64_t data) {
+    HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
     return (hal_status != HAL_OK) ? -1 : 0;
 }
 
@@ -53,4 +54,16 @@ size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
     return bytes_to_read;
+}
+
+uint16_t flashGetNumberOfPages() {
+    return 128;
+}
+
+uint16_t flashGetPageSize() {
+    return 1024;
+}
+
+uint8_t flashGetWordSize() {
+    return 4;
 }

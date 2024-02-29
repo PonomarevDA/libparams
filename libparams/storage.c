@@ -31,10 +31,7 @@ static int8_t _save();
 
 ///< Default values correspond to the last page access only.
 static RomDriverInstance rom = {
-    .addr = FLASH_LAST_PAGE_ADDR,
-    .first_page_idx = FLASH_NUM_OF_PAGES - 1,
-    .total_size = PAGE_SIZE_BYTES,
-    .pages_amount = 1,
+    .inited = false,
 };
 
 

@@ -24,6 +24,13 @@ void flashUnlock() {
 void flashLock() {
     HAL_FLASH_Lock();
 }
+
+/**
+ * @brief Page (2 KB) erase time
+ * typ 22 ms
+ * max 40 ms
+ * @note from https://www.st.com/resource/en/datasheet/stm32g030c6.pdf
+ */
 int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
     uint32_t last_page_idx = first_page_idx + num_of_pages;
     if (last_page_idx > flashGetNumberOfPages() || num_of_pages == 0) {
@@ -44,6 +51,12 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
     return res;
 }
 
+/**
+ * @brief 64-bit programming time
+ * typ 85 us
+ * max 125 us
+ * @note from https://www.st.com/resource/en/datasheet/stm32g030c6.pdf
+ */
 int8_t flashWriteU64(uint32_t address, uint64_t data) {
     return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
 }

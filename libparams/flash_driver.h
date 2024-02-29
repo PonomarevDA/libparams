@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_
-#define PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_
+#ifndef LIBPARAM_ROM_FLASH_DRIVER_H_
+#define LIBPARAM_ROM_FLASH_DRIVER_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -51,4 +51,4 @@ uint8_t flashGetWordSize();
 }
 #endif
 
-#endif  // PLATFORM_SPECIFIC_UBUNTU_FLASH_DRIVER_H_
+#endif  // LIBPARAM_ROM_FLASH_DRIVER_H_

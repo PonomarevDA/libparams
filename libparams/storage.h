@@ -14,6 +14,7 @@
 #include <assert.h>
 #include "rom.h"
 #include "libparams_error_codes.h"
+#include "_legacy_functions.h"
 
 #ifdef __cplusplus
 extern "C" {

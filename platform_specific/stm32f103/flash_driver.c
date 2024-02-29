@@ -24,6 +24,12 @@ void flashLock() {
     HAL_FLASH_Lock();
 }
 
+/**
+ * @brief Page (1 KB) erase time
+ * min 20 ms
+ * max 40 ms
+ * @note from https://www.st.com/resource/en/datasheet/stm32f103c8.pdf
+ */
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     uint32_t page_address = FLASH_START_ADDR + flashGetPageSize() * start_page_idx;
     FLASH_EraseInitTypeDef FLASH_EraseInitStruct = {
@@ -37,6 +43,13 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     return (page_error == 0xFFFFFFFF) ? 0 : -1;
 }
 
+/**
+ * @brief 16-bit programming time
+ * min 40 us
+ * typ 52.5 us
+ * max 70 us
+ * @note from https://www.st.com/resource/en/datasheet/stm32f103c8.pdf
+ */
 int8_t flashWriteU64(uint32_t address, uint64_t data) {
     HAL_StatusTypeDef hal_status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
     return (hal_status != HAL_OK) ? -1 : 0;

@@ -40,6 +40,10 @@ class IntegerParam(BaseParam):
             integer_parameter = IntegerParam._create_from_list_legacy(param_name, data)
         else:
             integer_parameter = None
+
+        if not hasattr(integer_parameter, "note"):
+            integer_parameter.note = ""
+
         return integer_parameter
 
     @staticmethod
@@ -104,6 +108,10 @@ class StringParam(BaseParam):
             string_param = StringParam._create_from_list_legacy(param_name, data)
         else:
             string_param = None
+
+        if not hasattr(string_param, "note"):
+            string_param.note = ""
+
         return string_param
 
     @staticmethod

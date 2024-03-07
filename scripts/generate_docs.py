@@ -12,6 +12,37 @@ from color_logging import log_err
 import yaml
 from params import IntegerParam, StringParam
 
+def port_data_type_to_md(origin_data_type : str) -> str:
+    """
+    Input example: uavcan.si.sample.voltage.Scalar.1.0
+    Output example: [uavcan.voltage.Scalar.1.0](https://github.com/OpenCyphal/
+                    public_regulated_data_types/blob/master/uavcan/si/sample/
+                    voltage/Scalar.1.0.dsdl)
+    """
+    assert isinstance(origin_data_type, str)
+    splitted = origin_data_type.split('.')
+    assert len(splitted) > 3, f"The {origin_data_type} is too short to be a data type."
+    assert splitted[-1].isdigit() and splitted[-2].isdigit(), \
+        f"The {origin_data_type} doesn't keep a version of dsdl."
+
+    def is_uavcan_dsdl(splitted):
+        return splitted[0] == 'uavcan'
+    def is_udral_dsdl(splitted):
+        return splitted[0] == 'reg' and splitted[1] == 'udral'
+
+    if not is_uavcan_dsdl(splitted) and not is_udral_dsdl(splitted):
+        return f"[{origin_data_type}]({origin_data_type})"
+
+    splitted_data_type = splitted[0:-2]
+    visible_version = f"{splitted[-2]}.{splitted[-1]}"
+    visible_data_type = ".".join(splitted_data_type)
+    link = (
+        "https://github.com/OpenCyphal/public_regulated_data_types/blob/master/"
+        f"{'/'.join(splitted_data_type)}.{visible_version}.dsdl")
+    markdown_data_type = f"[{visible_data_type}]({link})"
+
+    return markdown_data_type
+
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
 
@@ -19,6 +50,8 @@ all_params = []
 all_ports = {}
 
 if __name__=="__main__":
+    print(port_data_type_to_md("uavcan.si.sample.voltage.Scalar.1.0"))
+
     num_of_args = len(sys.argv)
     for yaml_file_idx in range(1, num_of_args):
         input_dir = sys.argv[yaml_file_idx]
@@ -47,15 +80,39 @@ if __name__=="__main__":
     with open('README.md', 'w') as f:
         if len(all_ports) >= 1:
             f.write("The node has the following interface:\n\n")
-            f.write("| №  | Type | Message | Topic name  |\n")
-            f.write("| -- | ---- | ------- | ----------- |\n")
 
-            counter = 1
+            pubs = {}
+            subs = {}
             for port_name, port_info in all_ports.items():
                 port_type = port_name[7:10]
-                port_data_type = port_info['data_type']
+                if port_type == "pub":
+                    pubs[port_name] = port_info
+                elif port_type == "sub":
+                    subs[port_name] = port_info
+
+            f.write("Publishers:\n")
+            f.write("| №  | Data type and topic name  | Description |\n")
+            f.write("| -- | ------------------------- | ----------- |\n")
+            counter = 1
+            for port_name, port_info in pubs.items():
+                data_type = port_data_type_to_md(port_info['data_type'])
                 topic_name = port_name[11:]
-                f.write(f"| {counter :> 3} | {port_type} | {port_data_type} | {topic_name} | {port_info}|\n")
+                note = port_info.get('note')
+                note = note.replace('\n', '</br>') if note is not None else ""
+                f.write(f"| {counter :> 2} | {data_type} </br> {topic_name} | {note}|\n")
+                counter += 1
+            f.write("\n")
+
+            f.write("Subscribers:\n")
+            f.write("| №  | Data type and topic name | Description |\n")
+            f.write("| -- | ------------------------ | ----------- |\n")
+            counter = 1
+            for port_name, port_info in subs.items():
+                data_type = port_data_type_to_md(port_info['data_type'])
+                topic_name = port_name[11:]
+                note = port_info.get('note')
+                note = note.replace('\n', '</br>') if note is not None else ""
+                f.write(f"| {counter :> 2} | {data_type} </br> {topic_name} | {note}|\n")
                 counter += 1
             f.write("\n")
 
@@ -67,7 +124,7 @@ if __name__=="__main__":
             counter = 1
             for param in all_params:
                 param.name = param.name.replace('"', '')
-                f.write(f"|{counter :> 3} | {param.name.ljust(23)} | {param.note} |\n")
+                f.write(f"| {counter :> 2} | {param.name.ljust(23)} | {param.note} |\n")
                 counter += 1
             f.write("\n")
         else:

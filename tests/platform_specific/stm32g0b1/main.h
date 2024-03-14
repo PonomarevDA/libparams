@@ -32,6 +32,7 @@ typedef struct
   uint32_t NbPages;
 } FLASH_EraseInitTypeDef;
 
+uint32_t HAL_GetTick();
 void HAL_FLASH_Init(uint32_t initial_addr);
 HAL_StatusTypeDef HAL_FLASH_Unlock(void);
 HAL_StatusTypeDef HAL_FLASH_Lock(void);

@@ -15,6 +15,10 @@ static uint8_t flash_memory[PAGE_SIZE];
 static bool is_locked = true;
 static size_t initial_addr = 0x08000000;
 
+uint32_t HAL_GetTick() {
+    return 0;
+}
+
 void HAL_FLASH_Init(uint32_t new_initial_addr) {
     initial_addr = new_initial_addr;
 }

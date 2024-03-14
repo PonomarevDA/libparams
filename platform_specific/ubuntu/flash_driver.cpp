@@ -97,7 +97,7 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) flash_memory;
 }
 
-size_t flashMemcpy(uint8_t* data, size_t offset, size_t bytes_to_read) {
+size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     assert(data != NULL && "libparams internal error");
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(bytes_to_read <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");

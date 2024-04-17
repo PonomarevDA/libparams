@@ -52,6 +52,8 @@ class Generator:
         self.strings_amount += 1
 
     def generate(self):
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
         with open(f"{self.dir}/{self.name}.cpp", 'w', encoding="utf-8") as cpp_file:
             cpp_content = (
                 f"{LICENSE_HEADER}\n"

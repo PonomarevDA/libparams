@@ -12,6 +12,10 @@
 #include "rom.h"
 #include "libparams_error_codes.h"
 
+#ifndef HAL_MODULE_ENABLED
+#include <stdio.h>
+#endif
+
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];
 extern StringDesc_t string_desc_pool[];
@@ -24,6 +28,7 @@ static ParamIndex_t all_params_amount = 0;
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
 static uint32_t _getStringMemoryPoolAddress();
 static int8_t _save();
+static int8_t _save_redundant();
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
@@ -33,7 +38,9 @@ static int8_t _save();
 static RomDriverInstance rom = {
     .inited = false,
 };
-
+static RomDriverInstance redundant_rom = {
+    .inited = false,
+};
 
 int8_t paramsInit(ParamIndex_t int_num,
                   ParamIndex_t str_num,
@@ -54,6 +61,16 @@ int8_t paramsInit(ParamIndex_t int_num,
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
+    rom.erased = true;
+    return LIBPARAMS_OK;
+}
+
+int8_t paramsInitRedundantPage(int32_t first_page_idx) {
+    redundant_rom = romInit(first_page_idx + rom.pages_amount, rom.pages_amount);
+    if (!redundant_rom.inited) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
+    redundant_rom.erased = true;
     return LIBPARAMS_OK;
 }
 
@@ -78,13 +95,65 @@ int8_t paramsLoad() {
     return LIBPARAMS_OK;
 }
 
+int8_t paramsLoadRom(RomDriverInstance rom_instance) {
+    romRead(&rom_instance, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(&rom_instance, _getStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+
+    for (uint_fast8_t idx = 0; idx < integers_amount; idx++) {
+        IntegerParamValue_t val = integer_values_pool[idx];
+        if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
+            integer_values_pool[idx] = integer_desc_pool[idx].def;
+        } else {
+            rom_instance.erased = false;
+        }
+    }
+
+    return LIBPARAMS_OK;
+}
+
+int8_t paramsChooseRom() {
+    paramsLoadRom(rom);
+    paramsLoadRom(redundant_rom);
+    RomDriverInstance buffer;
+    if (rom.erased) {
+        if (!redundant_rom.erased) {
+            buffer = redundant_rom;
+            redundant_rom = rom;
+            rom = buffer;
+        }
+    }
+    #ifndef HAL_MODULE_ENABLED
+    printf("choose rom");
+    #endif
+}
+
 int8_t paramsSave() {
     if (all_params_amount == 0) {
         return LIBPARAMS_NOT_INITIALIZED;
     }
-
+    int8_t res = 0;
+    if (redundant_rom.inited) {
+        // write params to redundant rom
+        romBeginWrite(&redundant_rom);
+        redundant_rom.erased = true;
+        res = _save_redundant(&redundant_rom);
+        romEndWrite(&redundant_rom);
+        // erase rom if save was successful
+        #ifndef HAL_MODULE_ENABLED
+        printf("switch rom");
+        #endif
+        if (res == 0) {
+            romBeginWrite(&rom);
+            // switch main and redundant rom
+            RomDriverInstance buffer = rom;
+            rom = redundant_rom;
+            redundant_rom = buffer;
+        }
+        return res;
+    }
     romBeginWrite(&rom);
-    int8_t res = _save();
+    rom.erased = true;
+    res = _save();
     romEndWrite(&rom);
     return res;
 }
@@ -243,6 +312,26 @@ static int8_t _save() {
     size_t offset = _getStringMemoryPoolAddress();
     if (STR_POOL_SIZE != 0 &&
             0 == romWrite(&rom, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
+
+    return LIBPARAMS_OK;
+}
+
+/**
+ * @note From romWrite() it is always expected to be successfully executed withing this file.
+ * An error means either a library internal error or the provided flash driver is incorrect.
+ * If such errir is detected, stop writing immediately to avoid doing something wrong.
+ */
+static int8_t _save_redundant(RomDriverInstance* rom_driver) {
+    if (INT_POOL_SIZE != 0 &&
+            0 == romWrite(&rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
+
+    size_t offset = _getStringMemoryPoolAddress();
+    if (STR_POOL_SIZE != 0 &&
+            0 == romWrite(&rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 

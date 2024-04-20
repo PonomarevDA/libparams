@@ -85,10 +85,26 @@ int8_t paramsInit(ParamIndex_t int_num, ParamIndex_t str_num,
                   int32_t first_page_idx, size_t pages_num);
 
 /**
+ * @brief           Initialize the redundant parameters pages. Call this on paramsSave() to backup parameters.
+ * @param int_num   The amount of integers parameters
+ * @param str_num   The amount of string parameters
+ * @param first_page Index of the first page. Negative values are counted from the end.
+ *                  For example, -1 means the latest page. For stm32f103 it will be page_idx=127.
+ * @param pages_num The amount of allocated pages. At least 1 page is required.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsInitRedundantPage(int32_t first_page_idx);
+/**
+ * @brief           Choose a rom from redundant rom and main rom.
+ * **/
+int8_t paramsChooseRom();
+
+/**
  * @brief           Load parameters from a persistent memory: flash for stm32 and file for ubuntu.
  * @return          LIBPARAMS_OK on success, otherwise < 0.
  */
 int8_t paramsLoad();
+int8_t paramsLoadRom(RomDriverInstance rom);
 
 /**
  * @brief           Save parameters to a persistent memory: flash for stm32 and file for ubuntu.

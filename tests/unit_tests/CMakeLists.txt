@@ -9,6 +9,21 @@ project(tests CXX C)
 set(UNIT_TESTS_DIR ${CMAKE_CURRENT_LIST_DIR})
 cmake_path(GET CMAKE_CURRENT_LIST_DIR PARENT_PATH TESTS_DIR)
 cmake_path(GET TESTS_DIR PARENT_PATH ROOT_DIR)
+cmake_minimum_required(VERSION 3.14)
+project(my_project)
+
+# GoogleTest requires at least C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 # Check if the COVERAGE flag is set
 option(COVERAGE "Enable coverage flags" OFF)

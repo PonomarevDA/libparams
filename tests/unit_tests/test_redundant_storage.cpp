@@ -25,7 +25,7 @@ typedef enum {
 } StrParamsIndexes;
 
 void init() {
-    paramsInit((ParamIndex_t)IntParamsIndexes::INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, -1, 1);
+    paramsInit((ParamIndex_t)IntParamsIndexes::INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
     paramsInitRedundantPage(255);
     paramsChooseRom();
     paramsLoad();

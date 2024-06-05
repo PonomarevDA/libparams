@@ -1,8 +1,17 @@
 name: code_style
 
-on: [push]
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
+  workflow_dispatch:
+
 jobs:
   astyle:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
@@ -19,6 +28,7 @@ jobs:
       - run: ./repo/scripts/code_style/check_astyle.sh
 
   cpplint:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
@@ -35,6 +45,7 @@ jobs:
       - run: ./repo/scripts/code_style/lint.sh
 
   crlf:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:

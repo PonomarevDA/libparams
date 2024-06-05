@@ -23,6 +23,7 @@ set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
 add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_LIST_DIR}/default_params.yaml")
+add_definitions(-DFLASH_DRIVER_SIM_STORAGE_FILE="${CMAKE_CURRENT_LIST_DIR}/sim_params.yaml")
 
 add_executable(application
     ${libparamsSrc}

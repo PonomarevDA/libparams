@@ -63,13 +63,17 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 }
 
 void flashLoadBufferFromFile() {
-#if defined(FLASH_DRIVER_SIM_STORAGE_FILE) && defined(FLASH_DRIVER_STORAGE_FILE)
+#if defined(FLASH_DRIVER_SIM_STORAGE_FILE) || defined(FLASH_DRIVER_STORAGE_FILE)
     std::ifstream params_storage_file;
+    #ifdef FLASH_DRIVER_SIM_STORAGE_FILE
     auto file_dir = FLASH_DRIVER_SIM_STORAGE_FILE;
     fs::directory_entry entry{file_dir};
     if (!entry.exists()) {
         file_dir = FLASH_DRIVER_STORAGE_FILE;
     }
+    #else
+    auto file_dir = FLASH_DRIVER_STORAGE_FILE;
+    #endif
     params_storage_file.open(file_dir, std::ios::in);
     if (!params_storage_file) {
         std::cout << "Flash driver: " << file_dir << " been found!"
@@ -131,7 +135,7 @@ void flashSaveBufferToFile() {
         std::cout << "(" << string_desc_pool[str_idx].name << "="
                   <<(str_param_value.c_str()) << ") " << std::endl;
         params_storage_file << string_desc_pool[str_idx].name << ": "
-                            << std::quoted(str_param_value.c_str()) << std::endl;
+                            << str_param_value.c_str() << std::endl;
         str_idx++;
     }
 

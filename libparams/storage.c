@@ -15,7 +15,6 @@
 #include "libparams_error_codes.h"
 #include "rom.h"
 #ifndef HAL_MODULE_ENABLED
-#include <stdio.h>
 #endif
 
 
@@ -130,6 +129,7 @@ int8_t paramsChooseRom() {
         }
     }
 }
+
 
 int8_t paramsSave() {
     if (all_params_amount == 0) {

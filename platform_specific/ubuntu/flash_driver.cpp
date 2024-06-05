@@ -17,14 +17,13 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-
+#include "params.hpp"
 #include "libparams_error_codes.h"
 #include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048
 
 namespace fs = std::filesystem;
-extern IntParamsIndexes;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
@@ -135,12 +134,11 @@ void flashSaveBufferToFile() {
                             << std::quoted(str_param_value.c_str()) << std::endl;
         str_idx++;
     }
-    auto offset = NUM_OF_STR_PARAMS * str_idx;
 
     for (size_t index = 0; index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
          index++) {
         uint32_t int_param_value;
-        memcpy(&int_param_value, flash_memory + offset + index * 4, 4);
+        memcpy(&int_param_value, flash_memory + index * 4, 4);
         std::cout << "(" << integer_desc_pool[idx].name << "="
                   << int_param_value << ") " << std::endl;
         params_storage_file << integer_desc_pool[idx].name << ": "

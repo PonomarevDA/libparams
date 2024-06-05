@@ -48,6 +48,12 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read);
 
 
 /**
+ * @brief Write chunk of data like memcpy
+ * @return bytes_to_read if success, otherwise 0
+ */
+size_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write);
+
+/**
  * @return Info about the flash memory
  */
 uint16_t flashGetNumberOfPages();

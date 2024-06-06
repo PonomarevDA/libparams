@@ -88,7 +88,13 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 
 static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
 
-size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
+size_t flashRead(uint8_t* data, uint32_t address, size_t bytes_to_read) {
+    if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
+    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
+
     assert(data != NULL && "libparams internal error");
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(bytes_to_read <= PAGE_SIZE_BYTES &&
@@ -104,12 +110,9 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
 int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
     assert(data != NULL && "libparams internal error");
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(bytes_to_write <= PAGE_SIZE_BYTES &&
-           "ROM driver accessing non-existent mem");
-    assert(offset + bytes_to_write <= PAGE_SIZE_BYTES &&
-           "ROM driver accessing non-existent mem");
-
-    const uint8_t* rom = &(flashGetPointer()[offset]);
+    assert(bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
+    assert(offset + bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
+    uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(&rom, data, bytes_to_write);
 #ifdef FLASH_DRIVER_STORAGE_FILE
     std::ofstream params_storage_file;

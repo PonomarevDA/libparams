@@ -72,7 +72,8 @@ size_t romWrite(const RomDriverInstance* rom, size_t offset, const uint8_t* data
     for (size_t idx = 0; idx < (size + flashGetWordSize() - 1) / flashGetWordSize(); idx++) {
         size_t addr = rom->addr + offset + flashGetWordSize() * idx;
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
-        status = flashWriteU64((uint32_t)addr, word);
+        status = flashWrite(word, (uint32_t)(offset + flashGetWordSize() * idx), 8);
+        // status = flashWriteU64((uint32_t)addr, word);
         if (status < 0) {
             break;
         }

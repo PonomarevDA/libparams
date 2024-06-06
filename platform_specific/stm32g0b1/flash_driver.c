@@ -65,7 +65,7 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
 
-size_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
+int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
     int8_t status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
 
     if (status < 0) {
@@ -95,7 +95,7 @@ size_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
             return bytes_written;  // Return the number of bytes written before failure
         }
     }
-    return bytes_written;  // Return the total number of bytes written
+    return status;  // Return the total number of bytes written
 }
 
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {

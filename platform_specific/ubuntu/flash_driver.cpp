@@ -17,8 +17,10 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include "params.hpp"
+
+#include "YamlParameters.hpp"
 #include "libparams_error_codes.h"
+#include "params.hpp"
 #include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048
@@ -35,7 +37,17 @@ static void flashLoadBufferFromFile();
 static void flashSaveBufferToFile();
 static uint8_t* flashGetPointer();
 
-void flashInit() { flashLoadBufferFromFile(); }
+void flashInit() {
+#ifdef FLASH_DRIVER_STORAGE_FILE
+    std::ifstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);
+
+    YamlParameters::read_from_file(flash_memory, params_storage_file);
+    params_storage_file.close();
+    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_STORAGE_FILE
+              << std::endl;
+#endif
+}
 
 void flashUnlock() { is_locked = false; }
 
@@ -50,108 +62,28 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
 }
 
 int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    if (is_locked || address < FLASH_START_ADDR ||
-        address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
+    if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
-    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data),
-           flashGetWordSize());
-    flashSaveBufferToFile();
-    return LIBPARAMS_OK;
-}
+    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
 
-void flashLoadBufferFromFile() {
-#if defined(FLASH_DRIVER_SIM_STORAGE_FILE) || defined(FLASH_DRIVER_STORAGE_FILE)
-    std::ifstream params_storage_file;
-    #ifdef FLASH_DRIVER_SIM_STORAGE_FILE
-    auto file_dir = FLASH_DRIVER_SIM_STORAGE_FILE;
-    fs::directory_entry entry{file_dir};
-    if (!entry.exists()) {
-        file_dir = FLASH_DRIVER_STORAGE_FILE;
-    }
-    #else
-    auto file_dir = FLASH_DRIVER_STORAGE_FILE;
-    #endif
-    params_storage_file.open(file_dir, std::ios::in);
-    if (!params_storage_file) {
-        std::cout << "Flash driver: " << file_dir << " been found!"
-                  << std::endl;
-    }
-    size_t read_counter = 0;
-    size_t int_param_idx = 0;
-    size_t str_param_idx = 0;
-    while (params_storage_file) {
-        if (read_counter % 2 == 0) {
-            std::string mystring;
-            params_storage_file >> mystring;
-            std::cout << std::setfill(' ') << std::setw(30) << mystring << " ";
-        } else {
-            std::string param_value;
-            params_storage_file >> param_value;
-            try {
-                uint32_t int_param_value = std::stoi(param_value);
-                memcpy(flash_memory + 4 * int_param_idx, &int_param_value, 4);
-                std::cout << "(offset=" << 4 * int_param_idx << ") ";
-                int_param_idx++;
-            } catch (std::invalid_argument const& ex) {
-                size_t offset =
-                    PAGE_SIZE_BYTES - MAX_STRING_LENGTH * (1 + str_param_idx);
-                memcpy(flash_memory + offset, param_value.c_str(),
-                       MAX_STRING_LENGTH);
-                std::cout << "(offset=" << offset << ") ";
-                str_param_idx++;
-            }
-            std::cout << param_value << std::endl;
-        }
-        read_counter++;
-    }
-    std::cout << "flash is done" << std::endl;
-    std::cout << std::endl;
-#endif
-}
-
-void flashSaveBufferToFile() {
 #ifdef FLASH_DRIVER_SIM_STORAGE_FILE
-    std::cout << "Flash driver: save data to " << FLASH_DRIVER_SIM_STORAGE_FILE
-              << "..." << std::endl;
-
     std::ofstream params_storage_file;
-    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios::out);
+    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);
+
     if (!params_storage_file) {
         std::cout << "Flash driver: " << FLASH_DRIVER_SIM_STORAGE_FILE
                   << " could not be opened for writing!" << std::endl;
-        return;
+        return LIBPARAMS_WRONG_ARGS;
     }
-
-    size_t idx = 0;
-    size_t str_idx = 0;
-
-    for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
-        std::string str_param_value(
-            reinterpret_cast<char*>(flash_memory + index * MAX_STRING_LENGTH),
-            MAX_STRING_LENGTH);
-        std::cout << "(" << string_desc_pool[str_idx].name << "="
-                  <<(str_param_value.c_str()) << ") " << std::endl;
-        params_storage_file << string_desc_pool[str_idx].name << ": "
-                            << str_param_value.c_str() << std::endl;
-        str_idx++;
-    }
-
-    for (size_t index = 0; index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
-         index++) {
-        uint32_t int_param_value;
-        memcpy(&int_param_value, flash_memory + index * 4, 4);
-        std::cout << "(" << integer_desc_pool[idx].name << "="
-                  << int_param_value << ") " << std::endl;
-        params_storage_file << integer_desc_pool[idx].name << ": "
-                            << int_param_value << std::endl;
-        idx++;
-    }
+    YamlParameters::write_to_file(flash_memory, params_storage_file);
     params_storage_file.close();
     std::cout << "Flash driver: data saved to " << FLASH_DRIVER_SIM_STORAGE_FILE
               << std::endl;
+
 #endif
+    return LIBPARAMS_OK;
 }
 
 static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
@@ -169,7 +101,7 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     return bytes_to_read;
 }
 
-size_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
+int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
     assert(data != NULL && "libparams internal error");
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(bytes_to_write <= PAGE_SIZE_BYTES &&
@@ -179,8 +111,22 @@ size_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
 
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(&rom, data, bytes_to_write);
-    flashSaveBufferToFile();
-    return bytes_to_write;
+#ifdef FLASH_DRIVER_STORAGE_FILE
+    std::ofstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::out);
+
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE
+                  << " could not be opened for writing!" << std::endl;
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    YamlParameters::write_to_file(flash_memory, params_storage_file);
+    params_storage_file.close();
+    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_STORAGE_FILE
+              << std::endl;
+
+#endif
+    return 0;
 }
 
 uint16_t flashGetNumberOfPages() { return 1; }

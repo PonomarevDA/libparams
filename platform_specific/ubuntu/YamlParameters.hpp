@@ -10,6 +10,7 @@
 #ifndef LIBPARAM_YAML_PARAMETERS_HPP_
 #define LIBPARAM_YAML_PARAMETERS_HPP_
 
+#include <string.h>
 #include <iostream>
 #include <cstdio>            // C system headers
 #include <cstdlib>           // C++ system headers
@@ -17,8 +18,8 @@
 #include <fstream>
 #include <iomanip>
 #include <filesystem>
-#include "libparams_error_codes.h"  // Other libraries' headers
 #include "storage.h"
+#include "libparams_error_codes.h"  // Other libraries' headers
 #include "params.hpp"
 
 #ifdef __cplusplus
@@ -26,9 +27,9 @@ extern "C" {
 #endif
 
 class YamlParameters {
-// public:
-    static void read_from_file(RomDriverInstance rom, char* file_dir);
-    static void write_to_file(RomDriverInstance rom, char* file_dir);
+public:
+    static void read_from_file(uint8_t* flash_memory, std::istream & params_storage_file);
+    static void write_to_file(uint8_t* flash_memory, std::ostream& params_storage_file);
 };
 
 

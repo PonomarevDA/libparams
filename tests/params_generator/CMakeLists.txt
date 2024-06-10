@@ -30,6 +30,6 @@ add_executable(${PROJECT_NAME} test.cpp
                ${LIBPARAMS_SOURCE_CODE_PATH}/storage.c
                ${LIBPARAMS_SOURCE_CODE_PATH}/rom.c
                ${GENERATED_PARAMS}
-               ${PLATFORM_SPECIFIC_PATH}/flash_driver.cpp)
+               ${PLATFORM_SPECIFIC_PATH}/flash_driver.c*)
 target_link_libraries(${PROJECT_NAME} GTest::GTest GTest::Main)
 gtest_discover_tests(${PROJECT_NAME})

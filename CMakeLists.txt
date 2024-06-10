@@ -12,18 +12,17 @@ else()
 endif()
 
 FILE(GLOB libparamsPlatformSpecificSrc
-  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/flash_driver.c*
+  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/*.c*
   )
   
   FILE(GLOB libparamsPlatformSpecificHeaders
-  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/flash_driver.h*
+  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/
   )
   
   set(libparamsSrc
   ${CMAKE_CURRENT_LIST_DIR}/libparams/rom.c
   ${CMAKE_CURRENT_LIST_DIR}/libparams/storage.c
   ${libparamsPlatformSpecificSrc}
-  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/YamlParameters.cpp
   )
   
   set(libparamsHeaders

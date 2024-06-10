@@ -75,29 +75,29 @@ int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
     size_t bytes_written = 0;
     size_t remaining_bytes = bytes_to_write;
 
-    while (remaining_bytes >= 2) {
-        uint16_t half_word = 0;
+    while (remaining_bytes > 0) {
+        uint64_t data_to_write = 0;
 
-        // Construct the half-word from the data
-        half_word = (data[bytes_written] << 8) | data[bytes_written + 1];
+        // Copy the next 8 bytes from the data buffer to data_to_write
+        for (size_t i = 0; i < 8 && bytes_written < bytes_to_write; i++) {
+            data_to_write |= ((uint64_t)data[bytes_written]) << (i * 8);
+            bytes_written++;
+            remaining_bytes--;
+        }
 
-        // Write the half-word to flash memory
-        flashProgramHalfWord((offset + bytes_written), half_word);
+        // Calculate the address for writing
+        uint32_t address = offset + (bytes_written - 8);
 
-        // Update the counters
-        bytes_written += 2;
-        remaining_bytes -= 2;
-
-        status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
-        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
+        // Write the 8-byte data_to_write to flash memory
+        status = -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data_to_write);
 
         if (status < 0) {
-            return bytes_written;  // Return the number of bytes written before failure
+            return bytes_written;  // Return the total number of bytes written
         }
     }
-    return status;  // Return the total number of bytes written
-}
 
+    return bytes_written;  // Return the total number of bytes written
+}
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {
         return 0;

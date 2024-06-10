@@ -17,6 +17,7 @@
 #include <string>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 #include <filesystem>
 #include "storage.h"
 #include "libparams_error_codes.h"  // Other libraries' headers
@@ -28,8 +29,8 @@ extern "C" {
 
 class YamlParameters {
 public:
-    static void read_from_file(uint8_t* flash_memory, std::istream & params_storage_file);
-    static void write_to_file(uint8_t* flash_memory, std::ostream& params_storage_file);
+    static void read_from_file(uint8_t* flash_memory, std::ifstream & params_storage_file);
+    static void write_to_file(uint8_t* flash_memory, std::ofstream& params_storage_file);
 };
 
 

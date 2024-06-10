@@ -29,7 +29,7 @@ namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-uint8_t flash_memory[PAGE_SIZE_BYTES];
+uint8_t *flash_memory;
 
 static bool is_locked = true;
 
@@ -39,13 +39,21 @@ static uint8_t* flashGetPointer();
 
 void flashInit() {
 #ifdef FLASH_DRIVER_STORAGE_FILE
+    // Init flash memory buffer on the heap
+    flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
+
     std::ifstream params_storage_file;
     params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);
 
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE
+                  << " could not be opened for reading!" << std::endl;
+        exit(-1);
+    }
+    std::cout << "Flash driver: data read from " << FLASH_DRIVER_STORAGE_FILE
+              << std::endl;
     YamlParameters::read_from_file(flash_memory, params_storage_file);
     params_storage_file.close();
-    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_STORAGE_FILE
-              << std::endl;
 #endif
 }
 
@@ -88,13 +96,7 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 
 static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
 
-size_t flashRead(uint8_t* data, uint32_t address, size_t bytes_to_read) {
-    if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
-        return LIBPARAMS_WRONG_ARGS;
-    }
-
-    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
-
+size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     assert(data != NULL && "libparams internal error");
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(bytes_to_read <= PAGE_SIZE_BYTES &&

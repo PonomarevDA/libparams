@@ -38,9 +38,9 @@ static void flashSaveBufferToFile();
 static uint8_t* flashGetPointer();
 
 void flashInit() {
+    flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
 #ifdef FLASH_DRIVER_STORAGE_FILE
     // Init flash memory buffer on the heap
-    flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
 
     std::ifstream params_storage_file;
     params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);

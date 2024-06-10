@@ -12,6 +12,7 @@
 #include "libparams_error_codes.h"
 
 TEST(TestFlashDriver, test_erase_ok) {
+    flashInit();
     flashUnlock();
     auto res = flashErase(0, 1);
     flashLock();
@@ -19,6 +20,7 @@ TEST(TestFlashDriver, test_erase_ok) {
 }
 
 TEST(TestFlashDriver, test_erase_error_locked) {
+    flashInit();
     flashLock();
     auto res = flashErase(0, 1);
     flashLock();
@@ -26,6 +28,7 @@ TEST(TestFlashDriver, test_erase_error_locked) {
 }
 
 TEST(TestFlashDriver, test_erase_error_bad_first_arg) {
+    flashInit();
     flashUnlock();
     auto res = flashErase(1, 1);
     flashLock();
@@ -33,6 +36,7 @@ TEST(TestFlashDriver, test_erase_error_bad_first_arg) {
 }
 
 TEST(TestFlashDriver, test_erase_error_bad_second_arg) {
+    flashInit();
     flashUnlock();
     auto res = flashErase(0, 0);
     flashLock();
@@ -40,6 +44,7 @@ TEST(TestFlashDriver, test_erase_error_bad_second_arg) {
 }
 
 TEST(TestFlashDriver, test_flash_ok) {
+    flashInit();
     flashUnlock();
     flashErase(0, 0);
     auto res = flashWriteU64(FLASH_START_ADDR, (uint64_t)42);

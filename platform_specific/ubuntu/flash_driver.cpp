@@ -114,8 +114,8 @@ int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
     assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
     assert(offset + bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    uint8_t* rom = &(flashGetPointer()[offset]);
-    memcpy(&rom, data, bytes_to_write);
+    uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
+    memcpy(rom, &data, bytes_to_write);
 #ifdef FLASH_DRIVER_STORAGE_FILE
     std::ofstream params_storage_file;
     params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::out);

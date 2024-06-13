@@ -65,38 +65,23 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
 
-int8_t flashWrite(uint8_t* data, size_t offset, size_t bytes_to_write) {
+int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     int8_t status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
 
     if (status < 0) {
-        return 0;  // Return 0 to indicate failure
+        return status;
     }
+    for (size_t idx = 0U; idx < (size + flashGetWordSize() - 1)/ flashGetWordSize(); idx++) {
+        uint64_t word = ((const uint64_t*)(const void*)data)[idx];
+        size_t addr = offset + flashGetWordSize() * idx;
 
-    size_t bytes_written = 0;
-    size_t remaining_bytes = bytes_to_write;
-
-    while (remaining_bytes > 0) {
-        uint64_t data_to_write = 0;
-
-        // Copy the next 8 bytes from the data buffer to data_to_write
-        for (size_t i = 0; i < 8 && bytes_written < bytes_to_write; i++) {
-            data_to_write |= ((uint64_t)data[bytes_written]) << (i * 8);
-            bytes_written++;
-            remaining_bytes--;
-        }
-
-        // Calculate the address for writing
-        uint32_t address = offset + (bytes_written - 8);
-
-        // Write the 8-byte data_to_write to flash memory
-        status = -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data_to_write);
-
+        status = flashWriteU64((uint32_t)addr, word);
         if (status < 0) {
-            return bytes_written;  // Return the total number of bytes written
+            break;
         }
     }
 
-    return bytes_written;  // Return the total number of bytes written
+    return size;  // Return the total number of bytes written
 }
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {

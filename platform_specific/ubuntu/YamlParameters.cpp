@@ -45,6 +45,7 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
         memcpy(&int_param_value, flash_memory + index * 4, 4);
         params_storage_file << integer_desc_pool[index].name
                             << "\t: " << int_param_value << std::endl;
+        std::cout << integer_desc_pool[index].name << " :"<< int_param_value << "\n";
     }
 
     for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
@@ -53,5 +54,7 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
             MAX_STRING_LENGTH);
         params_storage_file << string_desc_pool[index].name
                             << "\t: " << str_param_value.c_str() << std::endl;
+        std::cout << string_desc_pool[index].name << " :"<< str_param_value << "\n";
+
     }
 }

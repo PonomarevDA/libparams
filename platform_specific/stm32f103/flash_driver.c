@@ -105,8 +105,8 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     size_t n_half_words = (size + 1)/2;
 
     for (size_t i = 0; i < n_half_words; i += 1) {
-        const uint16_t halfword = (data[2U*i + 1]) << 8 | data[2U*i];
-        flashProgramHalfWord(offset + 2U*i, halfword);
+        const uint16_t half_word = (data[2U*i + 1]) << 8 | data[2U*i];
+        flashProgramHalfWord(offset + 2U*i, half_word);
 
         status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
         if (status < 0) {

@@ -102,38 +102,19 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     if (status < 0) {
         return status;
     }
+    size_t n_half_words = (size + 1)/2;
 
-    for (size_t idx = 0U; idx < (size + flashGetWordSize() - 1)/ flashGetWordSize(); idx++) {
-        uint64_t word = ((const uint64_t*)(const void*)data)[idx];
-        size_t addr = offset + flashGetWordSize() * idx;
+    for (size_t i = 0; i < n_half_words; i += 1) {
+        const uint16_t halfword = (data[2U*i + 1]) << 8 | data[2U*i];
+        flashProgramHalfWord(offset + 2U*i, halfword);
 
-        status = flashWriteU64((uint32_t)addr, word);
+        status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
         if (status < 0) {
             break;
         }
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
     }
 
-    // flashProgramHalfWord((address + (2U*index)), (uint16_t)(data >> (16U*index)));
-
-
-    // uint16_t half_word_data = 0;
-    // for (uint8_t index = 0U; index < half_words_num; index++) {
-    //     // Copy the next 2 bytes from the data buffer to half_word_data
-    //     half_word_data = (uint16_t)data[index * 2];
-    //     if ((index * 2 + 1) < bytes_to_write) {
-    //         half_word_data |= ((uint16_t)data[index * 2 + 1] << 8);
-    //     }
-
-    //     // Write the 16-bit half_word_data to flash memory
-    //     flashProgramHalfWord((offset + (2U * index)), half_word_data);
-
-    //     status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
-
-    //     CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
-    //     if (status < 0) {
-    //         break;
-    //     }
-    // }
     return status;
 }
 

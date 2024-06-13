@@ -20,8 +20,6 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIR})
 
-# include_directories(${GTEST_INCLUDE_DIR})
-
 include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)

@@ -55,6 +55,5 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
         params_storage_file << string_desc_pool[index].name
                             << "\t: " << str_param_value.c_str() << std::endl;
         std::cout << string_desc_pool[index].name << " :"<< str_param_value << "\n";
-
     }
 }

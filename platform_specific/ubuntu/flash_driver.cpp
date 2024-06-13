@@ -110,16 +110,12 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
 }
 
 int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
-    assert(data != NULL && "libparams internal error");
-    assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(offset + bytes_to_write <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    // uint8_t* rom = &(flashGetPointer()[offset]);
+    if (is_locked || offset < FLASH_START_ADDR || offset >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
-    // memcpy(flash_memory + (offset - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
-
-    // memcpy(rom, &data, bytes_to_write);
 #ifdef FLASH_DRIVER_SIM_STORAGE_FILE
     std::ofstream params_storage_file;
     params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);

@@ -71,6 +71,7 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     if (status < 0) {
         return status;
     }
+
     for (size_t idx = 0U; idx < (size + flashGetWordSize() - 1)/ flashGetWordSize(); idx++) {
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
         size_t addr = offset + flashGetWordSize() * idx;

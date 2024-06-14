@@ -7,10 +7,8 @@
  */
 
 #include "flash_driver.h"
-
 #include <stdbool.h>
 #include <string.h>
-
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -36,9 +34,7 @@ static bool is_locked = true;
 static uint8_t* flashGetPointer();
 
 void flashInit() {
-    // flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
 #ifdef FLASH_DRIVER_STORAGE_FILE
-    // Init flash memory buffer on the heap
 
     std::ifstream params_storage_file;
     params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);
@@ -95,13 +91,6 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
 
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
-    assert(data != NULL && "libparams internal error");
-    assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(bytes_to_read <= PAGE_SIZE_BYTES &&
-           "ROM driver accessing non-existent mem");
-    assert(offset + bytes_to_read <= PAGE_SIZE_BYTES &&
-           "ROM driver accessing non-existent mem");
-
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
     return bytes_to_read;

@@ -30,7 +30,6 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
         } catch (std::invalid_argument const& ex) {
             size_t offset = 2048 - MAX_STRING_LENGTH * (1 + str_param_idx);
             memcpy(flash_memory + offset, value.c_str(), sizeof(value));
-            memset(flash_memory + offset + sizeof(value), '\0', MAX_STRING_LENGTH - sizeof(value));
             str_param_idx++;
         }
     }

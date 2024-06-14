@@ -2,7 +2,6 @@
 
 namespace fs = std::filesystem;
 
-extern uint8_t flash_memory;
 namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
@@ -13,7 +12,6 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
     size_t str_param_idx = 0;
     std::string line;
 
-    std::cout << "start reading\n";
     while (std::getline(params_storage_file, line)) {
         std::istringstream iss(line);
         size_t delimiter_pos = line.find(':');
@@ -31,7 +29,8 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
             int_param_idx++;
         } catch (std::invalid_argument const& ex) {
             size_t offset = 2048 - MAX_STRING_LENGTH * (1 + str_param_idx);
-            memcpy(flash_memory + offset, value.c_str(), MAX_STRING_LENGTH);
+            memcpy(flash_memory + offset, value.c_str(), sizeof(value));
+            memset(flash_memory + offset + sizeof(value), '\0', MAX_STRING_LENGTH - sizeof(value));
             str_param_idx++;
         }
     }
@@ -43,17 +42,22 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
          index++) {
         int32_t int_param_value;
         memcpy(&int_param_value, flash_memory + index * 4, 4);
-        params_storage_file << integer_desc_pool[index].name
-                            << "\t: " << int_param_value << std::endl;
-        std::cout << integer_desc_pool[index].name << " :"<< int_param_value << "\n";
+        params_storage_file << std::left << std::setw(32) << integer_desc_pool[index].name << ":\t"
+                                                                        << int_param_value << "\n";
+        std::cout << std::left << std::setw(32) << integer_desc_pool[index].name
+                                                                << ":\t" << int_param_value << "\n";
     }
 
     for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
         std::string str_param_value(
-            reinterpret_cast<char*>(flash_memory + index * MAX_STRING_LENGTH),
+            reinterpret_cast<char*>(flash_memory + 2048 -  (index + 1) * MAX_STRING_LENGTH),
             MAX_STRING_LENGTH);
-        params_storage_file << string_desc_pool[index].name
-                            << "\t: " << str_param_value.c_str() << std::endl;
-        std::cout << string_desc_pool[index].name << " :"<< str_param_value << "\n";
+        auto str_end = str_param_value.find('\0');
+        str_param_value = str_param_value.substr(0, str_end);
+        params_storage_file << std::left << std::setw(32) << string_desc_pool[index].name << ":\t"
+                                                                        << str_param_value << "\n";
+        std::cout << std::left << std::setw(32) << string_desc_pool[index].name
+                                                                << ":\t" << str_param_value << "\n";
     }
+    params_storage_file.write("\n", 1);
 }

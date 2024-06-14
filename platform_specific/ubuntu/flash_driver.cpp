@@ -29,16 +29,14 @@ namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-uint8_t *flash_memory;
+uint8_t flash_memory[PAGE_SIZE_BYTES];
 
 static bool is_locked = true;
 
-static void flashLoadBufferFromFile();
-static void flashSaveBufferToFile();
 static uint8_t* flashGetPointer();
 
 void flashInit() {
-    flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
+    // flash_memory = (uint8_t*) malloc(PAGE_SIZE_BYTES);
 #ifdef FLASH_DRIVER_STORAGE_FILE
     // Init flash memory buffer on the heap
 

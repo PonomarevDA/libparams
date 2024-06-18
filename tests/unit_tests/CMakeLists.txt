@@ -27,6 +27,7 @@ include(${ROOT_DIR}/CMakeLists.txt)
 function(gen_test app_name test_file)
     include_directories(
         ${libparamsHeaders}
+        ${TESTS_DIR}
     )
     add_executable(${app_name}
         ${test_file}

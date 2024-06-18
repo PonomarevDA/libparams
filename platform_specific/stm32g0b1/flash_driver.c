@@ -65,6 +65,20 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
 
+int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
+    int8_t status;
+    for (size_t idx = 0U; idx < (size + flashGetWordSize() - 1)/ flashGetWordSize(); idx++) {
+        uint64_t word = ((const uint64_t*)(const void*)data)[idx];
+        size_t addr = offset + flashGetWordSize() * idx;
+
+        status = flashWriteU64((uint32_t)addr, word);
+        if (status < 0) {
+            break;
+        }
+    }
+
+    return size;  // Return the total number of bytes written
+}
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {
         return 0;

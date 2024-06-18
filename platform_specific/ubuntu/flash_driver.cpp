@@ -9,33 +9,51 @@
 #include "flash_driver.h"
 #include <stdbool.h>
 #include <string.h>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
 #include <cassert>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+
+#include "YamlParameters.hpp"
 #include "libparams_error_codes.h"
+#include "params.hpp"
 #include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048
 
+namespace fs = std::filesystem;
+extern IntegerDesc_t integer_desc_pool[];
+extern StringDesc_t string_desc_pool[];
+
 uint8_t flash_memory[PAGE_SIZE_BYTES];
+
 static bool is_locked = true;
 
-static void flashLoadBufferFromFile();
 static uint8_t* flashGetPointer();
 
 void flashInit() {
-    flashLoadBufferFromFile();
+#ifdef FLASH_DRIVER_STORAGE_FILE
+
+    std::ifstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);
+
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE
+                  << " could not be opened for reading!" << std::endl;
+        exit(-1);
+    }
+    std::cout << "Flash driver: data read from " << FLASH_DRIVER_STORAGE_FILE
+              << std::endl;
+    YamlParameters::read_from_file(flash_memory, params_storage_file);
+    params_storage_file.close();
+#endif
 }
 
-void flashUnlock() {
-    is_locked = false;
-}
+void flashUnlock() { is_locked = false; }
 
-void flashLock() {
-    is_locked = true;
-}
+void flashLock() { is_locked = true; }
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     if (is_locked || start_page_idx != 0 || num_of_pages != 1) {
@@ -49,73 +67,62 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
     if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
         return LIBPARAMS_WRONG_ARGS;
     }
-    memcpy(flash_memory + (address - FLASH_START_ADDR),
-           (void*)(&data),
-           flashGetWordSize());
+
+    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
+
+#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
+    std::ofstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);
+
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_SIM_STORAGE_FILE
+                  << " could not be opened for writing!" << std::endl;
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    YamlParameters::write_to_file(flash_memory, params_storage_file);
+    params_storage_file.close();
+    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_SIM_STORAGE_FILE
+              << std::endl;
+
+#endif
     return LIBPARAMS_OK;
 }
 
-void flashLoadBufferFromFile() {
-#ifdef FLASH_DRIVER_STORAGE_FILE
-    std::cout << "Flash driver: load data from " << FLASH_DRIVER_STORAGE_FILE << "..." << std::endl;
-    std::ifstream params_storage_file;
-    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios::in);
-    if (!params_storage_file) {
-        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE << " been found!" << std::endl;
-    }
-    size_t read_counter = 0;
-    size_t int_param_idx = 0;
-    size_t str_param_idx = 0;
-    while (params_storage_file) {
-        if (read_counter % 2 == 0) {
-            std::string mystring;
-            params_storage_file >> mystring;
-            std::cout << std::setfill(' ') << std::setw(30) << mystring << " ";
-        } else {
-            std::string param_value;
-            params_storage_file >> param_value;
-            try {
-                uint32_t int_param_value = std::stoi(param_value);
-                memcpy(flash_memory + 4*int_param_idx, &int_param_value, 4);
-                std::cout << "(offset=" << 4*int_param_idx << ") ";
-                int_param_idx++;
-            } catch (std::invalid_argument const& ex) {
-                size_t offset = PAGE_SIZE_BYTES - MAX_STRING_LENGTH*(1 + str_param_idx);
-                memcpy(flash_memory + offset, param_value.c_str(), MAX_STRING_LENGTH);
-                std::cout << "(offset=" << offset << ") ";
-                str_param_idx++;
-            }
-            std::cout << param_value << std::endl;
-        }
-        read_counter++;
-    }
-    std::cout << std::endl;
-#endif
-}
-
-static uint8_t* flashGetPointer() {
-    return (uint8_t*) flash_memory;
-}
+static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
 
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
-    assert(data != NULL && "libparams internal error");
-    assert(offset < PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(bytes_to_read <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-    assert(offset + bytes_to_read <= PAGE_SIZE_BYTES && "ROM driver accessing non-existent mem");
-
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
     return bytes_to_read;
 }
 
-uint16_t flashGetNumberOfPages() {
-    return 1;
+int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
+    if (is_locked || offset < FLASH_START_ADDR || offset >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+
+    uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
+    memcpy(rom, data, bytes_to_write);
+#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
+    std::ofstream params_storage_file;
+    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);
+
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << FLASH_DRIVER_SIM_STORAGE_FILE
+                  << " could not be opened for writing!" << std::endl;
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    YamlParameters::write_to_file(flash_memory, params_storage_file);
+    params_storage_file.close();
+    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_SIM_STORAGE_FILE
+              << std::endl;
+
+#endif
+    return 0;
 }
 
-uint16_t flashGetPageSize() {
-    return PAGE_SIZE_BYTES;
-}
+uint16_t flashGetNumberOfPages() { return 1; }
 
-uint8_t flashGetWordSize() {
-    return 8;
-}
+uint16_t flashGetPageSize() { return PAGE_SIZE_BYTES; }
+
+uint8_t flashGetWordSize() { return 8; }

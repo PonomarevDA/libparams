@@ -23,16 +23,20 @@ include_directories(${GTEST_INCLUDE_DIR})
 include_directories(
     ${UNIT_TESTS_DIR}
     ${TESTS_DIR}
+    ${ROOT_DIR}/include/libparams
+    ${ROOT_DIR}/platform_specific/ubuntu
 )
 set(LIBPARAMS_PLATFORM ubuntu)
-add_subdirectory(${ROOT_DIR} ${CMAKE_BINARY_DIR}/libparams)
 
 function(gen_test app_name test_file)
     add_executable(${app_name}
         ${test_file}
         ${TESTS_DIR}/params.c
+        ${ROOT_DIR}/src/rom.c
+        ${ROOT_DIR}/src/storage.c
+        ${ROOT_DIR}/platform_specific/ubuntu/flash_driver.cpp
     )
-    target_link_libraries(${app_name} gtest libparams)
+    target_link_libraries(${app_name} gtest)
 endfunction()
 
 gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)

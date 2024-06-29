@@ -15,11 +15,11 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/config.cmake)
 
 add_library(${PROJECT_NAME} STATIC
-  ${CMAKE_CURRENT_LIST_DIR}/libparams/rom.c
-  ${CMAKE_CURRENT_LIST_DIR}/libparams/storage.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/rom.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/storage.c
   ${libparamsPlatformSpecificSrc}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
-  ${CMAKE_CURRENT_LIST_DIR}/libparams/
+  ${CMAKE_CURRENT_LIST_DIR}/include/libparams/
   ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/
 )

@@ -7,16 +7,12 @@
 cmake_minimum_required(VERSION 3.15.3)
 project(libparams)
 
-if(LIBPARAMS_PLATFORM STREQUAL "stm32f103")
-elseif(LIBPARAMS_PLATFORM STREQUAL "stm32g0b1")
-elseif(LIBPARAMS_PLATFORM STREQUAL "ubuntu")
-else()
-  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified! Options: stm32f103, stm32g0b1, ubuntu.")
+set(SUPPORTED_PLATFORMS "stm32f103;stm32g0b1;ubuntu")
+if(NOT LIBPARAMS_PLATFORM IN_LIST SUPPORTED_PLATFORMS)
+  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified or unsupported! Options: stm32f103, stm32g0b1, ubuntu.")
 endif()
 
-FILE(GLOB libparamsPlatformSpecificSrc
-  ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/flash_driver.*
-)
+include(${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/config.cmake)
 
 add_library(${PROJECT_NAME} STATIC
   ${CMAKE_CURRENT_LIST_DIR}/libparams/rom.c

@@ -20,15 +20,20 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # Libraries
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/CMakeLists.txt)
+
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_subdirectory(${ROOT_DIR} ${CMAKE_BINARY_DIR}/libparams)
 
 add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_LIST_DIR}/default_params.yaml")
 
 add_executable(application
-    ${libparamsSrc}
     ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
+target_link_libraries(application libparams)
 
 execute_process(
     COMMAND ${ROOT_DIR}/scripts/generate_params.py --out-dir . -f ${CMAKE_CURRENT_LIST_DIR}/params.yaml
@@ -37,8 +42,3 @@ execute_process(
 if(NOT ret EQUAL 0)
     message( FATAL_ERROR "Params Generator has been failed. Abort.")
 endif()
-
-include_directories(
-    ${libparamsHeaders}
-    ${CMAKE_CURRENT_BINARY_DIR}
-)

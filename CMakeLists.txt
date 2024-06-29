@@ -5,7 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 cmake_minimum_required(VERSION 3.15.3)
-project(libparams)
+project(libparams VERSION 0.9.0)
 
 set(SUPPORTED_PLATFORMS "stm32f103;stm32g0b1;ubuntu")
 if(NOT LIBPARAMS_PLATFORM IN_LIST SUPPORTED_PLATFORMS)

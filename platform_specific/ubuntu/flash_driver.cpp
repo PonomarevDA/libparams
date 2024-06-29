@@ -18,7 +18,6 @@
 
 #include "YamlParameters.hpp"
 #include "libparams_error_codes.h"
-#include "params.hpp"
 #include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048

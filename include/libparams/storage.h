@@ -118,7 +118,7 @@ ParamIndex_t paramsFind(const uint8_t* name, uint16_t len);
 
 /**
  * @brief           Get the type of the parameter
- * @param param_idx The name of the parameter
+ * @param param_idx The index of the parameter
  * @return          The type of the paramter on success, otherwise PARAM_TYPE_UNDEFINED
  */
 ParamType_t paramsGetType(ParamIndex_t param_idx);

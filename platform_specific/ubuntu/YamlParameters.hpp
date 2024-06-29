@@ -21,7 +21,6 @@
 #include <filesystem>
 #include "storage.h"
 #include "libparams_error_codes.h"  // Other libraries' headers
-#include "params.hpp"
 
 #ifdef __cplusplus
 extern "C" {

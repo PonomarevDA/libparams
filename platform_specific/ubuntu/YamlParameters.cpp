@@ -37,8 +37,7 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
 
 void YamlParameters::write_to_file(uint8_t* flash_memory,
                                    std::ofstream& params_storage_file) {
-    for (size_t index = 0; index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
-         index++) {
+    for (size_t index = 0; paramsGetType(index) == PARAM_TYPE_INTEGER; index++) {
         int32_t int_param_value;
         memcpy(&int_param_value, flash_memory + index * 4, 4);
         params_storage_file << std::left << std::setw(32) << integer_desc_pool[index].name << ":\t"
@@ -47,7 +46,7 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
                                                                 << ":\t" << int_param_value << "\n";
     }
 
-    for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
+    for (size_t index = 0; paramsGetType(index) == PARAM_TYPE_STRING; index++) {
         std::string str_param_value(
             reinterpret_cast<char*>(flash_memory + 2048 -  (index + 1) * MAX_STRING_LENGTH),
             MAX_STRING_LENGTH);

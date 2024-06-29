@@ -37,26 +37,25 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
 
 void YamlParameters::write_to_file(uint8_t* flash_memory,
                                    std::ofstream& params_storage_file) {
-    for (size_t index = 0; index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
-         index++) {
+    for (size_t index = 0; index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; index++) {
         int32_t int_param_value;
         memcpy(&int_param_value, flash_memory + index * 4, 4);
         params_storage_file << std::left << std::setw(32) << integer_desc_pool[index].name << ":\t"
-                                                                        << int_param_value << "\n";
+                            << int_param_value << "\n";
         std::cout << std::left << std::setw(32) << integer_desc_pool[index].name
-                                                                << ":\t" << int_param_value << "\n";
+                  << ":\t" << int_param_value << "\n";
     }
 
     for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
-        std::string str_param_value(
-            reinterpret_cast<char*>(flash_memory + 2048 -  (NUM_OF_STR_PARAMS - index) *
-                                                MAX_STRING_LENGTH), MAX_STRING_LENGTH);
+        size_t offset = 2048 - (NUM_OF_STR_PARAMS - index) * MAX_STRING_LENGTH;
+        auto str_param_raw = reinterpret_cast<char*>(flash_memory + offset);
+        std::string str_param_value(str_param_raw, MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         str_param_value = str_param_value.substr(0, str_end);
         params_storage_file << std::left << std::setw(32) << string_desc_pool[index].name << ":\t"
-                                                                        << str_param_value << "\n";
+                            << str_param_value << "\n";
         std::cout << std::left << std::setw(32) << string_desc_pool[index].name
-                                                                << ":\t" << str_param_value << "\n";
+                  << ":\t" << str_param_value << "\n";
     }
     params_storage_file.write("\n", 1);
 }

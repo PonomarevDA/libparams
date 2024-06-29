@@ -51,9 +51,13 @@ void flashInit() {
 #endif
 }
 
-void flashUnlock() { is_locked = false; }
+void flashUnlock() {
+    is_locked = false;
+}
 
-void flashLock() { is_locked = true; }
+void flashLock() {
+    is_locked = true;
+}
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     if (is_locked || start_page_idx != 0 || num_of_pages != 1) {
@@ -88,7 +92,9 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
     return LIBPARAMS_OK;
 }
 
-static uint8_t* flashGetPointer() { return (uint8_t*)flash_memory; }
+static uint8_t* flashGetPointer() {
+    return (uint8_t*)flash_memory;
+}
 
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     const uint8_t* rom = &(flashGetPointer()[offset]);
@@ -121,8 +127,14 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
     return 0;
 }
 
-uint16_t flashGetNumberOfPages() { return 1; }
+uint16_t flashGetNumberOfPages() {
+    return 1;
+}
 
-uint16_t flashGetPageSize() { return PAGE_SIZE_BYTES; }
+uint16_t flashGetPageSize() {
+    return PAGE_SIZE_BYTES;
+}
 
-uint8_t flashGetWordSize() { return 8; }
+uint8_t flashGetWordSize() {
+    return 8;
+}

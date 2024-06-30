@@ -21,8 +21,8 @@ coverage: create_build_dir
 	cd ${BUILD_DIR} && ./rom
 	cd ${BUILD_DIR} && ./storage
 
-	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/libparams/rom.c.gcda
-	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/storage.dir${REPO_DIR}/libparams/storage.c.gcda
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/src/rom.c.gcda
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/storage.dir${REPO_DIR}/src/storage.c.gcda
 
 flash_driver: create_build_dir
 	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./flash_driver

@@ -4,7 +4,8 @@ SCRIPTS_DIR="$(dirname "$CODE_STYLE_DIR")"
 REPO_DIR="$(dirname "$SCRIPTS_DIR")"
 
 FOLDERS=(
-   "$REPO_DIR/libparams/*"
+   "$REPO_DIR/src/*"
+   "$REPO_DIR/include/*"
    "$REPO_DIR/platform_specific/*/*"
 )
 

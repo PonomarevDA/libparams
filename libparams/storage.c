@@ -68,6 +68,13 @@ int8_t paramsLoad() {
         }
     }
 
+    for (uint_fast8_t idx = 0; idx < strings_amount; idx++) {
+        // 255 value is default value for stm32, '\0' for ubuntu
+        if (string_values_pool[idx][0] == 255 || string_values_pool[idx][0] == '\0') {
+            memcpy(string_values_pool[idx], string_desc_pool[idx].def, MAX_STRING_LENGTH);
+        }
+    }
+
     return LIBPARAMS_OK;
 }
 

@@ -49,8 +49,8 @@ void YamlParameters::write_to_file(uint8_t* flash_memory,
 
     for (size_t index = 0; index < NUM_OF_STR_PARAMS; index++) {
         std::string str_param_value(
-            reinterpret_cast<char*>(flash_memory + 2048 -  (index + 1) * MAX_STRING_LENGTH),
-            MAX_STRING_LENGTH);
+            reinterpret_cast<char*>(flash_memory + 2048 -  (NUM_OF_STR_PARAMS - index) *
+                                                MAX_STRING_LENGTH), MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         str_param_value = str_param_value.substr(0, str_end);
         params_storage_file << std::left << std::setw(32) << string_desc_pool[index].name << ":\t"

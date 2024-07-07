@@ -12,68 +12,73 @@
 #include "libparams_error_codes.h"
 #include "flash_driver.h"
 
+class RomDriverMultiplePagesTest : public ::testing::Test {
+protected:
+    RomDriverInstance rom;
+
+    void SetUp() override {
+        rom = romInit(0, flashGetNumberOfPages());
+    }
+};
+
 // Test Case 1. Initialize ROM Driver Instance
 // Test 1.1: Initialize with Single Latest Page, Negative Number
-TEST(TestRom, test_1_1_initialize_with_single_latest_page_negative_number) {
+TEST(TestRom, initializeWithSingleLatestPageNegativeNumber) {
     auto rom = romInit(-1, 1);
-    ASSERT_TRUE(rom.inited);
+    ASSERT_TRUE(rom.inited)<< "Failed to init with single latest page using negative number";
 }
 // Test 1.2: Initialize with Single Latest Page, Positive Number
-TEST(TestRom, test_1_2_initialize_with_single_latest_page_positive_number) {
+TEST(TestRom, initializeWithSingleLatestPagePositiveNumber) {
     auto rom = romInit(flashGetNumberOfPages() - 1, 1);
-    ASSERT_TRUE(rom.inited);
+    ASSERT_TRUE(rom.inited) << "Failed to init with single latest page using positive number";
 }
 // Test 1.3: Initialize with Multiple Pages
-TEST(TestRom, test_1_3_initialize_with_multiple_pages) {
-    auto rom = romInit(0, flashGetNumberOfPages());
-    ASSERT_TRUE(rom.inited);
+TEST_F(RomDriverMultiplePagesTest, initializeWithMultiplePages) {
+    ASSERT_TRUE(rom.inited) << "Failed to init with multiple pages";
 }
 // Test 1.4: Initialize with Invalid Page Index
-TEST(TestRom, test_1_4_initialize_with_invalid_page_index) {
+TEST(TestRom, initializeWithInvalidPageIndex) {
     auto rom = romInit(flashGetNumberOfPages(), 1);
-    ASSERT_FALSE(rom.inited);
+    ASSERT_FALSE(rom.inited) << "Initialized with invalid page index";
 }
 // Test 1.5: Initialize with Zero Pages
-TEST(TestRom, test_1_5_initialize_with_zero_pages) {
+TEST(TestRom, initializeWithZeroPages) {
     auto rom = romInit(-1, 0);
-    ASSERT_FALSE(rom.inited);
+    ASSERT_FALSE(rom.inited) << "Initialized with zero pages";
 }
 
 
 // Test Case 2: Read from ROM
 // Test 2.1: Read Data within Bounds
-TEST(TestRom, test_2_1_read_data_withing_bounds) {
-    auto rom = romInit(0, flashGetNumberOfPages());
+TEST_F(RomDriverMultiplePagesTest, readDataWithingBounds) {
     const auto ROM_SIZE = romGetAvailableMemory(&rom);
     uint8_t data[ROM_SIZE];
 
     // Read a chank of data
-    ASSERT_EQ(romRead(&rom, 0, data, 8), 8);
+    ASSERT_EQ(romRead(&rom, 0, data, 8), 8) << "Failed to read data within bounds";
 
     // Read everything
-    ASSERT_EQ(romRead(&rom, 0, data, ROM_SIZE), ROM_SIZE);
+    ASSERT_EQ(romRead(&rom, 0, data, ROM_SIZE), ROM_SIZE) << "Failed to read entire ROM size";
 }
 // Test 2.2: Read Data Exceeding Bounds
-TEST(TestRom, test_2_2_read_data_exceeding_bounds) {
-    auto rom = romInit(0, flashGetNumberOfPages());
+TEST_F(RomDriverMultiplePagesTest, readDataExceedingBounds) {
     const auto ROM_SIZE = romGetAvailableMemory(&rom);
     uint8_t data[ROM_SIZE];
 
     // Normal, clamped read
-    ASSERT_EQ(romRead(&rom, 0, data, ROM_SIZE + 1), ROM_SIZE);
-    ASSERT_EQ(romRead(&rom, 1, data, ROM_SIZE), ROM_SIZE - 1);
+    ASSERT_EQ(romRead(&rom, 0, data, ROM_SIZE + 1), ROM_SIZE) << "Failed to clamp read";
+    ASSERT_EQ(romRead(&rom, 1, data, ROM_SIZE), ROM_SIZE - 1) << "Failed to clamp read";
 
     // Wrong inputs
-    ASSERT_EQ(romRead(nullptr, 0, data, ROM_SIZE), 0);
-    ASSERT_EQ(romRead(&rom, 0, nullptr, ROM_SIZE), 0);
-    ASSERT_EQ(romRead(&rom, ROM_SIZE, data, ROM_SIZE), 0);
-    ASSERT_EQ(romRead(&rom, 0, data, 0), 0);
+    ASSERT_EQ(romRead(nullptr, 0, data, ROM_SIZE), 0) << "Read should fail with nullptr ROM";
+    ASSERT_EQ(romRead(&rom, 0, nullptr, ROM_SIZE), 0) << "Read should fail with nullptr data";
+    ASSERT_EQ(romRead(&rom, ROM_SIZE, data, 1), 0) << "Read should fail: offset out of bounds";
+    ASSERT_EQ(romRead(&rom, 0, data, 0), 0) << "Read should fail with zero size";
 }
 
 // Test Case 3: Write to ROM
 // Test 3.1: Write Data within Bounds
-TEST(TestRom, test_3_1_write_data_withing_bounds) {
-    auto rom = romInit(0, flashGetNumberOfPages());
+TEST_F(RomDriverMultiplePagesTest, writeDataWithingBounds) {
     const uint8_t SAMPLE_DATA[] = {1, 2, 3, 4, 5, 6, 7, 8};
     uint8_t read_data[sizeof(SAMPLE_DATA)] = {};
 
@@ -85,8 +90,7 @@ TEST(TestRom, test_3_1_write_data_withing_bounds) {
     ASSERT_EQ(memcmp(SAMPLE_DATA, read_data, sizeof(SAMPLE_DATA)), 0);
 }
 // Test 3.2: Write Data Exceeding Bounds
-TEST(TestRom, test_3_2_romWrite_bad_args) {
-    auto rom = romInit(0, flashGetNumberOfPages());
+TEST_F(RomDriverMultiplePagesTest, writeDataExceedingBounds) {
     const uint8_t SAMPLE_DATA[] = {1, 2, 3, 4, 5, 6, 7, 8};
 
     // 1. ROM nullptr
@@ -123,12 +127,11 @@ TEST(TestRom, test_3_2_romWrite_bad_args) {
 
 // Test Case 4: Get Available Memory
 // Test 4.1: Verify Available Memory Calculation with correct_input
-TEST(TestRom, test_4_1_verify_avaliable_memory_calculation_with_correct_input) {
-    auto rom = romInit(0, flashGetNumberOfPages());
+TEST_F(RomDriverMultiplePagesTest, verifyAvaliableMemoryCalculationWithCorrectInput) {
     ASSERT_EQ(romGetAvailableMemory(&rom), flashGetNumberOfPages() * flashGetPageSize());
 }
 // Test 4.2: Verify Available Memory Calculation with nullptr
-TEST(TestRom, test_4_2_verify_avaliable_memory_calculation_with_nullptr) {
+TEST_F(RomDriverMultiplePagesTest, test_4_2_verifyAvaliableMemoryCalculationWithNullptr) {
     ASSERT_EQ(romGetAvailableMemory(nullptr), 0);
 }
 

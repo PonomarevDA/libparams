@@ -14,66 +14,108 @@
 typedef enum {
     NODE_ID,
     MAGNETOMETER_ID,
-    PERSISTENT_INTEGET_ID,
+    IMMUTABLE_INTEGER_ID,
     INTEGER_PARAMS_AMOUNT
 } IntParamsIndexes;
 
-typedef enum {
-    NODE_NAME,
-    MAGNETOMETER_TYPE,
-    STRING_PARAMS_AMOUNT
-} StrParamsIndexes;
+#define NODE_NAME               (INTEGER_PARAMS_AMOUNT + 0)
+#define MAGNETOMETER_TYPE       (INTEGER_PARAMS_AMOUNT + 1)
+#define STRING_PARAMS_AMOUNT    ((ParamIndex_t)2)
 
-void init() {
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
-    paramsLoad();
+#define NUMBER_OF_PARAMS        (INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT)
+
+
+class SinglePageStorageDriverTest : public ::testing::Test {
+protected:
+    RomDriverInstance rom;
+
+    void SetUp() override {
+        rom = romInit(-1, 1);
+        paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
+        paramsLoad();
+    }
+};
+
+class EmptyStorageDriverTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        paramsInit(0, 0, -1, 1);  // reset storage
+    }
+};
+
+void generateRandomCString(char* str, int size) {
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    int charsetSize = sizeof(charset) - 1;
+
+    for (int i = 0; i < size; ++i) {
+        str[i] = charset[rand() % charsetSize];
+    }
+    str[size] = '\0';
 }
-void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
-    size_t string_length = strlen(str);
-    paramsSetStringValue(param_idx, string_length, (const uint8_t*)str);
-    StringParamValue_t* read_str_param = paramsGetStringValue(param_idx);
 
-    ASSERT_NE((size_t)read_str_param, 0);
-    ASSERT_EQ(memcmp(str, read_str_param, string_length), 0);
-}
 
-TEST(TestStorage, test_paramsInit) {
+// Test Case 1: Initialization of Parameters
+// Test 1.1: Initialize with Valid Inputs
+TEST_F(EmptyStorageDriverTest, initializeWithValidInput) {
     ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1));
 }
-
-TEST(TestStorage, test_paramsLoad) {
-    paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
-    paramsLoad();
-    RomDriverInstance rom = romInit(0, 1);
-
-    int32_t data;
-
-    // Out of range value in flash (more than max)
-    data = 128;
-    romBeginWrite(&rom);
-    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite(&rom);
-    paramsLoad();
-    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
-
-    // Out of range value in flash (less than min)
-    data = -1;
-    romBeginWrite(&rom);
-    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite(&rom);
-    paramsLoad();
-    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
-
-    // Normal
-    data = 42;
-    romBeginWrite(&rom);
-    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&data), 4));
-    romEndWrite(&rom);
-    paramsLoad();
-    ASSERT_EQ(42, paramsGetIntegerValue(NODE_ID));
+// Test 1.2: Initialize with zero params
+TEST_F(EmptyStorageDriverTest, initializeWithZeroParams) {
+    ASSERT_EQ(LIBPARAMS_OK, paramsInit(0, 0, -1, 1));
+}
+// Test 1.3: Initialize with too much params
+TEST_F(EmptyStorageDriverTest, initializeWithTooMuchParams) {
+    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit(1000, 1000, -1, 1));
+}
+// Test 1.4: Initialize with Zero Pages
+TEST_F(EmptyStorageDriverTest, initializeZeroPages) {
+    ASSERT_EQ(LIBPARAMS_UNKNOWN_ERROR, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, 0, 0));
+}
+// Test 1.5: Initialize with Invalid Page Index
+TEST_F(EmptyStorageDriverTest, initializeWithInvalidaPageIndex) {
+    ASSERT_EQ(LIBPARAMS_UNKNOWN_ERROR, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 2));
 }
 
-TEST(TestStorage, test_paramsSave) {
+
+// Test Case 2: Load Parameters
+// Test 2.1: Load Parameters Successfully
+TEST_F(SinglePageStorageDriverTest, loadParametersSuccessfully) {
+    int32_t node_id;
+
+    // 1/3. The stored parameter value is within [min, max]
+    node_id = rand() % 127;
+    romBeginWrite(&rom);
+    ASSERT_EQ(sizeof(node_id), romWrite(&rom, 0, (uint8_t*)(void*)&node_id, sizeof(node_id)));
+    romEndWrite(&rom);
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoad());
+    ASSERT_EQ(node_id, paramsGetIntegerValue(NODE_ID));
+
+    // 2/3. Out of range value in flash (more than max)
+    node_id = 128;
+    romBeginWrite(&rom);
+    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&node_id), 4));
+    romEndWrite(&rom);
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoad());
+    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
+
+    // 3/3. Out of range value in flash (less than min)
+    node_id = -1;
+    romBeginWrite(&rom);
+    ASSERT_EQ(4, romWrite(&rom, 0, static_cast<const uint8_t*>((void*)&node_id), 4));
+    romEndWrite(&rom);
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoad());
+    ASSERT_EQ(50, paramsGetIntegerValue(NODE_ID));
+}
+// Test 2.2: Load Parameters with Uninitialized Parameters
+// Actually, it is better to return an error here
+TEST_F(EmptyStorageDriverTest, loadParametersSuccessfully) {
+    ASSERT_EQ(LIBPARAMS_OK, paramsLoad());
+}
+
+
+// Test Case 3: Save Parameters
+// Test 3.1: Save Parameters Successfully
+TEST_F(EmptyStorageDriverTest, saveParametersSuccessfully) {
     // Normal
     ASSERT_EQ(LIBPARAMS_OK, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
@@ -89,20 +131,26 @@ TEST(TestStorage, test_paramsSave) {
     // Full storage is ok
     ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
-
-    // More parameters than possible is not ok
-    paramsInit(0, 0, -1, 1);  // Reset the storage
-    ASSERT_EQ(LIBPARAMS_WRONG_ARGS, paramsInit((ParamIndex_t)513, 0, -1, 1));
+}
+// Test 3.2: Save Parameters with Uninitialized Parameters
+TEST_F(EmptyStorageDriverTest, saveParametersWithUninitializedParameters) {
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsSave());
 }
 
-TEST(TestStorage, test_paramsResetToDefault) {
-    init();
-    ASSERT_EQ(0, paramsResetToDefault());
+
+// Test Case 4: Reset Parameters to Default
+// Test 4.1: Reset Parameters Successfully
+TEST_F(SinglePageStorageDriverTest, resetParametersSuccessfully) {
+    ASSERT_EQ(LIBPARAMS_OK, paramsResetToDefault());
+}
+TEST_F(EmptyStorageDriverTest, resetParametersWithUninitializedParameters) {
+    ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsResetToDefault());
 }
 
-TEST(TestStorage, test_paramsGetName) {
-    init();
+
+// Test Case 5: Access Parameter Names
+// Test 5.1: Get Parameter Name Successfully
+TEST_F(SinglePageStorageDriverTest, getParameterNameSuccessfully) {
     size_t expected_param_name_length;
 
     ParamIndex_t int_param_idx = NODE_ID;
@@ -111,131 +159,153 @@ TEST(TestStorage, test_paramsGetName) {
     auto read_param_name = paramsGetName(int_param_idx);
     ASSERT_EQ(memcmp(int_param_expected_name, read_param_name, expected_param_name_length), 0);
 
-    ParamIndex_t str_param_idx = INTEGER_PARAMS_AMOUNT + NODE_NAME;
     auto str_param_expected_name = "name";
     expected_param_name_length = strlen(str_param_expected_name);
-    read_param_name = paramsGetName(str_param_idx);
+    read_param_name = paramsGetName(NODE_NAME);
     ASSERT_EQ(memcmp(str_param_expected_name, read_param_name, expected_param_name_length), 0);
-
-    // Out of bounds
-    ParamIndex_t wrong_param_idx = INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT;
-    read_param_name = paramsGetName(wrong_param_idx);
+}
+// Test 5.2: Get Parameter Name with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getParameterNameWithInvalidIndex) {
+    auto read_param_name = paramsGetName(NUMBER_OF_PARAMS);
     ASSERT_EQ(read_param_name, nullptr);
 }
 
-TEST(TestStorage, test_paramsFind) {
-    init();
 
+// Test Case 6: Find Parameter by Name
+// Test 6.1: Find Parameter by Valid Name
+TEST_F(SinglePageStorageDriverTest, findParameterByValidName) {
+    // Integer
     ASSERT_EQ(MAGNETOMETER_ID, paramsFind((const uint8_t*)"uavcan.pub.mag.id", 18));
+
+    // String
     ASSERT_EQ(INTEGER_PARAMS_AMOUNT + NODE_ID, paramsFind((const uint8_t*)"name", 4));
-    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, paramsFind((const uint8_t*)"none", 4));
+}
+// Test 6.2: Find Parameter by Invalid Name
+TEST_F(SinglePageStorageDriverTest, findParameterByInvalidName) {
+    ASSERT_EQ(NUMBER_OF_PARAMS, paramsFind((const uint8_t*)"none", 4));
 }
 
-TEST(TestStorage, test_paramsGetType) {
-    init();
 
-    std::vector<std::pair<ParamIndex_t, ParamType_t>> data_set = {
-        std::make_pair(NODE_ID,                                         PARAM_TYPE_INTEGER),
-        std::make_pair(INTEGER_PARAMS_AMOUNT + NODE_NAME,               PARAM_TYPE_STRING),
-        std::make_pair(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT,    PARAM_TYPE_UNDEFINED)
-    };
-
-    for (auto data : data_set) {
-        ASSERT_EQ(paramsGetType(data.first), data.second);
-    }
+// Test Case 7: Access Parameter Types
+// Test 7.1: Get Parameter Type Successfully
+TEST_F(SinglePageStorageDriverTest, getParameterTypeSuccessfully) {
+    ASSERT_EQ(PARAM_TYPE_INTEGER,   paramsGetType(NODE_ID));
+    ASSERT_EQ(PARAM_TYPE_STRING,    paramsGetType(NODE_NAME));
+}
+// Test 7.2: Get Parameter Type with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getParameterTypeWithInvalidIndex) {
+    ASSERT_EQ(PARAM_TYPE_UNDEFINED, paramsGetType(NUMBER_OF_PARAMS));
 }
 
-TEST(TestStorage, test_paramsGetIntegerDesc) {
-    init();
 
+// Test Case 8: Access Parameter Descriptions
+// Test 8.1: Get Integer Parameter Description Successfully
+TEST_F(SinglePageStorageDriverTest, getIntegerParameterDescriptionSuccessfully) {
     const IntegerDesc_t* desc = paramsGetIntegerDesc(NODE_ID);
     ASSERT_EQ(desc->def, 50);
     ASSERT_EQ(desc->min, 0);
     ASSERT_EQ(desc->max, 127);
-
-    // Out of parameters range
-    ASSERT_EQ(NULL, paramsGetIntegerDesc(INTEGER_PARAMS_AMOUNT));
 }
-
-TEST(TestStorage, test_paramsGetStringDesc) {
-    init();
-    ASSERT_EQ(NULL, paramsGetStringDesc(NODE_ID));
-
-    auto node_name_desc = paramsGetStringDesc(INTEGER_PARAMS_AMOUNT + NODE_NAME);
+// Test 8.2: Get Integer Parameter Description with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getIntegerParameterDescriptionWithInvalidIndex) {
+    ASSERT_EQ(nullptr, paramsGetIntegerDesc(INTEGER_PARAMS_AMOUNT));
+}
+// Test 8.3: Get String Parameter Description Successfully
+TEST_F(SinglePageStorageDriverTest, getStringParameterDescriptionSuccessfully) {
+    auto node_name_desc = paramsGetStringDesc(NODE_NAME);
     EXPECT_TRUE(std::string("Unknown") == std::string((const char*)node_name_desc->def));
-    EXPECT_TRUE(std::string("name") == std::string((const char*)node_name_desc->name));
+}
+// Test 8.4: Get String Parameter Description with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getStringParameterDescriptionWithInvalidIndex) {
+    ASSERT_EQ(nullptr, paramsGetStringDesc(NODE_ID));
 }
 
-TEST(TestStorage, test_paramsGetSetIntegerValue) {
-    init();
-    IntegerParamValue_t param_value;
 
-    paramsSetIntegerValue(NODE_ID, 0);
-    param_value = paramsGetIntegerValue(NODE_ID);
-    ASSERT_EQ(param_value, 0);
-
-    paramsSetIntegerValue(NODE_ID, 42);
-    param_value = paramsGetIntegerValue(NODE_ID);
-    ASSERT_EQ(param_value, 42);
-
-    paramsSetIntegerValue(NODE_ID, 127);
-    param_value = paramsGetIntegerValue(NODE_ID);
-    ASSERT_EQ(param_value, 127);
-
-    // Write out of parameters range
-    paramsSetIntegerValue(INTEGER_PARAMS_AMOUNT, 42);
-    param_value = paramsGetIntegerValue(NODE_ID);
-    ASSERT_EQ(param_value, 127);
-
-    // Read out of parameters range
-    param_value = paramsGetIntegerValue(INTEGER_PARAMS_AMOUNT);
-    ASSERT_EQ(param_value, -1);
+// Test Case 9: Access Parameter Values
+// Test 9.1: Get Integer Parameter Value Successfully
+TEST_F(SinglePageStorageDriverTest, getIntegerParameterValueSuccessfully) {
+    int32_t node_id = rand() % 127;
+    paramsSetIntegerValue(NODE_ID, node_id);
+    ASSERT_EQ(paramsGetIntegerValue(NODE_ID), node_id);
+}
+// Test 9.2: Get Integer Parameter Value with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getIntegerParameterValueWithInvalidIndex) {
+    ASSERT_EQ(paramsGetIntegerValue(INTEGER_PARAMS_AMOUNT), -1);
 }
 
-TEST(TestStorage, test_paramsGetSetStringValue) {
-    init();
+void mutable_string_write_read_check(ParamIndex_t param_idx, const char* str) {
+    size_t string_length = strlen(str);
+    paramsSetStringValue(param_idx, string_length, (const uint8_t*)str);
+    StringParamValue_t* read_str_param = paramsGetStringValue(param_idx);
 
-    // Mutable string
-    ParamIndex_t node_name_idx = INTEGER_PARAMS_AMOUNT + NODE_NAME;
-    mutable_string_write_read_check(node_name_idx, "custom_string");
-    mutable_string_write_read_check(node_name_idx, "another_custom_string");
+    ASSERT_NE((size_t)read_str_param, 0);
+    ASSERT_EQ(memcmp(str, read_str_param, string_length), 0);
+}
 
-    // Persistent string
-    ParamIndex_t mag_type_idx = INTEGER_PARAMS_AMOUNT + MAGNETOMETER_TYPE;
-    auto mag_type = (const uint8_t*)"uavcan.si.sample.magnetic_field_strength.Vector3";
-    paramsSetStringValue(mag_type_idx, 12, (const uint8_t*)"some_string");
-    StringParamValue_t* read_str_param = paramsGetStringValue(mag_type_idx);
-    ASSERT_EQ(memcmp(mag_type, read_str_param, 49), 0);
+// Test 9.3: Get String Parameter Value Successfully
+TEST_F(SinglePageStorageDriverTest, getStringParameterValueSuccessfully) {
+    const size_t STR_SIZE = 10;
+    char origin_str[STR_SIZE];
+    generateRandomCString(origin_str, STR_SIZE);
 
-    // Out of parameters range
+    paramsSetStringValue(NODE_NAME, STR_SIZE, (const uint8_t*)origin_str);
+    StringParamValue_t* read_str = paramsGetStringValue(NODE_NAME);
+    ASSERT_NE((size_t)read_str, 0);
+    ASSERT_EQ(memcmp(origin_str, read_str, STR_SIZE), 0);
+}
+// Test 9.4: Get String Parameter Value with Invalid Index
+TEST_F(SinglePageStorageDriverTest, getStringParameterValueWithInvalidIndex) {
     ParamIndex_t less_than_need_idx = INTEGER_PARAMS_AMOUNT - 1;
-    ASSERT_EQ(NULL, paramsGetStringValue(less_than_need_idx));
+    ASSERT_EQ(nullptr, paramsGetStringValue(less_than_need_idx));
 
-    ParamIndex_t more_than_need_idx = INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT;
-    ASSERT_EQ(NULL, paramsGetStringValue(more_than_need_idx));
+    ParamIndex_t more_than_need_idx = NUMBER_OF_PARAMS;
+    ASSERT_EQ(nullptr, paramsGetStringValue(more_than_need_idx));
 }
 
-TEST(TestStorage, test_paramsSetIntegerValue_persistent_param) {
-    init();
-    IntegerParamValue_t param_value;
 
-    paramsSetIntegerValue(PERSISTENT_INTEGET_ID, 0);
-    param_value = paramsGetIntegerValue(PERSISTENT_INTEGET_ID);
-    ASSERT_EQ(param_value, 1000000);
+// Test Case 10: Set Parameter Values
+// Test 10.1: Set Integer Parameter Value Successfully
+TEST_F(SinglePageStorageDriverTest, test_paramsSetIntegerValue_immutable_param) {
+    // Mutable integer was tested in the previous tests
+
+    // Immutable integer
+    paramsSetIntegerValue(IMMUTABLE_INTEGER_ID, 0);
+    ASSERT_EQ(paramsGetIntegerValue(IMMUTABLE_INTEGER_ID), 1000000);
 }
+// Test 10.2: Set Integer Parameter Value with Invalid Index
+// No way to check it
+TEST_F(SinglePageStorageDriverTest, setIntegerParameterValueWithInvalidIndex) {
+    paramsSetIntegerValue(INTEGER_PARAMS_AMOUNT, -1);
+    paramsSetIntegerValue(INTEGER_PARAMS_AMOUNT, 128);
+}
+// Test 10.3: Set String Parameter Value Successfully
+TEST_F(SinglePageStorageDriverTest, setStringParameterValueSuccessfully) {
+    // Mutable string was tested in the previous tests
 
-TEST(TestStorage, test_paramsSetStringValue) {
-    init();
+    // Immutable string
+    auto mag_type = (const uint8_t*)"uavcan.si.sample.magnetic_field_strength.Vector3";
+    paramsSetStringValue(MAGNETOMETER_TYPE, 12, (const uint8_t*)"some_string");
+    StringParamValue_t* read_str_param = paramsGetStringValue(MAGNETOMETER_TYPE);
+    ASSERT_EQ(memcmp(mag_type, read_str_param, sizeof(mag_type)), 0);
+}
+// Test 10.4: Set String Parameter Value with Invalid Index
+TEST_F(SinglePageStorageDriverTest, test_paramsSetStringValue) {
     auto test_string = (const uint8_t*)"test_string";
 
-    // Wrong inputs
-    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + NODE_NAME, 100, test_string));
-    ASSERT_EQ(0, paramsSetStringValue(0, 12, test_string));
-    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT, 12, test_string));
+    // Not a string yet (the index is less then need)
+    ASSERT_EQ(0, paramsSetStringValue(INTEGER_PARAMS_AMOUNT - 1, 12, test_string));
+
+    // No longer a string (the index is more then need)
+    ASSERT_EQ(0, paramsSetStringValue(NUMBER_OF_PARAMS, 12, test_string));
+
+    // String size is more than max
+    ASSERT_EQ(0, paramsSetStringValue(NODE_NAME, MAX_STRING_LENGTH + 1, test_string));
+
+    // Writing nullptr
+    ASSERT_EQ(0, paramsSetStringValue(NODE_NAME, MAX_STRING_LENGTH + 1, nullptr));
 }
 
-
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

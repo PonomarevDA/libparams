@@ -30,7 +30,8 @@ extern "C" {
 class YamlParameters {
 public:
     static void read_from_file(uint8_t* flash_memory, std::ifstream & params_storage_file);
-    static void write_to_file(uint8_t* flash_memory, std::ofstream& params_storage_file);
+    static std::tuple<uint8_t, uint8_t> write_to_file(uint8_t* flash_memory,
+        std::ofstream& params_storage_file, std::tuple<uint8_t, uint8_t>  last_idxs);
 };
 
 

@@ -22,33 +22,26 @@
 #include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048
+#define STR_PARAMS_SIZE_BYTES NUM_OF_STR_PARAMS * MAX_STRING_LENGTH
+#define INTEGER_PARAMS_SIZE_BYTES IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
+#define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES+ INTEGER_PARAMS_SIZE_BYTES)
+#define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
+#define f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
+#define sim_f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 
 namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-uint8_t flash_memory[PAGE_SIZE_BYTES];
-
+uint8_t flash_memory[PAGES_N * PAGE_SIZE_BYTES];
 static bool is_locked = true;
 
 static uint8_t* flashGetPointer();
+static int8_t __save_to_file();
+static void __read_from_file();
 
 void flashInit() {
-#ifdef FLASH_DRIVER_STORAGE_FILE
-
-    std::ifstream params_storage_file;
-    params_storage_file.open(FLASH_DRIVER_STORAGE_FILE, std::ios_base::in);
-
-    if (!params_storage_file) {
-        std::cout << "Flash driver: " << FLASH_DRIVER_STORAGE_FILE
-                  << " could not be opened for reading!" << std::endl;
-        exit(-1);
-    }
-    std::cout << "Flash driver: data read from " << FLASH_DRIVER_STORAGE_FILE
-              << std::endl;
-    YamlParameters::read_from_file(flash_memory, params_storage_file);
-    params_storage_file.close();
-#endif
+    __read_from_file();
 }
 
 void flashUnlock() {
@@ -60,10 +53,10 @@ void flashLock() {
 }
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
-    if (is_locked || start_page_idx != 0 || num_of_pages != 1) {
+    if (is_locked || num_of_pages >= PAGES_N) {
         return LIBPARAMS_WRONG_ARGS;
     }
-    memset(flash_memory, 0x00, PAGE_SIZE_BYTES);
+    memset(flash_memory + start_page_idx * PAGE_SIZE_BYTES, 0x00, num_of_pages * PAGE_SIZE_BYTES);
     return LIBPARAMS_OK;
 }
 
@@ -74,22 +67,7 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 
     memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
 
-#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
-    std::ofstream params_storage_file;
-    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);
-
-    if (!params_storage_file) {
-        std::cout << "Flash driver: " << FLASH_DRIVER_SIM_STORAGE_FILE
-                  << " could not be opened for writing!" << std::endl;
-        return LIBPARAMS_WRONG_ARGS;
-    }
-    YamlParameters::write_to_file(flash_memory, params_storage_file);
-    params_storage_file.close();
-    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_SIM_STORAGE_FILE
-              << std::endl;
-
-#endif
-    return LIBPARAMS_OK;
+    return __save_to_file();
 }
 
 static uint8_t* flashGetPointer() {
@@ -109,32 +87,66 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
 
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
-#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
-    std::ofstream params_storage_file;
-    params_storage_file.open(FLASH_DRIVER_SIM_STORAGE_FILE, std::ios_base::out);
-
-    if (!params_storage_file) {
-        std::cout << "Flash driver: " << FLASH_DRIVER_SIM_STORAGE_FILE
-                  << " could not be opened for writing!" << std::endl;
-        return LIBPARAMS_WRONG_ARGS;
-    }
-    YamlParameters::write_to_file(flash_memory, params_storage_file);
-    params_storage_file.close();
-    std::cout << "Flash driver: data saved to " << FLASH_DRIVER_SIM_STORAGE_FILE
-              << std::endl;
-
-#endif
-    return 0;
+    return __save_to_file();
 }
 
-uint16_t flashGetNumberOfPages() {
-    return 1;
-}
+uint16_t flashGetNumberOfPages() { return 2; }
 
 uint16_t flashGetPageSize() {
     return PAGE_SIZE_BYTES;
 }
 
-uint8_t flashGetWordSize() {
-    return 8;
+uint8_t flashGetWordSize() { return 8; }
+
+int8_t __save_to_file(){
+#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
+    std::string path = FLASH_DRIVER_SIM_STORAGE_FILE;
+
+    auto last = path.find_last_of('.');
+    char file_name[sim_f_name_len];
+    std::tuple<uint8_t, uint8_t> last_idxs;
+    for (uint8_t idx = 0; idx < PAGES_N; idx++) {
+        std::ofstream params_storage_file;
+        snprintf(file_name, sim_f_name_len, "%s_%d%s", path.substr(0, last).c_str(), idx, path.substr(last).c_str());
+        params_storage_file.open(file_name, std::ios_base::out);
+
+        if (!params_storage_file) {
+            std::cout << "Flash driver: " << file_name
+                    << " could not be opened for writing!" << std::endl;
+            return LIBPARAMS_WRONG_ARGS;
+        }
+        last_idxs = YamlParameters::write_to_file(flash_memory + flashGetPageSize() * idx, params_storage_file, last_idxs);
+        params_storage_file.close();
+        std::cout << "Flash driver: data saved to " << file_name
+                << unsigned(std::get<0>(last_idxs)) << unsigned(std::get<1>(last_idxs)) <<std::endl;
+    }
+#endif
+    return LIBPARAMS_OK;
+}
+
+void __read_from_file(){
+#ifdef FLASH_DRIVER_STORAGE_FILE
+    std::cout << "Flash driver n pages: " << PAGES_N
+                << std::endl;
+    std::cout << "Flash driver n bytes: " << PARAMS_SIZE_BYTES
+    << std::endl;
+    std::string path = FLASH_DRIVER_STORAGE_FILE;
+    auto last = path.find_last_of('.');
+    char file_name[f_name_len];
+    for (uint8_t idx = 0; idx < PAGES_N; idx++) {
+        std::ifstream params_storage_file;
+        snprintf(file_name, f_name_len, "%s_%d%s", path.substr(0, last).c_str(), idx, path.substr(last).c_str());
+        params_storage_file.open(file_name, std::ios_base::in);
+
+        if (!params_storage_file) {
+            std::cout << "Flash driver: " << file_name
+                    << " could not be opened for reading!" << std::endl;
+            exit(-1);
+        }
+        std::cout << "Flash driver: data read from " << file_name
+                << std::endl;
+        YamlParameters::read_from_file(flash_memory + flashGetPageSize() * idx, params_storage_file);
+        params_storage_file.close();
+    }
+#endif
 }

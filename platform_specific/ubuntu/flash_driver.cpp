@@ -24,7 +24,7 @@
 #define PAGE_SIZE_BYTES 2048
 #define STR_PARAMS_SIZE_BYTES NUM_OF_STR_PARAMS * MAX_STRING_LENGTH
 #define INTEGER_PARAMS_SIZE_BYTES IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
-#define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES+ INTEGER_PARAMS_SIZE_BYTES)
+#define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
 #define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
 #define f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 #define sim_f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
@@ -37,11 +37,11 @@ uint8_t flash_memory[PAGES_N * PAGE_SIZE_BYTES];
 static bool is_locked = true;
 
 static uint8_t* flashGetPointer();
-static int8_t __save_to_file();
-static void __read_from_file();
+static int8_t __save_to_files();
+static void __read_from_files();
 
 void flashInit() {
-    __read_from_file();
+    __read_from_files();
 }
 
 void flashUnlock() {
@@ -67,7 +67,7 @@ int8_t flashWriteU64(uint32_t address, uint64_t data) {
 
     memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
 
-    return __save_to_file();
+    return __save_to_files();
 }
 
 static uint8_t* flashGetPointer() {
@@ -87,7 +87,7 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
 
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
-    return __save_to_file();
+    return __save_to_files();
 }
 
 uint16_t flashGetNumberOfPages() { return 2; }
@@ -98,7 +98,7 @@ uint16_t flashGetPageSize() {
 
 uint8_t flashGetWordSize() { return 8; }
 
-int8_t __save_to_file(){
+int8_t __save_to_files(){
 #ifdef FLASH_DRIVER_SIM_STORAGE_FILE
     std::string path = FLASH_DRIVER_SIM_STORAGE_FILE;
 
@@ -124,7 +124,7 @@ int8_t __save_to_file(){
     return LIBPARAMS_OK;
 }
 
-void __read_from_file(){
+void __read_from_files(){
 #ifdef FLASH_DRIVER_STORAGE_FILE
     std::cout << "Flash driver n pages: " << PAGES_N
                 << std::endl;

@@ -46,14 +46,23 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
                             << int_param_value << "\n";
         std::cout << std::left << std::setw(32) << integer_desc_pool[index].name
                                                                 << ":\t" << int_param_value << "\n";
+        // printf("%p", (void*)(flash_memory + index * 4));
         n_bytes += 4;
         std::get<0>(last_idxs) = index + 1;
         if (n_bytes > 2048) {
             break;
         }
     }
+    n_bytes += 56;
+    auto last_str_idx = std::get<1>(last_idxs);
+    auto num_str_params = NUM_OF_STR_PARAMS;
+    auto str_params_remained = NUM_OF_STR_PARAMS - last_str_idx;
+    auto available_str_params = (2048 - n_bytes) / 56;
 
-    for (uint8_t index = std::get<1>(last_idxs); index < NUM_OF_STR_PARAMS; index++) {
+    if (available_str_params < str_params_remained) {
+        num_str_params = last_str_idx + available_str_params;
+    }
+    for (uint8_t index = last_str_idx; index < num_str_params; index++) {
         std::string str_param_value(
             reinterpret_cast<char*>(flash_memory + 2048 - (NUM_OF_STR_PARAMS - index) *
                                                 MAX_STRING_LENGTH), MAX_STRING_LENGTH);
@@ -63,6 +72,9 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
                             << str_param_value << "\n";
         std::cout << std::left << std::setw(32) << string_desc_pool[index].name
                                                                 << ":\t" << str_param_value << "\n";
+        // printf("%p", (void*) (flash_memory + 2048 - (NUM_OF_STR_PARAMS - index) *
+        //                                         MAX_STRING_LENGTH));
+
         n_bytes += MAX_STRING_LENGTH;
         std::get<1>(last_idxs) = index + 1;
         if (n_bytes > 2048) {

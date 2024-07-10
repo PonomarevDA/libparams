@@ -60,7 +60,7 @@ class Generator:
                               / page_size)
         for page_idx in range(num_pages):
             with open(f"{self.dir}/{self.name}_{page_idx}.yml", 'w', encoding="utf-8") as yaml_fd:
-                while array_size < page_size:
+                while array_size < page_size - 56:
                     param = None
                     try:
                         param = next(integer_iter)

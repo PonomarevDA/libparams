@@ -26,8 +26,8 @@
 #define INTEGER_PARAMS_SIZE_BYTES IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
 #define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
 #define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
-#define f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
-#define sim_f_name_len strlen(FLASH_DRIVER_STORAGE_FILE) + 10
+#define F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
+#define SIM_F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 
 namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
@@ -103,11 +103,12 @@ int8_t __save_to_files(){
     std::string path = FLASH_DRIVER_SIM_STORAGE_FILE;
 
     auto last = path.find_last_of('.');
-    char file_name[sim_f_name_len];
+    char file_name[SIM_F_NAME_LEN];
     std::tuple<uint8_t, uint8_t> last_idxs;
     for (uint8_t idx = 0; idx < PAGES_N; idx++) {
         std::ofstream params_storage_file;
-        snprintf(file_name, sim_f_name_len, "%s_%d%s", path.substr(0, last).c_str(), idx, path.substr(last).c_str());
+        snprintf(file_name, SIM_F_NAME_LEN, "%s_%d%s",
+                                path.substr(0, last).c_str(), idx, path.substr(last).c_str());
         params_storage_file.open(file_name, std::ios_base::out);
 
         if (!params_storage_file) {
@@ -115,7 +116,8 @@ int8_t __save_to_files(){
                     << " could not be opened for writing!" << std::endl;
             return LIBPARAMS_WRONG_ARGS;
         }
-        last_idxs = YamlParameters::write_to_file(flash_memory + flashGetPageSize() * idx, params_storage_file, last_idxs);
+        last_idxs = YamlParameters::write_to_file(flash_memory + idx * 2048,
+                                                                params_storage_file, last_idxs);
         params_storage_file.close();
         std::cout << "Flash driver: data saved to " << file_name
                 << unsigned(std::get<0>(last_idxs)) << unsigned(std::get<1>(last_idxs)) <<std::endl;
@@ -132,10 +134,11 @@ void __read_from_files(){
     << std::endl;
     std::string path = FLASH_DRIVER_STORAGE_FILE;
     auto last = path.find_last_of('.');
-    char file_name[f_name_len];
+    char file_name[F_NAME_LEN];
     for (uint8_t idx = 0; idx < PAGES_N; idx++) {
         std::ifstream params_storage_file;
-        snprintf(file_name, f_name_len, "%s_%d%s", path.substr(0, last).c_str(), idx, path.substr(last).c_str());
+        snprintf(file_name, F_NAME_LEN, "%s_%d%s",
+                                    path.substr(0, last).c_str(), idx, path.substr(last).c_str());
         params_storage_file.open(file_name, std::ios_base::in);
 
         if (!params_storage_file) {
@@ -145,7 +148,7 @@ void __read_from_files(){
         }
         std::cout << "Flash driver: data read from " << file_name
                 << std::endl;
-        YamlParameters::read_from_file(flash_memory + flashGetPageSize() * idx, params_storage_file);
+        YamlParameters::read_from_file(flash_memory + idx * 2048, params_storage_file);
         params_storage_file.close();
     }
 #endif

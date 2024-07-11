@@ -44,12 +44,12 @@ typedef struct {
 RomDriverInstance romInit(int32_t first_page_idx, size_t pages_amount);
 
 /**
- * @brief Return the number of bytes read (may be less than size).
+ * @brief Return the number of bytes read (may be less than requested_size).
  */
 size_t romRead(const RomDriverInstance* rom,
                size_t                   offset,
                uint8_t*                 data,
-               size_t                   size);
+               size_t                   requested_size);
 
 /**
  * @brief Return the number of bytes wrote (0 in case of error).

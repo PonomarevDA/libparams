@@ -35,13 +35,13 @@ static RomDriverInstance rom = {
 };
 
 
-int8_t paramsInit(ParamIndex_t integers_requested,
-                  ParamIndex_t strings_requested,
+int8_t paramsInit(ParamIndex_t int_num,
+                  ParamIndex_t str_num,
                   int32_t first_page_idx,
-                  size_t pages_amount) {
-    uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * integers_requested +\
-                                 MAX_STRING_LENGTH * strings_requested;
-    rom = romInit(first_page_idx, pages_amount);
+                  size_t pages_num) {
+    uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * int_num +\
+                                 MAX_STRING_LENGTH * str_num;
+    rom = romInit(first_page_idx, pages_num);
 
     if (!rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
@@ -51,8 +51,8 @@ int8_t paramsInit(ParamIndex_t integers_requested,
         return LIBPARAMS_WRONG_ARGS;
     }
 
-    integers_amount = integers_requested;
-    strings_amount = strings_requested;
+    integers_amount = int_num;
+    strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
     return LIBPARAMS_OK;
 }
@@ -113,16 +113,16 @@ const char* paramsGetName(ParamIndex_t param_idx) {
     return NULL;
 }
 
-ParamIndex_t paramsFind(const uint8_t* name, uint16_t name_len) {
+ParamIndex_t paramsFind(const uint8_t* name, uint16_t len) {
     ParamIndex_t idx;
     for (idx = 0; idx < integers_amount; idx++) {
-        if (strncmp((const char*)name, integer_desc_pool[idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, integer_desc_pool[idx].name, len) == 0) {
             return idx;
         }
     }
     for (idx = integers_amount; idx < all_params_amount; idx++) {
         size_t str_idx = idx - integers_amount;
-        if (strncmp((const char*)name, string_desc_pool[str_idx].name, name_len) == 0) {
+        if (strncmp((const char*)name, string_desc_pool[str_idx].name, len) == 0) {
             return idx;
         }
     }
@@ -158,17 +158,17 @@ int32_t paramsGetIntegerValue(ParamIndex_t param_idx) {
     return integer_values_pool[param_idx];
 }
 
-void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t value) {
+void paramsSetIntegerValue(ParamIndex_t param_idx, IntegerParamValue_t param_value) {
     if (param_idx >= integers_amount) {
         return;
     }
 
     const IntegerDesc_t* desc = &integer_desc_pool[param_idx];
-    if (!desc->is_mutable || value > desc->max || value < desc->min) {
+    if (!desc->is_mutable || param_value > desc->max || param_value < desc->min) {
         return;
     }
 
-    integer_values_pool[param_idx] = value;
+    integer_values_pool[param_idx] = param_value;
 }
 
 StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {

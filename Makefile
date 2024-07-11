@@ -56,5 +56,8 @@ ubuntu: clean
 	mkdir -p ${UBUNTU_BUILD_DIR}
 	cd ${UBUNTU_BUILD_DIR} && cmake -S ${UBUNTU_CMAKE_DIR} -B . && $(MAKE) && ./application
 
+cppcheck:
+	./scripts/cppcheck.sh
+
 clean:
 	rm -rf ${BUILD_PATH}

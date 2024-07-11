@@ -7,10 +7,10 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: repo
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: RaccoonlabDev/code_style
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -23,10 +23,10 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: repo
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: RaccoonlabDev/code_style
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -39,10 +39,10 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: repo
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: RaccoonlabDev/code_style
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -50,3 +50,11 @@ jobs:
 
       - run: sudo apt-get install -y dos2unix
       - run: ./repo/scripts/code_style/crlf.sh
+
+  cppcheck:
+    timeout-minutes: 1
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y cppcheck
+      - run: make cppcheck

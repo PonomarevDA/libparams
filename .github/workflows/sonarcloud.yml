@@ -1,6 +1,12 @@
-name: SonarCloud
+name: Coverage and SonarCloud
 
-on: [push]
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
 
 jobs:
   build:
@@ -24,6 +30,7 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make coverage
 
       - name: Run sonar-scanner
+        if: github.event.repository.fork == false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: sonar-scanner

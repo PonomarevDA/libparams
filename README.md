@@ -1,4 +1,6 @@
-# libparams [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=coverage)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=coverage)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=PonomarevDA_libparams&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=PonomarevDA_libparams) [![make build](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml)
+
+# libparams
 
 libparams is a C-written hardware abstract library that consist of 2 things:
 
@@ -17,7 +19,7 @@ The codebase is implemented in C99/C11.
 
 The library was tested on stm32f103 (128 Kbytes) and stm32g0 (512 Kbytes). These hardware can be considered as minimum required.
 
-**Design**
+## 1. DESIGN
 
 The design of the library can be illustrated as shown below:
 
@@ -37,7 +39,7 @@ The design of the library can be illustrated as shown below:
 ```
 
 
-## 1. High level interface. Parameters
+### 1.1. High level interface. Parameters
 
 There are 4 types of parameters that we may want to store (they are defined in [ParamType_t](https://github.com/PonomarevDA/libparams/blob/585dd09fdd3267675acdf890978c1a266b38c39a/libparams/storage.h#L29) enum):
 - PARAM_TYPE_INTEGER (int32)
@@ -75,7 +77,7 @@ Writing or reading from the external application should be done by name of the p
 
 Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparams/storage.c](libparams/storage.c) for the implementation details.
 
-## 2. Middle level interface. Abstract ROM driver
+### 1.2. Middle level interface. Abstract ROM driver
 
 ROM driver simply allows you to write and read sequence of bytes. Mainly, it consist of 3 operations.
 
@@ -87,7 +89,7 @@ ROM driver simply allows you to write and read sequence of bytes. Mainly, it con
 
 Look at [rom.h](rom.h) to get full API and [rom.c](rom.c) for the implementation details.
 
-## 3. Low level interface. Hardware specific flash driver
+### 1.3. Low level interface. Hardware specific flash driver
 
 Although storage and rom drivers are hardware abstract, they still need a hardware related flash driver. Just for an example, here are a few hardware specific flash driver implementations:
 
@@ -99,7 +101,7 @@ For implementation details please refer to the corresponded folder.
 
 New drivers might be added in future.
 
-## 4. Usage example
+## 2. USAGE
 
 It is expected either to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
 
@@ -181,7 +183,7 @@ void application_example() {
 
 Please, refer to the [libparams/storage.h](libparams/storage.h) for the high level usage details because it is self-documented.
 
-## Usage examples [![make build](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml)
+## 3. USAGE EXAMPLES
 
 In [tests](tests) folder you can find a few examples about how to use the library:
 
@@ -201,7 +203,11 @@ A few real external applications based on this library:
 - [Cyphal ubuntu publisher example](https://github.com/RaccoonlabDev/cyphal_application/tree/devel/examples/ubuntu_publisher_example)
 - [Cyphal UAV HITL communicator ubuntu](https://github.com/RaccoonlabDev/cyphal_communicator/tree/master/src)
 
-## How to run SonarCloud Analysis manually:
+## 4. CONTRIBUTING
+
+Please, follow the [CONTRIBUTING.md](CONTRIBUTING.md) guide.
+
+**How to run SonarCloud Analysis manually**
 
 ```bash
 export SONAR_TOKEN=<...>
@@ -209,10 +215,10 @@ export SONAR_TOKEN=<...>
 ~/Downloads/sonar-scanner-cli-5.0.1.3006-linux/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
 ```
 
-## License
+## 5. LICENSE
 
 The project is distributed under term of MPL v2.0 license.
 
-## Acknowledgements
+## 6. ACKNOWLEDGEMENTS
 
 This project has been supported by funds from The Foundation for Assistance to Small Innovative Enterprises (FASIE). Moreover, we are honored to be distinguished as laureates of the "Digital Technologies Code" competition, under the federal project "Digital Technologies". We express our profound gratitude for their invaluable support and endorsement.

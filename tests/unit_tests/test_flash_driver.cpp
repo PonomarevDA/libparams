@@ -11,13 +11,22 @@
 #include "flash_driver.h"
 #include "libparams_error_codes.h"
 
-TEST(TestFlashDriver, test_erase_ok) {
+// Test Case 1. Initialize flash driver
+TEST(TestFlashDriver, initializeFlashDriver) {
     flashUnlock();
     auto res = flashErase(0, 1);
     flashLock();
     ASSERT_EQ(res, LIBPARAMS_OK);
 }
 
+
+// Test case 2. Erase
+TEST(TestFlashDriver, test_erase_ok) {
+    flashUnlock();
+    auto res = flashErase(0, 1);
+    flashLock();
+    ASSERT_EQ(res, LIBPARAMS_OK);
+}
 TEST(TestFlashDriver, test_erase_error_locked) {
     flashLock();
     auto res = flashErase(0, 1);
@@ -39,6 +48,9 @@ TEST(TestFlashDriver, test_erase_error_bad_second_arg) {
     ASSERT_TRUE(res < 0);
 }
 
+// Test case 3. flashRead
+
+// Test case 4. flashWrite
 TEST(TestFlashDriver, test_flash_ok) {
     flashUnlock();
     flashErase(0, 0);

@@ -17,12 +17,18 @@ create_build_dir:
 
 coverage: create_build_dir
 	cd ${BUILD_DIR} && cmake -DCOVERAGE=1 ${CRNT_DIR} && make
-	cd ${BUILD_DIR} && ./flash_driver
-	cd ${BUILD_DIR} && ./rom
 	cd ${BUILD_DIR} && ./storage
+	cd ${BUILD_DIR} && ./rom
+	cd ${BUILD_DIR} && ./flash_driver
 
-	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/libparams/rom.c.gcda
+	echo "\n1. Storage:"
 	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/storage.dir${REPO_DIR}/libparams/storage.c.gcda
+
+	echo "\n2. ROM:"
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/libparams/rom.c.gcda
+
+	# echo "\n3. Ubuntu flash driver:"
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/flash_driver.dir${REPO_DIR}/platform_specific/ubuntu/flash_driver.cpp.gcda
 
 flash_driver: create_build_dir
 	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./flash_driver

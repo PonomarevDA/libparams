@@ -55,7 +55,7 @@ void flashLock() {
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     if (is_locked || num_of_pages >= PAGES_N) {
-        return LIBPARAMS_WRONG_ARGS;
+       return LIBPARAMS_WRONG_ARGS;
     }
     memset(flash_memory + start_page_idx * PAGE_SIZE_BYTES, 0x00, num_of_pages * PAGE_SIZE_BYTES);
     return LIBPARAMS_OK;
@@ -78,6 +78,7 @@ static uint8_t* flashGetPointer() {
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
+ 
     return bytes_to_read;
 }
 
@@ -117,7 +118,9 @@ int8_t __save_to_files(){
                     << " could not be opened for writing!" << std::endl;
             return LIBPARAMS_WRONG_ARGS;
         }
-        last_idxs = YamlParameters::write_to_file(flash_memory + idx * 2048,
+        // last_idxs = YamlParameters::write_to_file(flash_memory + idx * 2048,
+        //                                                         params_storage_file, last_idxs);
+        last_idxs = YamlParameters::write_to_file(flash_memory, PAGES_N,
                                                                 params_storage_file, last_idxs);
         params_storage_file.close();
         std::cout << "Flash driver: data saved to " << file_name
@@ -136,6 +139,8 @@ void __read_from_files(){
     std::string path = FLASH_DRIVER_STORAGE_FILE;
     auto last = path.find_last_of('.');
     char file_name[F_NAME_LEN];
+    std::tuple<uint8_t, uint8_t> last_idxs;
+
     for (uint8_t idx = 0; idx < PAGES_N; idx++) {
         std::ifstream params_storage_file;
         snprintf(file_name, F_NAME_LEN, "%s_%d%s",
@@ -149,7 +154,9 @@ void __read_from_files(){
         }
         std::cout << "Flash driver: data read from " << file_name
                 << std::endl;
-        YamlParameters::read_from_file(flash_memory + idx * 2048, params_storage_file);
+        // YamlParameters::read_from_file(flash_memory, params_storage_file);
+        last_idxs = YamlParameters::read_from_file(flash_memory, PAGES_N, params_storage_file,
+                                                                            last_idxs);
         params_storage_file.close();
     }
 #endif

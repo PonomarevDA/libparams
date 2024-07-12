@@ -6,10 +6,11 @@ namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-void YamlParameters::read_from_file(uint8_t* flash_memory,
-                                    std::ifstream& params_storage_file) {
-    size_t int_param_idx = 0;
-    size_t str_param_idx = 0;
+std::tuple<uint8_t, uint8_t> YamlParameters::read_from_file(uint8_t* flash_memory, size_t pages_n,
+                                    std::ifstream& params_storage_file, std::tuple<uint8_t,
+                                    uint8_t> last_idxs) {
+    size_t int_param_idx = std::get<0>(last_idxs);
+    size_t str_param_idx = std::get<1>(last_idxs);
     std::string line;
 
     while (std::getline(params_storage_file, line)) {
@@ -31,19 +32,18 @@ void YamlParameters::read_from_file(uint8_t* flash_memory,
             size_t quote_pos = value.find('"');
             size_t quote_end_pos = value.find('"', quote_pos + 1);
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
-
-            size_t offset = 2048 - MAX_STRING_LENGTH * (1 + str_param_idx);
+            int offset = pages_n * 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - str_param_idx + 1);
             memcpy(flash_memory + offset, str_value.c_str(), sizeof(str_value));
-            if (str_param_idx < 19) {
-                std::cout << std::left << std::setw(32) << string_desc_pool[34 + str_param_idx].name
-                                                        << ":" << str_value.c_str() << "\n";
-            }
             str_param_idx++;
         }
     }
+    std::get<0>(last_idxs) = int_param_idx;
+    std::get<1>(last_idxs) = str_param_idx;
+
+    return last_idxs;
 }
 
-std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory,
+std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory, size_t pages_n,
                     std::ofstream& params_storage_file, std::tuple<uint8_t, uint8_t> last_idxs) {
     uint16_t n_bytes = 0;
     for (uint8_t index = std::get<0>(last_idxs); index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
@@ -68,19 +68,21 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
     auto available_str_params = (2048 - n_bytes) / 56;
 
     if (available_str_params < str_params_remained) {
-        num_str_params = available_str_params;
+        num_str_params = last_str_idx + available_str_params;
     }
-    for (uint8_t index = 0; index < num_str_params; index++) {
-        size_t offset = 2048 - MAX_STRING_LENGTH * (1 + index);
+    for (uint8_t index = last_str_idx; index < num_str_params; index++) {
+        size_t offset = pages_n * 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - index + 1);
+
+        // size_t offset = 2048 - MAX_STRING_LENGTH * (1 + NUM_OF_STR_PARAMS - index);
 
         std::string str_param_value(
             reinterpret_cast<char*>(flash_memory + offset), MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         auto str_param = str_param_value.substr(0, str_end);
         params_storage_file << std::left << std::setw(32) <<
-                            string_desc_pool[index + last_str_idx].name <<
+                            string_desc_pool[last_str_idx].name <<
                             ":\t" << '"' << str_param.c_str() << '"' << "\n";
-        std::cout << std::left << std::setw(32) << string_desc_pool[index + last_str_idx].name <<
+        std::cout << std::left << std::setw(32) << string_desc_pool[index].name <<
                             ":\t" << '"' << str_param.c_str() << '"' << "\n";
         printf("%p", (void*) (flash_memory + offset));
 

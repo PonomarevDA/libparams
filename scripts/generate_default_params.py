@@ -37,10 +37,10 @@ class ParamsLoader:
                     if is_integer_desc_pool:
                         self.integers_array.append(IntegerParam(data[0].replace('    ', '').replace(double_quotes,''), default=data[3]))
                     else:
-                        self.strings_array.append(StringParam(name=data[0].replace('    ', '').replace(double_quotes,''), default=data[1]))
+                        self.strings_array.append(StringParam(name=data[0].replace('    ', '').replace(double_quotes,''), default=data[1][1:]))
 
 class Generator:
-    def __init__(self, directory, name, 
+    def __init__(self, directory, name,
                  integers_array: list[IntegerParam] = [], strings_array: list[StringParam] = []) -> None:
         self.dir = directory
         self.name = name
@@ -52,31 +52,31 @@ class Generator:
             os.makedirs(self.dir)
         array_size = 0
         page_size = 2048
-        yaml_content = ""
         integer_iter = iter(self.integers_array)
         string_iter = iter(self.strings_array)
-
         num_pages = math.ceil((4 * len(self.integers_array) + 56 * len(self.strings_array)) 
                               / page_size)
+
         for page_idx in range(num_pages):
+            yaml_content = ""
             with open(f"{self.dir}/{self.name}_{page_idx}.yml", 'w', encoding="utf-8") as yaml_fd:
                 while array_size < page_size - 56:
                     param = None
                     try:
                         param = next(integer_iter)
-                        yaml_content += f"{param.name :<32}: {param.default},\n"
+                        yaml_content += f"{param.name :<32}:{param.default}\n"
                         array_size += 4
                     except StopIteration:
                         try:
                             param = next(string_iter)
-                            yaml_content += f"{param.name :<32}: {param.default},\n"
+                            yaml_content += f'{param.name :<32}: "{param.default.replace('"', '')}"\n'
                             array_size += 56
                         except:
                             yaml_fd.write(yaml_content)
                             return
                 array_size = 0
                 yaml_fd.write(yaml_content)
-                yaml_content = ""
+                yaml_fd.close()
 
 if __name__=="__main__":
     from argparse import ArgumentParser

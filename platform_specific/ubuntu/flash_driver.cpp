@@ -33,7 +33,8 @@ namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-uint8_t flash_memory[PAGES_N * PAGE_SIZE_BYTES];
+uint8_t flash_memory[4096];
+// uint8_t flash_memory[PAGES_N * PAGE_SIZE_BYTES];
 static bool is_locked = true;
 
 static uint8_t* flashGetPointer();

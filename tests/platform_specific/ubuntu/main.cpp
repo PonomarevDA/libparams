@@ -22,11 +22,13 @@ int main (int argc, char *argv[]) {
     std::cout << "Integer parameters:" << std::endl;
     for (size_t int_idx = 0; int_idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; int_idx++) {
         auto integer_desc = paramsGetIntegerDesc(int_idx);
-        std::cout << "- " << integer_desc->name << ": " << paramsGetIntegerValue(int_idx) << std::endl;
+        std::cout << "- " << integer_desc->name << ": " << paramsGetIntegerValue(int_idx) <<
+                                                                                    std::endl;
     }
 
     std::cout << "String parameters:" << std::endl;
-    for (size_t str_idx = IntParamsIndexes::INTEGER_PARAMS_AMOUNT; str_idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT + NUM_OF_STR_PARAMS; str_idx++) {
+    for (size_t str_idx = IntParamsIndexes::INTEGER_PARAMS_AMOUNT; str_idx <
+                IntParamsIndexes::INTEGER_PARAMS_AMOUNT + NUM_OF_STR_PARAMS; str_idx++) {
         std::cout << "- ";
         auto string_desc = paramsGetStringDesc(str_idx);
         auto string_param_ptr = paramsGetStringValue(str_idx);

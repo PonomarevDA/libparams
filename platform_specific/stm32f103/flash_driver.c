@@ -118,7 +118,6 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     return status;
 }
 
-
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {
         return 0;

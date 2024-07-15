@@ -32,7 +32,8 @@ std::tuple<uint8_t, uint8_t> YamlParameters::read_from_file(uint8_t* flash_memor
             size_t quote_pos = value.find('"');
             size_t quote_end_pos = value.find('"', quote_pos + 1);
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
-            int offset = pages_n * 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - str_param_idx + 1);
+            int offset = pages_n * 2048 - MAX_STRING_LENGTH *
+                                                        (NUM_OF_STR_PARAMS - str_param_idx + 1);
             memcpy(flash_memory + offset, str_value.c_str(), sizeof(str_value));
             str_param_idx++;
         }
@@ -54,7 +55,6 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
                             << int_param_value << "\n";
         std::cout << std::left << std::setw(32) << integer_desc_pool[index].name
                                                             << ":\t" << int_param_value << "\n";
-        printf("%p", (void*)(flash_memory + index * 4));
         n_bytes += 4;
         std::get<0>(last_idxs) = index + 1;
         if (n_bytes > 2048 - 4) {
@@ -73,18 +73,15 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
     for (uint8_t index = last_str_idx; index < num_str_params; index++) {
         size_t offset = pages_n * 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - index + 1);
 
-        // size_t offset = 2048 - MAX_STRING_LENGTH * (1 + NUM_OF_STR_PARAMS - index);
-
         std::string str_param_value(
             reinterpret_cast<char*>(flash_memory + offset), MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         auto str_param = str_param_value.substr(0, str_end);
         params_storage_file << std::left << std::setw(32) <<
-                            string_desc_pool[last_str_idx].name <<
+                            string_desc_pool[index].name <<
                             ":\t" << '"' << str_param.c_str() << '"' << "\n";
         std::cout << std::left << std::setw(32) << string_desc_pool[index].name <<
                             ":\t" << '"' << str_param.c_str() << '"' << "\n";
-        printf("%p", (void*) (flash_memory + offset));
 
         n_bytes += MAX_STRING_LENGTH;
         std::get<1>(last_idxs) += 1;

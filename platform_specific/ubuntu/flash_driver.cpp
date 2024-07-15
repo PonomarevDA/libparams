@@ -39,7 +39,7 @@ static bool is_locked = true;
 
 static uint8_t* flashGetPointer();
 static int8_t __save_to_files();
-static void __read_from_files();
+static int8_t __read_from_files();
 
 void flashInit() {
     __read_from_files();
@@ -108,31 +108,36 @@ int8_t __save_to_files(){
     auto last = path.find_last_of('.');
     char file_name[SIM_F_NAME_LEN];
     std::tuple<uint8_t, uint8_t> last_idxs;
+    int8_t res;
     for (uint8_t idx = 0; idx < PAGES_N; idx++) {
         std::ofstream params_storage_file;
         snprintf(file_name, SIM_F_NAME_LEN, "%s_%d%s",
                                 path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        last_idxs = YamlParameters::write_to_file(file_name, flash_memory, PAGES_N, last_idxs);
-        std::cout << "Flash driver: data saved to " << file_name <<std::endl;
+        res = YamlParameters::write_to_file(file_name, flash_memory, PAGES_N, &last_idxs);
+        if (res != LIBPARAMS_OK) {
+            return res;
+        }
     }
 #endif
     return LIBPARAMS_OK;
 }
 
-void __read_from_files(){
+int8_t __read_from_files(){
 #ifdef FLASH_DRIVER_STORAGE_FILE
-    std::cout << "Flash driver n pages: " << PAGES_N << std::endl;
-    std::cout << "Flash driver n bytes: " << FLASH_SIZE << std::endl;
     std::string path = FLASH_DRIVER_STORAGE_FILE;
     auto last = path.find_last_of('.');
     char file_name[F_NAME_LEN];
     std::tuple<uint8_t, uint8_t> last_idxs;
-
+    int8_t res;
     for (uint8_t idx = 0; idx < PAGES_N; idx++) {
         std::ifstream params_storage_file;
         snprintf(file_name, F_NAME_LEN, "%s_%d%s",
                                     path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        last_idxs = YamlParameters::read_from_file(file_name, flash_memory, PAGES_N, last_idxs);
+        res = YamlParameters::read_from_file(file_name, flash_memory, PAGES_N, &last_idxs);
+        if (res != LIBPARAMS_OK) {
+            return res;
+        }
     }
 #endif
+    return LIBPARAMS_OK;
 }

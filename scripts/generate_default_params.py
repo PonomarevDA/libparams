@@ -11,6 +11,7 @@
 import math
 import os
 import sys
+from typing import List
 from color_logging import log_err
 import yaml
 from params import IntegerParam, StringParam
@@ -41,7 +42,7 @@ class ParamsLoader:
 
 class Generator:
     def __init__(self, directory, name,
-                 integers_array: list[IntegerParam] = [], strings_array: list[StringParam] = []) -> None:
+                 integers_array: List[IntegerParam] = [], strings_array: List[StringParam] = []) -> None:
         self.dir = directory
         self.name = name
         self.integers_array = integers_array
@@ -69,7 +70,7 @@ class Generator:
                     except StopIteration:
                         try:
                             param = next(string_iter)
-                            yaml_content += f'{param.name :<32}: "{param.default.replace('"', '')}"\n'
+                            yaml_content += f'{param.name :<32}: {param.default}\n'
                             array_size += 56
                         except:
                             yaml_fd.write(yaml_content)

@@ -6,9 +6,19 @@ namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-std::tuple<uint8_t, uint8_t> YamlParameters::read_from_file(uint8_t* flash_memory, size_t pages_n,
-                                    std::ifstream& params_storage_file, std::tuple<uint8_t,
-                                    uint8_t> last_idxs) {
+std::tuple<uint8_t, uint8_t> YamlParameters::read_from_file(std::string path,
+                    uint8_t* flash_memory, size_t pages_n, std::tuple<uint8_t, uint8_t> last_idxs) {
+    std::ifstream params_storage_file;
+    params_storage_file.open(path, std::ios_base::in);
+
+    if (!params_storage_file) {
+        std::cout << "Flash driver: " << path
+                << " could not be opened for reading!" << std::endl;
+        exit(-1);
+    }
+    std::cout << "Flash driver: data read from " << path
+            << std::endl;
+
     size_t int_param_idx = std::get<0>(last_idxs);
     size_t str_param_idx = std::get<1>(last_idxs);
     std::string line;
@@ -40,12 +50,21 @@ std::tuple<uint8_t, uint8_t> YamlParameters::read_from_file(uint8_t* flash_memor
     }
     std::get<0>(last_idxs) = int_param_idx;
     std::get<1>(last_idxs) = str_param_idx;
+    params_storage_file.close();
 
     return last_idxs;
 }
 
-std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory, size_t pages_n,
-                    std::ofstream& params_storage_file, std::tuple<uint8_t, uint8_t> last_idxs) {
+std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(std::string path,
+                    uint8_t* flash_memory, size_t pages_n, std::tuple<uint8_t, uint8_t> last_idxs) {
+    std::ofstream params_storage_file;
+    params_storage_file.open(path, std::ios_base::out);
+    if (!params_storage_file) {
+            std::cout << "Flash driver: " << path
+                    << " could not be opened for writing!" << std::endl;
+            exit(-1);
+    }
+
     uint16_t n_bytes = 0;
     for (uint8_t index = std::get<0>(last_idxs); index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
                                                                                         index++) {
@@ -91,5 +110,6 @@ std::tuple<uint8_t, uint8_t> YamlParameters::write_to_file(uint8_t* flash_memory
     }
 
     params_storage_file.write("\n", 1);
+    params_storage_file.close();
     return last_idxs;
 }

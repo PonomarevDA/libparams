@@ -29,11 +29,10 @@ extern "C" {
 
 class YamlParameters {
 public:
-    static std::tuple<uint8_t, uint8_t> read_from_file(uint8_t* flash_memory, size_t pages_n,
-                                    std::ifstream& params_storage_file, std::tuple<uint8_t,
-                                    uint8_t> last_idxs);
-    static std::tuple<uint8_t, uint8_t> write_to_file(uint8_t* flash_memory, size_t pages_n,
-                    std::ofstream& params_storage_file, std::tuple<uint8_t, uint8_t> last_idxs);
+    static std::tuple<uint8_t, uint8_t> read_from_file(std::string path,
+                    uint8_t* flash_memory, size_t pages_n, std::tuple<uint8_t, uint8_t> last_idxs);
+    static std::tuple<uint8_t, uint8_t> write_to_file(std::string path,
+                    uint8_t* flash_memory, size_t pages_n, std::tuple<uint8_t, uint8_t> last_idxs);
 };
 
 

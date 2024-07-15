@@ -75,7 +75,8 @@ class Generator:
                             yaml_fd.write(yaml_content)
                             return
                 array_size = 0
-                yaml_fd.write(yaml_content)
+                if (yaml_fd.write(yaml_content) != 0):
+                    sys.exit(1)
                 yaml_fd.close()
 
 if __name__=="__main__":

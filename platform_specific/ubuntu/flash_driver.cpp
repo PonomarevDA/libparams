@@ -27,9 +27,10 @@
 #define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
 #define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
 #define F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
-#define SIM_F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 #define FLASH_SIZE PAGE_SIZE_BYTES * (PAGES_N)
-
+#ifdef  FLASH_DRIVER_SIM_STORAGE_FILE
+    #define SIM_F_NAME_LEN strlen(FLASH_DRIVER_SIM_STORAGE_FILE) + 10
+#endif
 namespace fs = std::filesystem;
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
@@ -113,7 +114,8 @@ int8_t __save_to_files(){
         std::ofstream params_storage_file;
         snprintf(file_name, SIM_F_NAME_LEN, "%s_%d%s",
                                 path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        res = YamlParameters::write_to_file(file_name, flash_memory, PAGES_N, &last_idxs);
+        res = YamlParameters::write_to_file(file_name, flash_memory, PAGES_N,
+                                                                    &last_idxs, PAGE_SIZE_BYTES);
         if (res != LIBPARAMS_OK) {
             return res;
         }
@@ -133,7 +135,8 @@ int8_t __read_from_files(){
         std::ifstream params_storage_file;
         snprintf(file_name, F_NAME_LEN, "%s_%d%s",
                                     path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        res = YamlParameters::read_from_file(file_name, flash_memory, PAGES_N, &last_idxs);
+        res = YamlParameters::read_from_file(file_name, flash_memory, PAGES_N,
+                                                                    &last_idxs, PAGE_SIZE_BYTES);
         if (res != LIBPARAMS_OK) {
             return res;
         }

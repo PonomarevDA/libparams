@@ -8,8 +8,8 @@ extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
 int8_t YamlParameters::read_from_file(std::string path, uint8_t* flash_memory, size_t pages_n,
-                                                    std::tuple<uint8_t, uint8_t>* last_idxs) {
-    if (flash_memory == NULL || pages_n < 1 || path.empty()) {
+                                        std::tuple<uint8_t, uint8_t>* last_idxs, size_t page_size) {
+    if (flash_memory == NULL || pages_n < 1 || path.empty() || page_size < 4) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
@@ -37,7 +37,7 @@ int8_t YamlParameters::read_from_file(std::string path, uint8_t* flash_memory, s
         try {
             std::string num_value;
             std::remove_copy_if(value.begin(), value.end(), num_value.begin(), ::isspace);
-            uint32_t int_value = std::stoi(num_value);
+            int32_t int_value = std::stoi(num_value);
             memcpy(flash_memory + 4 * int_param_idx, &int_value, 4);
             int_param_idx++;
         } catch (std::invalid_argument const& ex) {
@@ -46,7 +46,8 @@ int8_t YamlParameters::read_from_file(std::string path, uint8_t* flash_memory, s
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
             int offset = pages_n * 2048 - MAX_STRING_LENGTH *
                                                         (NUM_OF_STR_PARAMS - str_param_idx);
-            memcpy(flash_memory + offset, str_value.c_str(), sizeof(str_value));
+            memcpy(flash_memory + offset, str_value.c_str(), strlen(str_value.c_str()));
+            memcpy(flash_memory + offset + strlen(str_value.c_str()), "\0", 1);
             str_param_idx++;
         }
     }
@@ -57,17 +58,14 @@ int8_t YamlParameters::read_from_file(std::string path, uint8_t* flash_memory, s
 }
 
 int8_t YamlParameters::write_to_file(std::string path, uint8_t* flash_memory, size_t pages_n,
-                                                std::tuple<uint8_t, uint8_t>* last_idxs) {
-    if (flash_memory == NULL || pages_n < 1 || path.empty()) {
+                                        std::tuple<uint8_t, uint8_t>* last_idxs, size_t page_size) {
+    if (flash_memory == NULL || pages_n < 1 || path.empty() || page_size < 4) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
     std::ofstream params_storage_file;
     params_storage_file.open(path, std::ios_base::out);
-    if (!params_storage_file) {
-        std::cout << "YamlParameters: " << path << " could not be opened for writing!" << std::endl;
-        return LIBPARAMS_WRONG_ARGS;
-    }
+
     std::cout << "YamlParameters: save data to " << path << std::endl;
     uint16_t n_bytes = 0;
     for (uint8_t index = std::get<0>(*last_idxs); index < IntParamsIndexes::INTEGER_PARAMS_AMOUNT;

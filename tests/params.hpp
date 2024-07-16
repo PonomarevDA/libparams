@@ -14,8 +14,6 @@ enum IntParamsIndexes {
     PARAM_UAVCAN_NODE_ID,
     PARAM_MAG_ID,
     PARAM_CAN_BAUDRATE,
-    PARAM_NAME,
-    PARAM_MAG_TYPE,
 
     INTEGER_PARAMS_AMOUNT
 };

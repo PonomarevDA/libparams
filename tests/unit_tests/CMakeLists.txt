@@ -37,6 +37,21 @@ function(gen_test app_name test_file)
     target_link_libraries(${app_name} gtest)
 endfunction()
 
+if(YAML_PARAMETERS)
+    set(DEFAULT_PARAMS_BASE_NAME default_params)
+    add_definitions(-DFLASH_DRIVER_STORAGE_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+    add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_BINARY_DIR}/${DEFAULT_PARAMS_BASE_NAME}.yml")
+    execute_process(
+        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${TESTS_DIR}/params.c
+        --out-file-name ${DEFAULT_PARAMS_BASE_NAME}
+        RESULT_VARIABLE ret
+    )
+    if(NOT ret EQUAL 0)
+        message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
+    endif()
+endif()
+
 gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)
 gen_test(rom              ${UNIT_TESTS_DIR}/test_rom.cpp)
 gen_test(storage          ${UNIT_TESTS_DIR}/test_storage.cpp)
+gen_test(yaml_parameters  ${UNIT_TESTS_DIR}/test_yaml_parameters.cpp)

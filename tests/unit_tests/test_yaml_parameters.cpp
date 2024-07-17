@@ -79,6 +79,7 @@ TEST(TestYamlParameters, write_empty_path) {
     ASSERT_EQ(res, LIBPARAMS_WRONG_ARGS);
 }
 
+#ifdef FLASH_DRIVER_STORAGE_FILE
 TEST(TestYamlParameters, write_non_existing_path) {
     uint8_t* flash;
     auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
@@ -88,7 +89,7 @@ TEST(TestYamlParameters, write_non_existing_path) {
     delete_file(path);
     ASSERT_EQ(res, LIBPARAMS_OK);
 }
-
+#endif
 // Test Case 2. Read from file
 TEST(TestYamlParameters, read_zero_page_size) {
     uint8_t* flash = 0;
@@ -118,6 +119,7 @@ TEST(TestYamlParameters, read_empty_path) {
     ASSERT_EQ(res, LIBPARAMS_WRONG_ARGS);
 }
 
+#ifdef FLASH_DRIVER_STORAGE_FILE
 TEST(TestYamlParameters, read_non_existing_path) {
     uint8_t* flash;
     auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
@@ -199,6 +201,7 @@ TEST(TestYamlParameters, write_comparison) {
         ASSERT_STREQ(str_val.c_str(), def);
     }
 }
+#endif
 
 int main (int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);

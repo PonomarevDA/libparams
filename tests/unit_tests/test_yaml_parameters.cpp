@@ -163,6 +163,43 @@ TEST(TestYamlParameters, read_comparison) {
 }
 
 
+// Test Case 4. Check if writing is right
+TEST(TestYamlParameters, write_comparison) {
+    uint8_t flash[2048];
+    for (uint8_t idx = 0; idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; idx ++) {
+        memcpy(flash + 4 * idx, &integer_desc_pool[idx].def, 4);
+    }
+    for (uint8_t idx = 0; idx < NUM_OF_STR_PARAMS; idx ++) {
+        auto offset = 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - idx);
+        memcpy(flash + offset, &string_desc_pool[idx].def, MAX_STRING_LENGTH);
+    }
+
+    std::string path = FLASH_DRIVER_STORAGE_FILE;
+    auto last = path.find_last_of('.');
+    char file_name[F_NAME_LEN];
+    snprintf(file_name, F_NAME_LEN, "%s_%d%s",
+                                path.substr(0, last).c_str(), 0, path.substr(last).c_str());
+    auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
+    auto res = YamlParameters::write_to_file(file_name, flash, 1, &idxs, 2048);
+    ASSERT_EQ(res, LIBPARAMS_OK);
+    uint8_t flash_read[2048];
+    auto idxs_read = std::tuple<uint8_t, uint8_t>(0, 0);
+    res = YamlParameters::read_from_file(file_name, flash_read, 1, &idxs_read, 2048);
+    ASSERT_EQ(res, LIBPARAMS_OK);
+
+    int32_t int_val = 0;
+    for (uint8_t idx = 0; idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; idx ++) {
+        memcpy(&int_val, flash_read + 4 * idx, 4);
+        ASSERT_EQ(int_val, integer_desc_pool[idx].def);
+    }
+    for (uint8_t idx = 0; idx < NUM_OF_STR_PARAMS; idx ++) {
+        auto offset = 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - idx);
+        std::string str_val(reinterpret_cast<char*>(flash_read + offset), MAX_STRING_LENGTH);
+        auto def = (char*)(string_desc_pool[idx].def);
+        ASSERT_STREQ(str_val.c_str(), def);
+    }
+}
+
 int main (int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

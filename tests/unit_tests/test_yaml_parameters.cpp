@@ -10,30 +10,13 @@
 #include <iostream>
 #include "YamlParameters.hpp"
 #include "libparams_error_codes.h"
-
+#include "common/algorithms.hpp"
 
 #define F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 #define SIM_F_NAME_LEN strlen(FLASH_DRIVER_SIM_STORAGE_FILE) + 10
 
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
-
-// Source: https://stackoverflow.com/a/12468109
-std::string random_string( size_t length )
-{
-    auto randchar = []() -> char
-    {
-        const char charset[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(charset) - 1);
-        return charset[rand() % max_index];
-    };
-    std::string str(length, 0);
-    std::generate_n(str.begin(), length, randchar);
-    return str;
-}
 
 int8_t delete_file(char* path) {
     try {
@@ -84,7 +67,9 @@ TEST(TestYamlParameters, write_non_existing_path) {
     uint8_t* flash;
     auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
     char path[100];
-    snprintf(path, 100, "%s/%s", FLASH_DRIVER_STORAGE_DIR, random_string(3).c_str());
+    char file_name[3];
+    generateRandomCString(file_name, 3);
+    snprintf(path, sizeof(path), "%s/%s", FLASH_DRIVER_STORAGE_DIR, file_name);
     auto res = YamlParameters::write_to_file(path, flash, 1, &idxs, 100);
     delete_file(path);
     ASSERT_EQ(res, LIBPARAMS_OK);
@@ -124,7 +109,9 @@ TEST(TestYamlParameters, read_non_existing_path) {
     uint8_t* flash;
     auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
     char path[100];
-    snprintf(path, sizeof(path), "%s/%s", FLASH_DRIVER_STORAGE_DIR, random_string(3).c_str());
+        char file_name[3];
+    generateRandomCString(file_name, 3);
+    snprintf(path, sizeof(path), "%s/%s", FLASH_DRIVER_STORAGE_DIR, file_name);
     auto res = YamlParameters::read_from_file(path, flash, 1, &idxs, 100);
     delete_file(path);
     ASSERT_EQ(res, LIBPARAMS_WRONG_ARGS);
@@ -134,13 +121,15 @@ TEST(TestYamlParameters, read_not_enought_page_size) {
     uint8_t* flash;
     auto idxs = std::tuple<uint8_t, uint8_t>(0, 0);
     char path[100];
-    snprintf(path, sizeof(path), "%s/%s", FLASH_DRIVER_STORAGE_DIR, random_string(3).c_str());
+    char file_name[3];
+    generateRandomCString(file_name, 3);
+    snprintf(path, sizeof(path), "%s/%s", FLASH_DRIVER_STORAGE_DIR, file_name);
     auto res = YamlParameters::read_from_file(path, flash, 1, &idxs, 100);
     delete_file(path);
     ASSERT_EQ(res, LIBPARAMS_WRONG_ARGS);
 }
 
-// Test Case 3. Check if reading is right
+// Test Case 3. Check if reading is right with default_params file
 TEST(TestYamlParameters, read_comparison) {
     std::string path = FLASH_DRIVER_STORAGE_FILE;
     auto last = path.find_last_of('.');

@@ -10,6 +10,7 @@
 #include <iostream>
 #include "storage.h"
 #include "libparams_error_codes.h"
+#include "common/algorithms.hpp"
 
 typedef enum {
     NODE_ID,
@@ -43,15 +44,6 @@ protected:
     }
 };
 
-void generateRandomCString(char* str, int size) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int charsetSize = sizeof(charset) - 1;
-
-    for (int i = 0; i < size; ++i) {
-        str[i] = charset[rand() % charsetSize];
-    }
-    str[size] = '\0';
-}
 
 
 // Test Case 1: Initialization of Parameters

@@ -12,9 +12,17 @@ import os
 import sys
 import logging
 from typing import Optional
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+def get_source_files(directories: list, extensions=('.c', '.cpp', '.h', '.hpp')):
+    source_files = []
+    for directory in directories:
+        for path in Path(directory).rglob('*'):
+            if path.suffix in extensions and path.is_file():
+                source_files.append(path)
+    return source_files
 
 def main(directories: list, astylerc: Optional[str]):
     assert isinstance(directories, list)
@@ -28,6 +36,10 @@ def main(directories: list, astylerc: Optional[str]):
         sys.exit(f"Error: astylerc path `{astylerc}` specified, but can't be found. Abort.")
 
     logging.debug(f"Directories: {directories}")
+
+    files = get_source_files(directories)
+    for file in files:
+        logging.debug(file)
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG)

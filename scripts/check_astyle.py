@@ -11,16 +11,21 @@ Check code style with astyle
 import os
 import sys
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
-def main(directories: list):
+def main(directories: list, astylerc: Optional[str]):
     assert isinstance(directories, list)
+    assert isinstance(astylerc, str) or astylerc is None
 
     for dir in directories:
         if not os.path.exists(dir):
-            sys.exit(f"The directory {dir} is not exist. Abort.")
+            sys.exit(f"Error: the directory `{dir}` is not exist. Abort.")
+
+    if astylerc is not None and not os.path.exists(astylerc):
+        sys.exit(f"Error: astylerc path `{astylerc}` specified, but can't be found. Abort.")
 
     logging.debug(f"Directories: {directories}")
 
@@ -31,6 +36,7 @@ if __name__=="__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser(description=__doc__)
     parser.add_argument('directories', nargs='+', help='Directories to search for source files')
+    parser.add_argument("--astylerc", type=str, required=False, help="Optional path to astylerc file")
 
     args = parser.parse_args()
-    main(args.directories)
+    main(args.directories, args.astylerc)

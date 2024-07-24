@@ -26,23 +26,24 @@
 #define INTEGER_PARAMS_SIZE_BYTES IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
 #define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
 #define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
-#define F_NAME_LEN strlen(FLASH_DRIVER_STORAGE_FILE) + 10
 #define FLASH_SIZE PAGE_SIZE_BYTES * (PAGES_N)
-#ifdef  FLASH_DRIVER_SIM_STORAGE_FILE
-    #define SIM_F_NAME_LEN strlen(FLASH_DRIVER_SIM_STORAGE_FILE) + 10
-#endif
-namespace fs = std::filesystem;
-extern IntegerDesc_t integer_desc_pool[];
-extern StringDesc_t string_desc_pool[];
 
 uint8_t flash_memory[FLASH_SIZE];
 static bool is_locked = true;
+YamlParameters yaml_params = YamlParameters(flash_memory, PAGE_SIZE_BYTES, PAGES_N,
+                        NUM_OF_STR_PARAMS, IntParamsIndexes::INTEGER_PARAMS_AMOUNT);
 
 static uint8_t* flashGetPointer();
 static int8_t __save_to_files();
 static int8_t __read_from_files();
 
 void flashInit() {
+#ifdef LIBPARAMS_INIT_PARAMS_FILE_NAME
+    yaml_params.set_init_file_name(LIBPARAMS_INIT_PARAMS_FILE_NAME);
+#endif
+#ifdef LIBPARAMS_TEMP_PARAMS_FILE_NAME
+    yaml_params.set_temp_file_name(LIBPARAMS_TEMP_PARAMS_FILE_NAME);
+#endif
     __read_from_files();
 }
 
@@ -104,43 +105,15 @@ uint16_t flashGetPageSize() {
 uint8_t flashGetWordSize() { return 8; }
 
 int8_t __save_to_files(){
-#ifdef FLASH_DRIVER_SIM_STORAGE_FILE
-    std::string path = FLASH_DRIVER_SIM_STORAGE_FILE;
-    auto last = path.find_last_of('.');
-    char file_name[SIM_F_NAME_LEN];
-    std::tuple<uint8_t, uint8_t> last_idxs;
-    int8_t res;
-    for (uint8_t idx = 0; idx < PAGES_N; idx++) {
-        std::ofstream params_storage_file;
-        snprintf(file_name, SIM_F_NAME_LEN, "%s_%d%s",
-                                path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        res = YamlParameters::write_to_file(file_name, flash_memory, PAGES_N,
-                                                                    &last_idxs, PAGE_SIZE_BYTES);
-        if (res != LIBPARAMS_OK) {
-            return res;
-        }
-    }
+#ifdef LIBPARAMS_PARAMS_DIR
+    return yaml_params.write_to_files(LIBPARAMS_PARAMS_DIR);
 #endif
     return LIBPARAMS_OK;
 }
 
 int8_t __read_from_files(){
-#ifdef FLASH_DRIVER_STORAGE_FILE
-    std::string path = FLASH_DRIVER_STORAGE_FILE;
-    auto last = path.find_last_of('.');
-    char file_name[F_NAME_LEN];
-    std::tuple<uint8_t, uint8_t> last_idxs;
-    int8_t res;
-    for (uint8_t idx = 0; idx < PAGES_N; idx++) {
-        std::ifstream params_storage_file;
-        snprintf(file_name, F_NAME_LEN, "%s_%d%s",
-                                    path.substr(0, last).c_str(), idx, path.substr(last).c_str());
-        res = YamlParameters::read_from_file(file_name, flash_memory, PAGES_N,
-                                                                    &last_idxs, PAGE_SIZE_BYTES);
-        if (res != LIBPARAMS_OK) {
-            return res;
-        }
-    }
+#ifdef LIBPARAMS_PARAMS_DIR
+    return yaml_params.read_from_dir(LIBPARAMS_PARAMS_DIR);
 #endif
     return LIBPARAMS_OK;
 }

@@ -107,7 +107,7 @@ It is expected either to add the library into your project as submodule or just 
 
 You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [CMakeLists.txt](CMakeLists.txt).
 
-If it is SITL mode, you need additionally to specify the define `FLASH_DRIVER_STORAGE_FILE` with path to the yaml file with parameters values.
+If it is SITL mode, you need additionally to specify the define path to yml files with parameters values `LIBPARAMS_PARAMS_DIR`, name of file with initial parameters `LIBPARAMS_INIT_PARAMS_FILE_NAME` and temporal parameters `LIBPARAMS_TEMP_PARAMS_FILE_NAME` ("initial_params" and "temp_params" set as default).
 
 You can create params.c and params.h files with the following content:
 

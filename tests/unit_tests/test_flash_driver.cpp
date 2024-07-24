@@ -28,6 +28,7 @@ TEST(TestFlashDriver, test_erase_ok) {
     flashLock();
     ASSERT_EQ(res, LIBPARAMS_OK);
 }
+
 TEST(TestFlashDriver, test_erase_error_locked) {
     flashLock();
     auto res = flashErase(0, 1);
@@ -49,6 +50,7 @@ TEST(TestFlashDriver, test_erase_error_bad_second_arg) {
     ASSERT_TRUE(res < 0);
 }
 
+
 // Test case 3. flashRead
 TEST(TestFlashDriver, test_read_flash_ok) {
     flashUnlock();
@@ -60,6 +62,7 @@ TEST(TestFlashDriver, test_read_flash_ok) {
     ASSERT_EQ(res, 1);
     ASSERT_EQ(0, val);
 }
+
 
 // Test case 4. flashWriteU64
 TEST(TestFlashDriver, test_write64_flash_ok) {
@@ -86,6 +89,7 @@ TEST(TestFlashDriver, test_write_flash_ok) {
     ASSERT_EQ(res, LIBPARAMS_OK);
 }
 
+
 // Test case 6. Check values`
 TEST(TestFlashDriver, test_flash_check_numeric_ok) {
     flashUnlock();
@@ -100,9 +104,9 @@ TEST(TestFlashDriver, test_flash_check_numeric_ok) {
 }
 
 TEST(TestFlashDriver, test_flash_check_string_ok) {
-    flashUnlock();
     char val[56];
     generateRandomCString(val, 56);
+    flashUnlock();
     auto res = flashWrite((uint8_t*)val, FLASH_START_ADDR, 56);
     flashLock();
     ASSERT_EQ(res, LIBPARAMS_OK);

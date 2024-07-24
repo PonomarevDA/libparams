@@ -22,8 +22,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
-set(DEFAULT_PARAMS_BASE_NAME default_params)
-add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_BINARY_DIR}/${DEFAULT_PARAMS_BASE_NAME}.yml")
+set(LIBPARAMS_INIT_PARAMS_BASE_NAME initial_params)
+add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+add_definitions(-DLIBPARAMS_TEMP_PARAMS_FILE_NAME="temp_params")
+add_definitions(-DLIBPARAMS_INIT_PARAMS_FILE_NAME="${LIBPARAMS_INIT_PARAMS_BASE_NAME}")
 
 add_executable(application
     ${libparamsSrc}
@@ -41,7 +43,7 @@ endif()
 
 execute_process(
     COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
-    --out-file-name ${DEFAULT_PARAMS_BASE_NAME}
+    --out-file-name ${LIBPARAMS_INIT_PARAMS_BASE_NAME}
     RESULT_VARIABLE ret
 )
 if(NOT ret EQUAL 0)

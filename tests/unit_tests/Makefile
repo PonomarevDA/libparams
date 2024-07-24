@@ -40,4 +40,4 @@ storage: create_build_dir
 	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./storage
 
 yaml_parameters: create_build_dir
-	cd ${BUILD_DIR} && cmake -DYAML_PARAMETERS=1 ${CRNT_DIR} && make && ./yaml_parameters
+	cd ${BUILD_DIR} && cmake -DYAML_PARAMETERS=1 -DCMAKE_BUILD_TYPE=DEBUG  ${CRNT_DIR} && make && ./yaml_parameters

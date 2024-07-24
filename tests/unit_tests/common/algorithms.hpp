@@ -6,8 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <gtest/gtest.h>
-#include <iostream>
+#ifndef LIBPARAM_UNIT_TESTS_ALGHORITMS_HPP_
+#define LIBPARAM_UNIT_TESTS_ALGHORITMS_HPP_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 inline void generateRandomCString(char* str, int size) {
     const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -18,3 +22,9 @@ inline void generateRandomCString(char* str, int size) {
     }
     str[size] = '\0';
 }
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // LIBPARAM_UNIT_TESTS_ALGHORITMS_HPP_

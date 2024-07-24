@@ -24,32 +24,46 @@ include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
-function(gen_test app_name test_file)
-    include_directories(
-        ${libparamsHeaders}
-        ${TESTS_DIR}
-    )
-    add_executable(${app_name}
-        ${test_file}
-        ${libparamsSrc}
-        ${TESTS_DIR}/params.c
-    )
-    target_link_libraries(${app_name} gtest)
-endfunction()
-
 if(YAML_PARAMETERS)
-    set(DEFAULT_PARAMS_BASE_NAME default_params)
-    add_definitions(-DFLASH_DRIVER_STORAGE_DIR="${CMAKE_CURRENT_BINARY_DIR}")
-    add_definitions(-DFLASH_DRIVER_STORAGE_FILE="${CMAKE_CURRENT_BINARY_DIR}/${DEFAULT_PARAMS_BASE_NAME}.yml")
+    set(LIBPARAMS_PARAMS_BASE_NAME initial_params)
+    add_definitions(-DLIBPARAMS_INITIAL_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+    add_definitions(-DLIBPARAMS_INITIAL_PARAMS_FILE="${CMAKE_CURRENT_BINARY_DIR}/${LIBPARAMS_PARAMS_BASE_NAME}.yml")
     execute_process(
-        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${TESTS_DIR}/params.c
-        --out-file-name ${DEFAULT_PARAMS_BASE_NAME}
+        COMMAND ${ROOT_DIR}/scripts/generate_random_params.py 
+        --out-dir ${CMAKE_CURRENT_BINARY_DIR}
+        RESULT_VARIABLE ret
+    )
+    execute_process(
+        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
+        --out-file-name ${LIBPARAMS_PARAMS_BASE_NAME}
         RESULT_VARIABLE ret
     )
     if(NOT ret EQUAL 0)
         message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
     endif()
 endif()
+
+
+function(gen_test app_name test_file)
+    # Create the executable target
+    add_executable(${app_name}
+        ${test_file}
+        ${libparamsSrc}
+    )
+
+    # Conditional source file based on app_name
+    if(app_name STREQUAL "yaml_parameters")
+        target_sources(${app_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/params.cpp)
+        target_include_directories(${app_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    else()
+        target_sources(${app_name} PRIVATE ${TESTS_DIR}/params.c)
+        target_include_directories(${app_name} PRIVATE ${TESTS_DIR})
+    endif()
+
+    # Link libraries to the target
+    target_link_libraries(${app_name} gtest)
+endfunction()
+
 
 gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)
 gen_test(rom              ${UNIT_TESTS_DIR}/test_rom.cpp)

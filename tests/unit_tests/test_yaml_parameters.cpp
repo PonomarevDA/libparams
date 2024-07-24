@@ -157,9 +157,10 @@ TEST(TestYamlParameters, read_comparison) {
                                                                 num_int_params, num_str_params);
     auto res = yaml_params.read_from_dir(LIBPARAMS_INITIAL_PARAMS_DIR);
     ASSERT_EQ(res, LIBPARAMS_OK);
-    int32_t int_val = 0;
     for (uint8_t idx = 0; idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; idx ++) {
+        int32_t int_val = 0;
         memcpy(&int_val, flash + 4 * idx, 4);
+        std::cout << integer_desc_pool[idx].def;
         ASSERT_EQ(int_val, integer_desc_pool[idx].def);
     }
     for (uint8_t idx = 0; idx < NUM_OF_STR_PARAMS; idx ++) {

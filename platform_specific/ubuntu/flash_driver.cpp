@@ -19,7 +19,6 @@
 #include "YamlParameters.hpp"
 #include "libparams_error_codes.h"
 #include "params.hpp"
-#include "storage.h"
 
 #define PAGE_SIZE_BYTES 2048
 #define STR_PARAMS_SIZE_BYTES NUM_OF_STR_PARAMS * MAX_STRING_LENGTH

@@ -10,7 +10,7 @@ BUILD_DIR=${REPO_DIR}/build
 
 all: unit_tests
 
-unit_tests: flash_driver rom storage
+unit_tests: flash_driver rom storage yaml_parameters
 
 create_build_dir:
 	mkdir -p ${BUILD_DIR}
@@ -31,13 +31,13 @@ coverage: create_build_dir
 	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/flash_driver.dir${REPO_DIR}/platform_specific/ubuntu/flash_driver.cpp.gcda
 
 flash_driver: create_build_dir
-	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./flash_driver
+	cd ${BUILD_DIR} && cmake -DTEST_NUM=1 ${CRNT_DIR} && make && ./flash_driver
 
 rom: create_build_dir
-	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./rom
+	cd ${BUILD_DIR} && cmake -DTEST_NUM=2 ${CRNT_DIR} && make && ./rom
 
 storage: create_build_dir
-	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./storage
+	cd ${BUILD_DIR} && cmake -DTEST_NUM=3 ${CRNT_DIR} && make && ./storage
 
 yaml_parameters: create_build_dir
-	cd ${BUILD_DIR} && cmake -DYAML_PARAMETERS=1 -DCMAKE_BUILD_TYPE=DEBUG  ${CRNT_DIR} && make && ./yaml_parameters
+	cd ${BUILD_DIR} && cmake -DCMAKE_BUILD_TYPE=DEBUG -DTEST_NUM=4 -DCOVERAGE=0 ${CRNT_DIR} && make && ./yaml_parameters

@@ -85,7 +85,7 @@ class Generator:
                 f"{LICENSE_HEADER}\n"
                 "#pragma once\n"
                 "#include \"storage.h\"\n\n"
-                "enum IntParamsIndexes : ParamIndex_t {\n"
+                "enum IntParamsIndexes {\n"
                 f"{self.integers_enums}\n"
                 "    INTEGER_PARAMS_AMOUNT\n"
                 "};\n"
@@ -110,7 +110,7 @@ if __name__=="__main__":
 
     num_str_params = random.randint(1, 15)
     num_int_params = random.randint(0, 10)
-    gen.add_integer(IntegerParam.create_port_id("uavcan.node.id", "PARAM_UAVCAN_NODE_ID"))
+    gen.add_integer(IntegerParam.create_port_id("uavcan.node.id", "PARAM_UAVCAN_NODE"))
     sys_name_data = {"default": "co.raccoonlab.random", "flags": random.choice(['immutable', 'mutable'])}
     gen.add_string(StringParam.create("system.name", sys_name_data))
 

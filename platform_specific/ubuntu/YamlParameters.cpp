@@ -101,7 +101,7 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
     while (std::getline(params_storage_file, line)) {
         std::istringstream iss(line);
         size_t delimiter_pos = line.find(':');
-        std::cout << line << std::endl;
+        // std::cout << line << std::endl;
         if (delimiter_pos == std::string::npos) {
             continue;
         }
@@ -121,8 +121,6 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
                                 std::string("YamlParameters: Wrong num_int_params"));
             }
         } catch (std::invalid_argument const& ex) {
-            std::cout << *int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx) <<
-                        " flash_size: " << (int)flash_size << std::endl;
             if (flash_size < uint(*int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx))) {
                 char error_mesg[100];
                 snprintf(error_mesg, sizeof(error_mesg),
@@ -149,7 +147,6 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
             memcpy(flash_memory + offset, str_value.c_str(), strlen(str_value.c_str()));
             memcpy(flash_memory + offset + strlen(str_value.c_str()), "\0", 1);
             *str_param_idx = *str_param_idx + 1;
-
         }
     }
 }

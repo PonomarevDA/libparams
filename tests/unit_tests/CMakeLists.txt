@@ -22,27 +22,23 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIR})
 
-include_directories(.)
+# include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
-# file(GLOB UNIT_TESTS_DIR LIST_DIRECTORIES true "*")
-# list(FILTER UNIT_TESTS_DIR EXCLUDE REGEX "params")
 
-FOREACH(subdir ${libparamsSrc})
-  message(STATUS "${subdir}")
-ENDFOREACH()
+# Get all directories in UNIT_TESTS_DIR
+file(GLOB_RECURSE ALL_TEST_DIRS RELATIVE ${UNIT_TESTS_DIR} ${UNIT_TESTS_DIR}/*)
 
-FOREACH(subdir ${libparamsHeaders})
-  message(STATUS "libparamsHeaders ${subdir}")
-ENDFOREACH()
+# Create a list to hold the filtered directories
+set(FILTERED_TEST_DIRS)
 
-FOREACH(subdir ${UNIT_TESTS_DIR})
-  message(STATUS "UNIT_TESTS_DIR ${subdir}")
-ENDFOREACH()
-
-FOREACH(subdir ${CMAKE_CURRENT_BINARY_DIR})
-  message(STATUS "CMAKE_CURRENT_BINARY_DIR ${subdir}")
-ENDFOREACH()
+# Loop through all found directories and exclude "params"
+foreach(DIR ${ALL_TEST_DIRS})
+    message(STATUS "${DIR}")
+    if(NOT DIR MATCHES "params")
+        list(APPEND FILTERED_TEST_DIRS ${DIR})
+    endif()
+endforeach()
 
 function(generate_random_params)
     set(LIBPARAMS_PARAMS_BASE_NAME initial_params)
@@ -72,7 +68,7 @@ function(gen_test app_name test_file)
     add_executable(${app_name}
     ${test_file}
     ${libparamsSrc})
-    # target_sources(${app_name} PUBLIC ${test_file} ${libparamsSrc})
+
     target_include_directories(${app_name} PUBLIC ${libparamsHeaders})
 
     # Conditional source file based on app_name

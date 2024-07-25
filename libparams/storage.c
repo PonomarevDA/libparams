@@ -12,7 +12,6 @@
 #include "flash_driver.h"
 #include "rom.h"
 #include "libparams_error_codes.h"
-#include "params.hpp"
 
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];

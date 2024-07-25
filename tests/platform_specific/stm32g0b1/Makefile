@@ -11,7 +11,7 @@ C_SOURCES =                         \
 ${ROOT_DIR}/libparams/rom.c         \
 ${ROOT_DIR}/platform_specific/stm32g0b1/flash_driver.c       \
 ${ROOT_DIR}/libparams/storage.c     \
-../../params.c                      \
+../../params/params.c                         \
 main.c                              \
 application.c
 

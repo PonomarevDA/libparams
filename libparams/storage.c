@@ -8,9 +8,11 @@
 
 #include "storage.h"
 #include <string.h>
+#include <stdio.h>
 #include "flash_driver.h"
 #include "rom.h"
 #include "libparams_error_codes.h"
+#include "params.hpp"
 
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];
@@ -141,6 +143,7 @@ ParamType_t paramsGetType(ParamIndex_t param_idx) {
 
 const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
     if (param_idx >= integers_amount) {
+        printf("paramsGetIntegerDesc: %s\n", integer_desc_pool[param_idx].name);
         return NULL;
     }
     return &integer_desc_pool[param_idx];

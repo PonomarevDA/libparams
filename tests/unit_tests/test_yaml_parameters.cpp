@@ -116,7 +116,7 @@ TEST(TestYamlParameters, write_ok) {
     uint8_t flash[100];
     auto num_int_params = IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
     auto num_str_params = NUM_OF_STR_PARAMS;
-    YamlParameters yaml_params = YamlParameters(flash, 100, 1, num_int_params, num_str_params);
+    YamlParameters yaml_params = YamlParameters(flash, 100, 1, num_str_params, num_int_params);
     char file_name[9];
     std::string dir = LIBPARAMS_INITIAL_PARAMS_DIR;
     generateRandomCString(file_name, 9);
@@ -150,26 +150,28 @@ TEST(TestYamlParameters, read_not_enought_page_size) {
 
 // Test Case 5. Check if reading is right with default_params file
 TEST(TestYamlParameters, read_comparison) {
-    auto req_flash_size = IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4 +
-                                                                    (2 + NUM_OF_STR_PARAMS) * 56;
-    uint8_t flash[req_flash_size];
     auto num_int_params = IntParamsIndexes::INTEGER_PARAMS_AMOUNT;
     auto num_str_params = NUM_OF_STR_PARAMS;
+
+    auto req_flash_size = num_int_params * 4 + (2 + num_str_params) * 56;
+    uint8_t flash[req_flash_size];
+
     YamlParameters yaml_params = YamlParameters(flash, req_flash_size, 1,
-                                                                num_int_params, num_str_params);
-    std::cout << num_int_params << num_str_params;
+                                                        num_str_params, num_int_params);
     auto res = yaml_params.read_from_dir(LIBPARAMS_INITIAL_PARAMS_DIR);
     ASSERT_EQ(res, LIBPARAMS_OK);
     for (uint8_t idx = 0; idx < IntParamsIndexes::INTEGER_PARAMS_AMOUNT; idx ++) {
         int32_t int_val = 0;
         memcpy(&int_val, flash + 4 * idx, 4);
-        std::cout << integer_desc_pool[idx].def;
         ASSERT_EQ(int_val, integer_desc_pool[idx].def);
     }
     for (uint8_t idx = 0; idx < NUM_OF_STR_PARAMS; idx ++) {
-        auto offset = 2048 - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - idx);
+        auto offset = req_flash_size - MAX_STRING_LENGTH * (NUM_OF_STR_PARAMS - idx);
         std::string str_val(reinterpret_cast<char*>(flash + offset),
         MAX_STRING_LENGTH);
+        // size_t quote_pos = str_val.find('"');
+        // size_t quote_end_pos = str_val.find('"', quote_pos + 1);
+        // std::string str_value = str_val.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
         auto def = (char*)(string_desc_pool[idx].def);
         ASSERT_STREQ(str_val.c_str(), def);
     }

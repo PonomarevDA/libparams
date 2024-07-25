@@ -110,7 +110,7 @@ if __name__=="__main__":
 
     num_str_params = random.randint(1, 15)
     num_int_params = random.randint(0, 10)
-    gen.add_integer(IntegerParam.create_port_id("uavcan.node.id", "PARAM_UAVCAN_NODE"))
+    gen.add_integer(IntegerParam.create_port_id("uavcan.node", "PARAM_UAVCAN_NODE"))
     sys_name_data = {"default": "co.raccoonlab.random", "flags": random.choice(['immutable', 'mutable'])}
     gen.add_string(StringParam.create("system.name", sys_name_data))
 

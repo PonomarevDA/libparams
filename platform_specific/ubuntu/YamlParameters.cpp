@@ -15,6 +15,9 @@
 #include "libparams_error_codes.h"
 #include "YamlParameters.hpp"
 
+extern IntegerDesc_t integer_desc_pool[];
+extern StringDesc_t string_desc_pool[];
+
 int8_t YamlParameters::set_init_file_name(std::string file_name) {
     if (file_name.empty()) {
         return LIBPARAMS_WRONG_ARGS;
@@ -74,7 +77,6 @@ int8_t YamlParameters::write_to_files(const std::string& path) {
     if (path.empty()) {
         return LIBPARAMS_WRONG_ARGS;
     }
-
     char file_name[256];
     // remember last written indexes
     uint8_t int_param_idx = 0;
@@ -98,79 +100,79 @@ int8_t YamlParameters::write_to_files(const std::string& path) {
 void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx){
     std::string line;
+    std::string value;
     while (std::getline(params_storage_file, line)) {
-        std::istringstream iss(line);
         size_t delimiter_pos = line.find(':');
-        // std::cout << line << std::endl;
         if (delimiter_pos == std::string::npos) {
             continue;
         }
-        std::string value = line.substr(delimiter_pos + 1);
+        value = line.substr(delimiter_pos + 1);
         try {
-            std::string num_value;
-            std::remove_copy_if(value.begin(), value.end(), num_value.begin(), ::isspace);
-            int32_t int_value = std::stoi(num_value);
-            if (flash_size < 4 * (*int_param_idx)) {
-                throw std::invalid_argument(
-                                std::string("YamlParameters: Not enought flash size"));
+            if (*int_param_idx > num_int_params) {
+                throw std::invalid_argument(std::string(
+                    "YamlParameters: Got more integer params than defined by num_int_params"));
             }
+            if (flash_size < 4 * (*int_param_idx)) {
+                throw std::invalid_argument(std::string("YamlParameters: Not enought flash size"));
+            }
+            int32_t int_value = std::stoi(value);
             memcpy(flash_memory + 4 * (*int_param_idx), &int_value, 4);
             *int_param_idx = *int_param_idx + 1;
-            if (*int_param_idx > num_int_params) {
-                throw std::invalid_argument(
-                                std::string("YamlParameters: Wrong num_int_params"));
-            }
         } catch (std::invalid_argument const& ex) {
+            int offset = flash_pages_num * page_size - MAX_STRING_LENGTH *
+                                                        (num_str_params - (*str_param_idx));
+            if (*str_param_idx > num_str_params) {
+                throw std::invalid_argument(std::string("YamlParameters: Wrong num_str_params"));
+            }
             if (flash_size < uint(*int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx))) {
                 char error_mesg[100];
                 snprintf(error_mesg, sizeof(error_mesg),
                     "YamlParameters: Not enought flash size, needed: %d, provided: %d",
-                    *int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx), (int)flash_size);
+                    *int_param_idx * 4 + MAX_STRING_LENGTH * (*str_param_idx), (int)flash_size);
                 throw std::invalid_argument(std::string(error_mesg));
             }
             size_t quote_pos = value.find('"');
             size_t quote_end_pos = value.find('"', quote_pos + 1);
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
-            int offset = flash_pages_num * page_size - MAX_STRING_LENGTH *
-                                                        (num_str_params - (*str_param_idx));
             if (offset < *int_param_idx * 4) {
                 char error_mesg[100];
                 snprintf(error_mesg, sizeof(error_mesg),
-                    "YamlParameters: Not enought flash size, needed: %d, provided: %d",
-                    *int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx), (int)flash_size);
+                    "YamlParameters: params overlap last int param addr: %d, str param offset: %d",
+                    *int_param_idx * 4, offset);
                 throw std::invalid_argument(std::string(error_mesg));
             }
-            if (*str_param_idx > num_str_params) {
-                throw std::invalid_argument(
-                                std::string("YamlParameters: Wrong num_str_params"));
-            }
+
             memcpy(flash_memory + offset, str_value.c_str(), strlen(str_value.c_str()));
             memcpy(flash_memory + offset + strlen(str_value.c_str()), "\0", 1);
             *str_param_idx = *str_param_idx + 1;
         }
     }
+
+    if (*int_param_idx > num_int_params || *str_param_idx > num_str_params) {
+        throw std::invalid_argument(std::string(
+            "YamlParameters: Got more integer params than defined by num_int_params"));
+    }
 }
 
 void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx) {
+    if (*int_param_idx > num_int_params || *str_param_idx > num_str_params) {
+        throw std::invalid_argument(std::string(
+        "YamlParameters: int_param_idx or str_param_idx is bigger than defined by num_int_params"));
+    }
     uint32_t n_bytes = 0;
     uint8_t param_idx = *int_param_idx;
     for (uint8_t index = param_idx; index < num_int_params; index++) {
         int32_t int_param_value;
         memcpy(&int_param_value, flash_memory + index * 4, 4);
-        const IntegerDesc_t* param_desc = paramsGetIntegerDesc(index);
-        if (param_desc == NULL) {
-            throw std::invalid_argument(
-                            std::string("YamlParameters: Wrong param idx"));
-        }
-        const char* name = paramsGetIntegerDesc(index)->name;
+        const char* name = integer_desc_pool[index].name;
         params_storage_file << std::left << std::setw(32) << name << ":\t"
                             << int_param_value << "\n";
         std::cout << std::left << std::setw(32) << name << ":\t" << int_param_value << "\n";
         n_bytes += 4;
         *int_param_idx = *int_param_idx + 1;
         if (n_bytes + 4 > page_size) {
-            break;
+            return;
         }
     }
 
@@ -189,7 +191,7 @@ void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* i
             reinterpret_cast<char*>(flash_memory + offset), MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         auto str_param = str_param_value.substr(0, str_end);
-        const char* name = paramsGetStringDesc(index + num_int_params)->name;
+        const char* name = string_desc_pool[index].name;
 
         params_storage_file << std::left << std::setw(32) << name << ":\t" << '"'
                                                             << str_param.c_str() << '"' << "\n";

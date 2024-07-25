@@ -78,7 +78,7 @@ class Generator:
                 f"{LICENSE_HEADER}\n"
                 "#pragma once\n"
                 "#include \"storage.h\"\n\n"
-                "enum IntParamsIndexes : ParamIndex_t {\n"
+                "enum IntParamsIndexes {\n"
                 f"{self.integers_enums}\n"
                 "    INTEGER_PARAMS_AMOUNT\n"
                 "};\n"

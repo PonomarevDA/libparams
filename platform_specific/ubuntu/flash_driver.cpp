@@ -105,15 +105,9 @@ uint16_t flashGetPageSize() {
 uint8_t flashGetWordSize() { return 8; }
 
 int8_t __save_to_files(){
-#ifdef LIBPARAMS_PARAMS_DIR
     return yaml_params.write_to_dir(LIBPARAMS_PARAMS_DIR);
-#endif
-    return LIBPARAMS_OK;
 }
 
 int8_t __read_from_files(){
-#ifdef LIBPARAMS_PARAMS_DIR
     return yaml_params.read_from_dir(LIBPARAMS_PARAMS_DIR);
-#endif
-    return LIBPARAMS_OK;
 }

@@ -107,7 +107,7 @@ It is expected either to add the library into your project as submodule or just 
 
 You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [CMakeLists.txt](CMakeLists.txt).
 
-If it is SITL mode, you need additionally to specify path to yml files with parameters values `LIBPARAMS_PARAMS_DIR`, name of file with initial parameters `LIBPARAMS_INIT_PARAMS_FILE_NAME` and temporal parameters `LIBPARAMS_TEMP_PARAMS_FILE_NAME` ("initial_params" and "temp_params" set as default).
+If it is SITL mode, you need additionally to specify path to yaml files with parameters values `LIBPARAMS_PARAMS_DIR`. The flash memory is divided to pages, therefore the base name of file with initial parameters `LIBPARAMS_PARAMS_BASE_NAME`  needs to be specified. The file named `<LIBPARAMS_PARAMS_BASE_NAME>_0.yaml` will be read as a default parameters values container. 
 
 You can create params.c and params.h files with the following content:
 
@@ -180,6 +180,16 @@ void application_example() {
     paramsLoad();
 }
 ```
+
+You can create yaml file to specify initial parameters:
+
+```yaml
+# init_params.yaml
+uavcan.node.id: 50
+
+system.name: ""
+```
+
 
 Please, refer to the [libparams/storage.h](libparams/storage.h) for the high level usage details because it is self-documented.
 

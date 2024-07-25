@@ -60,7 +60,7 @@ class Generator:
 
         for page_idx in range(num_pages):
             yaml_content = ""
-            with open(f"{self.dir}/{self.name}_{page_idx}.yml", 'w', encoding="utf-8") as yaml_fd:
+            with open(f"{self.dir}/{self.name}_{page_idx}.yaml", 'w', encoding="utf-8") as yaml_fd:
                 while array_size < page_size - 56:
                     param = None
                     try:

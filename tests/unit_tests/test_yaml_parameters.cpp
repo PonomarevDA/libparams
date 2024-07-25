@@ -28,7 +28,7 @@
 #define REQ_FLASH_SIZE          NUM_INT_PARAMS * 4 + NUM_STR_PARAMS * 56
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
-std::string dir(LIBPARAMS_INITIAL_PARAMS_DIR);
+std::string dir(LIBPARAMS_PARAMS_DIR);
 
 int8_t delete_file(const char* path) {
     try {
@@ -115,7 +115,7 @@ TEST(TestYamlParameters, write_ok) {
     YamlParameters yaml_params = YamlParameters(flash, REQ_FLASH_SIZE, 1,
                                                                 NUM_STR_PARAMS, NUM_INT_PARAMS);
     auto res = yaml_params.write_to_dir(dir);
-    delete_file((dir + "/temp_params_0.yml").c_str());
+    delete_file((dir + "/temp_params_0.yaml").c_str());
     ASSERT_EQ(res, LIBPARAMS_OK);
 }
 
@@ -131,7 +131,7 @@ TEST(TestYamlParameters, write_wrong_params_num) {
     YamlParameters yaml_params = YamlParameters(flash, 100, 1, 0, 1);
     auto res = yaml_params.write_to_dir(dir);
 
-    delete_file((dir + "/temp_params_0.yml").c_str());
+    delete_file((dir + "/temp_params_0.yaml").c_str());
 }
 
 
@@ -162,7 +162,7 @@ TEST(TestYamlParameters, read_empty_file) {
     generateRandomCString(file_name, 10);
     std::ofstream params_storage_file;
     std::string file_path = dir;
-    file_path.append("/").append(file_name) + ".yml";
+    file_path.append("/").append(file_name) + ".yaml";
     params_storage_file.open(file_path, std::ios_base::out);
     YamlParameters yaml_params = YamlParameters(flash, REQ_FLASH_SIZE, 1,
                                                             NUM_STR_PARAMS, NUM_INT_PARAMS);
@@ -197,7 +197,7 @@ TEST(TestYamlParameters, read_comparison) {
 }
 
 
-// Test Case 6. Check if created file is the same as initial_params yml file generated
+// Test Case 6. Check if created file is the same as initial_params yaml file generated
 // by python script (/scripts/generate_random_params.py).
 TEST(TestYamlParameters, write_comparison) {
     uint8_t flash[REQ_FLASH_SIZE];
@@ -210,11 +210,11 @@ TEST(TestYamlParameters, write_comparison) {
     res = yaml_params.write_to_dir(dir);
     ASSERT_EQ(res, LIBPARAMS_OK);
 
-    auto file_name = dir + "/" + "init_params_0.yml";
+    auto file_name = dir + "/" + "init_params_0.yaml";
     std::ifstream init_storage_file;
     init_storage_file.open(file_name, std::ios_base::in);
 
-    file_name = dir + "/" + "written_0.yml";
+    file_name = dir + "/" + "written_0.yaml";
     std::ifstream written_storage_file;
     written_storage_file.open(file_name, std::ios_base::in);
 

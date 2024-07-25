@@ -47,13 +47,13 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
         std::ifstream params_storage_file;
 
         // check if temp file for the page already exists, else read from init file
-        snprintf(file_name, sizeof(file_name), "%s/%s_%d.yml",
+        snprintf(file_name, sizeof(file_name), "%s/%s_%d.yaml",
                                     path.c_str(), temp_file_name.c_str(), idx);
         params_storage_file.open(file_name, std::ios_base::in);
         if (!params_storage_file) {
             std::cout << "YamlParameters: " << file_name <<
                                                 " could not be opened for reading!" << std::endl;
-            snprintf(file_name, sizeof(file_name), "%s/%s_%d.yml",
+            snprintf(file_name, sizeof(file_name), "%s/%s_%d.yaml",
                         path.c_str(), init_file_name.c_str(), idx);
             params_storage_file.open(file_name, std::ios_base::in);
             if (!params_storage_file) {
@@ -86,7 +86,7 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
     uint8_t int_param_idx = 0;
     uint8_t str_param_idx = 0;
     for (uint8_t idx = 0; idx < flash_pages_num; idx++) {
-        snprintf(file_name, sizeof(file_name), "%s/%s_%d.yml",
+        snprintf(file_name, sizeof(file_name), "%s/%s_%d.yaml",
                                     path.c_str(), temp_file_name.c_str(), idx);
         std::ofstream params_storage_file;
         params_storage_file.open(file_name, std::ios_base::out);

@@ -2,9 +2,12 @@
 
 The Ubuntu flash driver emulates a real flash memory of an stm32 microcontroller.
 
-The implementation is quite simple: it allocates an array with the size of a typical stm32 page (2048 bytes). It is expected that a single page will be sufficient.
+The implementation is quite simple: it allocates an array with the size multiple of a typical stm32 page (2048 bytes). The number of flash pages are calculated based on number of parameters.
 
-If a string named `LIBPARAMS_INITIAL_PARAMS_FILE` is defined, the driver will read the yaml file into the allocated array during the initialization.
+If a strings named `LIBPARAMS_PARAMS_DIR` is defined, the driver will read initial parameters values from located in the directory yaml files into the allocated array during the initialization.
+> The default file names are "init_params_n.yaml", where n -- the number of flash pages. Using the `LIBPARAMS_INIT_PARAMS_BASE_NAME` you can specify the file name, such that the library will search for `${LIBPARAMS_PARAMS_DIR}/${LIBPARAMS_INIT_PARAMS_BASE_NAME}_n.yaml` file for each flash page.
+
+> The `LIBPARAMS_TEMP_PARAMS_BASE_NAME` specifies the names for files where the parameters will be saved during the `flashWrite` function call.
 
 The Ubuntu flash driver allows you to run an application based on libparams on Ubuntu. For example, it allows you to run a Cyphal/DroneCAN SITL node.
 
@@ -18,4 +21,4 @@ The unit tests are based on this driver:
 - [tests/unit_tests](../../tests/unit_tests/)
 
 An example of a simple Ubuntu application:
-- [tests/unit_tests](../../tests/platform_specific/ubuntu)
+- [tests/platform_specific/ubuntu](../../tests/platform_specific/ubuntu)

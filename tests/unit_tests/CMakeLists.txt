@@ -28,9 +28,9 @@ set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
 function(generate_random_params)
-    set(LIBPARAMS_PARAMS_BASE_NAME init_params)
-    add_definitions(-DLIBPARAMS_INITIAL_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
-    add_definitions(-DLIBPARAMS_INITIAL_PARAMS_FILE="${CMAKE_CURRENT_BINARY_DIR}/${LIBPARAMS_PARAMS_BASE_NAME}.yml")
+    set(LIBPARAMS_PARAMS_INIT_NAME init_params)
+    set(LIBPARAMS_PARAMS_TEMP_NAME temp_params)
+    add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
     execute_process(
         COMMAND ${ROOT_DIR}/scripts/generate_random_params.py 
         --out-dir ${CMAKE_CURRENT_BINARY_DIR}
@@ -41,7 +41,7 @@ function(generate_random_params)
     endif()
     execute_process(
         COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
-        --out-file-name ${LIBPARAMS_PARAMS_BASE_NAME}
+        --out-file-name ${LIBPARAMS_PARAMS_INIT_NAME}
         RESULT_VARIABLE ret
     )
     if(NOT ret EQUAL 0)

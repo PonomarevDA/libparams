@@ -38,7 +38,7 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
     if (path.empty()) {
         return LIBPARAMS_WRONG_ARGS;
     }
-
+    int8_t res;
     char file_name[256];
     uint8_t int_param_idx = 0;
     uint8_t str_param_idx = 0;
@@ -67,16 +67,20 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
         if ((int_param_idx > num_int_params) || (str_param_idx > num_str_params)) {
             break;;
         }
-        __read_page(params_storage_file, &int_param_idx, &str_param_idx);
+        res = __read_page(params_storage_file, &int_param_idx, &str_param_idx);
         params_storage_file.close();
+        if (res != LIBPARAMS_OK) {
+            return res;
+        }
     }
     return LIBPARAMS_OK;
 }
 
-int8_t YamlParameters::write_to_files(const std::string& path) {
+int8_t YamlParameters::write_to_dir(const std::string& path) {
     if (path.empty()) {
         return LIBPARAMS_WRONG_ARGS;
     }
+    int8_t res;
     char file_name[256];
     // remember last written indexes
     uint8_t int_param_idx = 0;
@@ -88,16 +92,21 @@ int8_t YamlParameters::write_to_files(const std::string& path) {
         params_storage_file.open(file_name, std::ios_base::out);
         std::cout << "YamlParameters: save data to " << file_name << std::endl;
 
-        __write_page(params_storage_file, &int_param_idx, &str_param_idx);
+        res = __write_page(params_storage_file, &int_param_idx, &str_param_idx);
         params_storage_file.close();
+        if (res != LIBPARAMS_OK) {
+            return res;
+        }
     }
-    if (int_param_idx < num_int_params || str_param_idx < num_str_params) {
+    if (int_param_idx != num_int_params || str_param_idx != num_str_params) {
+        std::cout << "YamlParameters:" <<
+        "Number of parameters in the file isn't equal to the one specified in the constructor\n";
         return LIBPARAMS_WRONG_ARGS;
     }
     return LIBPARAMS_OK;
 }
 
-void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
+int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx){
     std::string line;
     std::string value;
@@ -109,11 +118,13 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
         value = line.substr(delimiter_pos + 1);
         try {
             if (*int_param_idx > num_int_params) {
-                throw std::invalid_argument(std::string(
-                    "YamlParameters: Got more integer params than defined by num_int_params"));
+                std::cout <<
+                    "YamlParameters: Got more integer params than defined by num_int_params\n";
+                return LIBPARAMS_WRONG_ARGS;
             }
             if (flash_size < 4 * (*int_param_idx)) {
-                throw std::invalid_argument(std::string("YamlParameters: Not enought flash size"));
+                std::cout << "YamlParameters: Not enought flash size\n";
+                return LIBPARAMS_WRONG_ARGS;
             }
             int32_t int_value = std::stoi(value);
             memcpy(flash_memory + 4 * (*int_param_idx), &int_value, 4);
@@ -122,24 +133,20 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
             int offset = flash_pages_num * page_size - MAX_STRING_LENGTH *
                                                         (num_str_params - (*str_param_idx));
             if (*str_param_idx > num_str_params) {
-                throw std::invalid_argument(std::string("YamlParameters: Wrong num_str_params"));
+                std::cout << "YamlParameters: Wrong num_str_params";
+                return LIBPARAMS_WRONG_ARGS;
             }
-            if (flash_size < uint(*int_param_idx * 4 + MAX_STRING_LENGTH *(*str_param_idx))) {
-                char error_mesg[100];
-                snprintf(error_mesg, sizeof(error_mesg),
-                    "YamlParameters: Not enought flash size, needed: %d, provided: %d",
-                    *int_param_idx * 4 + MAX_STRING_LENGTH * (*str_param_idx), (int)flash_size);
-                throw std::invalid_argument(std::string(error_mesg));
-            }
+
             size_t quote_pos = value.find('"');
             size_t quote_end_pos = value.find('"', quote_pos + 1);
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
             if (offset < *int_param_idx * 4) {
                 char error_mesg[100];
                 snprintf(error_mesg, sizeof(error_mesg),
-                    "YamlParameters: params overlap last int param addr: %d, str param offset: %d",
+                    "YamlParameters: params overlap last int param addr %d, str param offset %d\n",
                     *int_param_idx * 4, offset);
-                throw std::invalid_argument(std::string(error_mesg));
+                std::cout << error_mesg;
+                return LIBPARAMS_WRONG_ARGS;
             }
 
             memcpy(flash_memory + offset, str_value.c_str(), strlen(str_value.c_str()));
@@ -148,17 +155,20 @@ void YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* in
         }
     }
 
-    if (*int_param_idx > num_int_params || *str_param_idx > num_str_params) {
-        throw std::invalid_argument(std::string(
-            "YamlParameters: Got more integer params than defined by num_int_params"));
+    if (*int_param_idx != num_int_params || *str_param_idx != num_str_params) {
+        std::cout << "YamlParameters:" <<
+        "Number of parameters in the file isn't equal to the one specified in the constructor\n";
+        return LIBPARAMS_WRONG_ARGS;
     }
+    return LIBPARAMS_OK;
 }
 
-void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
+int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx) {
     if (*int_param_idx > num_int_params || *str_param_idx > num_str_params) {
-        throw std::invalid_argument(std::string(
-        "YamlParameters: int_param_idx or str_param_idx is bigger than defined by num_int_params"));
+        std::cout<<
+        "YamlParameters: int_param_idx or str_param_idx is bigger than defined by num_int_params\n";
+        return LIBPARAMS_WRONG_ARGS;
     }
     uint32_t n_bytes = 0;
     uint8_t param_idx = *int_param_idx;
@@ -166,13 +176,13 @@ void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* i
         int32_t int_param_value;
         memcpy(&int_param_value, flash_memory + index * 4, 4);
         const char* name = integer_desc_pool[index].name;
-        params_storage_file << std::left << std::setw(32) << name << ":\t"
+        params_storage_file << std::left << std::setw(32) << name << ": "
                             << int_param_value << "\n";
         std::cout << std::left << std::setw(32) << name << ":\t" << int_param_value << "\n";
         n_bytes += 4;
         *int_param_idx = *int_param_idx + 1;
         if (n_bytes + 4 > page_size) {
-            return;
+            return LIBPARAMS_OK;
         }
     }
 
@@ -193,7 +203,7 @@ void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* i
         auto str_param = str_param_value.substr(0, str_end);
         const char* name = string_desc_pool[index].name;
 
-        params_storage_file << std::left << std::setw(32) << name << ":\t" << '"'
+        params_storage_file << std::left << std::setw(32) << name << ": " << '"'
                                                             << str_param.c_str() << '"' << "\n";
         std::cout << std::left << std::setw(32) << name << ":\t" << '"'
                                                             << str_param.c_str() << '"' << "\n";
@@ -202,7 +212,8 @@ void YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t* i
 
         *str_param_idx = *str_param_idx + 1;
         if (n_bytes + 56 > page_size) {
-            break;
+            return LIBPARAMS_OK;
         }
     }
+    return LIBPARAMS_OK;
 }

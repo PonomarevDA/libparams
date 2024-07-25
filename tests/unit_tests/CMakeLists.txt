@@ -28,7 +28,7 @@ set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
 function(generate_random_params)
-    set(LIBPARAMS_PARAMS_BASE_NAME initial_params)
+    set(LIBPARAMS_PARAMS_BASE_NAME init_params)
     add_definitions(-DLIBPARAMS_INITIAL_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
     add_definitions(-DLIBPARAMS_INITIAL_PARAMS_FILE="${CMAKE_CURRENT_BINARY_DIR}/${LIBPARAMS_PARAMS_BASE_NAME}.yml")
     execute_process(

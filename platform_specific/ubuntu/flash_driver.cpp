@@ -21,12 +21,12 @@
 #include "storage.h"
 #include "params.hpp"
 
-#define PAGE_SIZE_BYTES 2048
-#define STR_PARAMS_SIZE_BYTES NUM_OF_STR_PARAMS * MAX_STRING_LENGTH
-#define INTEGER_PARAMS_SIZE_BYTES IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
-#define PARAMS_SIZE_BYTES (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
-#define PAGES_N (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
-#define FLASH_SIZE PAGE_SIZE_BYTES * (PAGES_N)
+#define PAGE_SIZE_BYTES             2048
+#define STR_PARAMS_SIZE_BYTES       NUM_OF_STR_PARAMS * MAX_STRING_LENGTH
+#define INTEGER_PARAMS_SIZE_BYTES   IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4
+#define PARAMS_SIZE_BYTES           (STR_PARAMS_SIZE_BYTES + INTEGER_PARAMS_SIZE_BYTES)
+#define PAGES_N                     (PARAMS_SIZE_BYTES / PAGE_SIZE_BYTES) + 1
+#define FLASH_SIZE                  PAGE_SIZE_BYTES * (PAGES_N)
 
 uint8_t flash_memory[FLASH_SIZE];
 static bool is_locked = true;
@@ -106,7 +106,7 @@ uint8_t flashGetWordSize() { return 8; }
 
 int8_t __save_to_files(){
 #ifdef LIBPARAMS_PARAMS_DIR
-    return yaml_params.write_to_files(LIBPARAMS_PARAMS_DIR);
+    return yaml_params.write_to_dir(LIBPARAMS_PARAMS_DIR);
 #endif
     return LIBPARAMS_OK;
 }

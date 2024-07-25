@@ -141,7 +141,6 @@ ParamType_t paramsGetType(ParamIndex_t param_idx) {
 
 const IntegerDesc_t* paramsGetIntegerDesc(ParamIndex_t param_idx) {
     if (param_idx >= integers_amount) {
-        printf("paramsGetIntegerDesc: %s\n", integer_desc_pool[param_idx].name);
         return NULL;
     }
     return &integer_desc_pool[param_idx];

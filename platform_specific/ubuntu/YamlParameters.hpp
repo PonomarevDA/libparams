@@ -18,7 +18,7 @@ class YamlParameters {
     uint8_t num_str_params;
     uint8_t num_int_params;
     uint32_t flash_size;
-    std::string init_file_name = "initial_params";
+    std::string init_file_name = "init_params";
     std::string temp_file_name = "temp_params";
 
    public:
@@ -30,18 +30,27 @@ class YamlParameters {
             throw std::invalid_argument("YamlParameters: Invalid arguments for constructor");
         }
         flash_size = page_size * flash_pages_num;
+        uint32_t req_flash_size = num_flash_pages * 4 + 56 * num_str_params;
+        if (flash_size < req_flash_size) {
+                char error_mesg[100];
+                snprintf(error_mesg, sizeof(error_mesg),
+                    "YamlParameters: Not enought flash size, needed: %d, provided: %d\n",
+                    (int)req_flash_size, (int)flash_size);
+                std::cout << error_mesg;
+                throw std::invalid_argument(error_mesg);
+        }
     }
 
     int8_t read_from_dir(const std::string& path);
-    int8_t write_to_files(const std::string& path);
+    int8_t write_to_dir(const std::string& path);
 
     int8_t set_init_file_name(std::string file_name);
     int8_t set_temp_file_name(std::string file_name);
 
 private:
-    void __write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
+    int8_t __write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx);
-    void __read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
+    int8_t __read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
                                                                     uint8_t* str_param_idx);
 };
 

@@ -35,13 +35,13 @@ coverage: create_build_dir
 	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/yaml_parameters.dir${REPO_DIR}/platform_specific/ubuntu/YamlParameters.cpp.gcda
 
 flash_driver: create_build_dir
-	cd ${BUILD_DIR} && cmake -DTEST_NUM=1 ${CRNT_DIR} && make && ./flash_driver
+	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./flash_driver
 
 rom: create_build_dir
-	cd ${BUILD_DIR} && cmake -DTEST_NUM=2 ${CRNT_DIR} && make && ./rom
+	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./rom
 
 storage: create_build_dir
-	cd ${BUILD_DIR} && cmake -DTEST_NUM=3 ${CRNT_DIR} && make && ./storage
+	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./storage
 
 yaml_parameters: create_build_dir
-	cd ${BUILD_DIR} && cmake -DCMAKE_BUILD_TYPE=DEBUG -DTEST_NUM=4 -DCOVERAGE=0 ${CRNT_DIR} && make && ./yaml_parameters
+	cd ${BUILD_DIR} && cmake ${CRNT_DIR} && make && ./yaml_parameters

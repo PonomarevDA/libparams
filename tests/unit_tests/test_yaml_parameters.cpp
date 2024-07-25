@@ -106,10 +106,8 @@ TEST(TestYamlParameters, write_wrong_params_num) {
     yaml_params.set_temp_file_name(std::string(file_name));
     auto res = yaml_params.write_to_files(dir);
 
-    // EXPECT_THROW(yaml_params.write_to_files(LIBPARAMS_INITIAL_PARAMS_DIR),
-    //              std::invalid_argument);
     auto path = dir;
-    delete_file((dir.append("/").append(file_name).append("_0.yml")).c_str());
+    delete_file((dir + "/" + file_name +"_0.yml").c_str());
 }
 
 TEST(TestYamlParameters, write_ok) {
@@ -123,7 +121,7 @@ TEST(TestYamlParameters, write_ok) {
     yaml_params.set_temp_file_name(std::string(file_name));
     auto res = yaml_params.write_to_files(dir);
     auto path = dir;
-    delete_file((dir.append("/").append(file_name).append("_0.yml")).c_str());
+    delete_file((dir + "/" + file_name +"_0.yml").c_str());
     ASSERT_EQ(res, LIBPARAMS_WRONG_ARGS);
 }
 

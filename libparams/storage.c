@@ -8,7 +8,6 @@
 
 #include "storage.h"
 #include <string.h>
-#include <stdio.h>
 #include "flash_driver.h"
 #include "rom.h"
 #include "libparams_error_codes.h"

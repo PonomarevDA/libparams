@@ -115,18 +115,18 @@ if __name__=="__main__":
     gen.add_string(StringParam.create("system.name", sys_name_data))
 
     for str_idx in range(num_str_params):
-        data = {"default": gen_random_str(55), "flags": random.choice(['immutable', 'mutable'])}
-        gen.add_string(StringParam.create(gen_random_str(55), data))
+        data = {"default": gen_random_str(random.randint(1, 55)), "flags": random.choice(['immutable', 'mutable'])}
+        gen.add_string(StringParam.create(gen_random_str(random.randint(1, 55)), data))
 
     for int_idx in range(num_int_params):
         min = random.randint(0, 10000)
         max = random.randint(min, min+10000)
         default = random.randrange(min, max, 1)
-        data = {"enum": gen_random_str(56, True), 
+        data = {"enum": gen_random_str(random.randint(1, 55), True), 
                 "default": default,
                 "min": min,
                 "max": max,
                 "flags": random.choice(['immutable', 'mutable'])}
-        gen.add_integer(IntegerParam.create(gen_random_str(56), data))
+        gen.add_integer(IntegerParam.create(gen_random_str(random.randint(1, 55)), data))
 
     gen.generate()

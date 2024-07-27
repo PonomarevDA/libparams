@@ -16,16 +16,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: repo
-      - uses: actions/checkout@v4
-        with:
-          repository: RaccoonlabDev/code_style
-          token: ${{ secrets.ACCESS_TOKEN }}
-          path: repo/code_style
-
       - run: pip3 install cpplint
-      - run: ./repo/scripts/code_style/lint.sh
+      - run: cpplint libparams/* platform_specific/*/*
 
   crlf:
     timeout-minutes: 1

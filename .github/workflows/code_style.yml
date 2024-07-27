@@ -1,6 +1,12 @@
 name: code_style
 
-on: [push]
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
 
 jobs:
   astyle:
@@ -9,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y astyle
-      - run: ./scripts/check_astyle.py libparams platform_specific --astylerc scripts/astylerc
+      - run: make astyle
 
   cpplint:
     timeout-minutes: 1
@@ -17,23 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip3 install cpplint
-      - run: cpplint libparams/* platform_specific/*/*
+      - run: make cpplint
 
   crlf:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: repo
-      - uses: actions/checkout@v4
-        with:
-          repository: RaccoonlabDev/code_style
-          token: ${{ secrets.ACCESS_TOKEN }}
-          path: repo/code_style
-
       - run: sudo apt-get install -y dos2unix
-      - run: ./repo/scripts/code_style/crlf.sh
+      - run: make crlf
 
   cppcheck:
     timeout-minutes: 1
@@ -42,3 +40,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y cppcheck
       - run: make cppcheck
+
+  pylint:
+    timeout-minutes: 1
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip3 install pylint
+      - run: make pylint

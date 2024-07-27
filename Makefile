@@ -56,8 +56,18 @@ ubuntu: clean
 	mkdir -p ${UBUNTU_BUILD_DIR}
 	cd ${UBUNTU_BUILD_DIR} && cmake -S ${UBUNTU_CMAKE_DIR} -B . && $(MAKE) && ./application
 
+
+code_style: astyle cpplint crlf cppcheck
+astyle:
+	./scripts/code_style/check_astyle.py libparams platform_specific --astylerc scripts/code_style/astylerc
+cpplint:
+	cpplint libparams/* platform_specific/*/*
+crlf:
+	./scripts/code_style/check_crlf.py
 cppcheck:
-	./scripts/cppcheck.sh
+	./scripts/code_style/cppcheck.sh
+pylint:
+	pylint scripts/code_style
 
 clean:
 	rm -rf ${BUILD_PATH}

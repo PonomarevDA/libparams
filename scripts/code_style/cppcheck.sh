@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-SCRIPTS_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+CODE_STYLE_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPTS_DIR="$(dirname "$CODE_STYLE_DIR")"
 REPO_DIR="$(dirname "$SCRIPTS_DIR")"
 
 cppcheck --enable=all \

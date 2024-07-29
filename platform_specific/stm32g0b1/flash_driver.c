@@ -14,6 +14,11 @@
 
 static uint8_t* flashGetPointer();
 static int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages);
+static int8_t flashWriteU64(uint32_t address, uint64_t data);
+
+
+static const size_t FLASH_WORD_SIZE = 8;
+
 
 void flashInit() {
 }
@@ -51,25 +56,12 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
     return res;
 }
 
-/**
- * @brief 64-bit programming time
- * typ 85 us
- * max 125 us
- * @note from https://www.st.com/resource/en/datasheet/stm32g030c6.pdf
- */
-int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
-}
-
-static uint8_t* flashGetPointer() {
-    return (uint8_t*) FLASH_START_ADDR;
-}
 
 int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     int8_t status;
-    for (size_t idx = 0U; idx < (size + flashGetWordSize() - 1)/ flashGetWordSize(); idx++) {
+    for (size_t idx = 0U; idx < (size + FLASH_WORD_SIZE - 1)/ FLASH_WORD_SIZE; idx++) {
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
-        size_t addr = offset + flashGetWordSize() * idx;
+        size_t addr = offset + FLASH_WORD_SIZE * idx;
 
         status = flashWriteU64((uint32_t)addr, word);
         if (status < 0) {
@@ -87,6 +79,18 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     const uint8_t* rom = &(flashGetPointer()[offset]);
     memcpy(data, rom, bytes_to_read);
     return bytes_to_read;
+}
+
+uint16_t flashGetNumberOfPages() {
+    return 256;
+}
+
+uint16_t flashGetPageSize() {
+    return 2048;
+}
+
+static uint8_t* flashGetPointer() {
+    return (uint8_t*) FLASH_START_ADDR;
 }
 
 int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pages) {
@@ -114,14 +118,12 @@ int8_t flashErasePagessInSingleBank(uint32_t first_page_idx, uint32_t num_of_pag
     return -status;
 }
 
-uint16_t flashGetNumberOfPages() {
-    return 256;
-}
-
-uint16_t flashGetPageSize() {
-    return 2048;
-}
-
-uint8_t flashGetWordSize() {
-    return 8;
+/**
+ * @brief 64-bit programming time
+ * typ 85 us
+ * max 125 us
+ * @note from https://www.st.com/resource/en/datasheet/stm32g030c6.pdf
+ */
+int8_t flashWriteU64(uint32_t address, uint64_t data) {
+    return -HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, data);
 }

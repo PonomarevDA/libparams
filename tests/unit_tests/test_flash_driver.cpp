@@ -64,16 +64,7 @@ TEST(TestFlashDriver, test_read_flash_ok) {
 }
 
 
-// Test case 4. flashWriteU64
-TEST(TestFlashDriver, test_write64_flash_ok) {
-    flashUnlock();
-    auto res = flashWriteU64(FLASH_START_ADDR, (uint64_t)42);
-    flashLock();
-    ASSERT_EQ(res, LIBPARAMS_OK);
-}
-
-
-// Test case 5. flashWrite
+// Test case 4. flashWrite
 TEST(TestFlashDriver, test_write_flash_wrong_addr) {
     flashUnlock();
     auto res = flashWrite((uint8_t*)42, 0, 1);
@@ -90,7 +81,7 @@ TEST(TestFlashDriver, test_write_flash_ok) {
 }
 
 
-// Test case 6. Check values`
+// Test case 5. Check values`
 TEST(TestFlashDriver, test_flash_check_numeric_ok) {
     flashUnlock();
     uint8_t val = 42;

@@ -63,16 +63,6 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     return LIBPARAMS_OK;
 }
 
-int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    if (is_locked || address < FLASH_START_ADDR || address >= FLASH_START_ADDR + PAGE_SIZE_BYTES) {
-        return LIBPARAMS_WRONG_ARGS;
-    }
-
-    memcpy(flash_memory + (address - FLASH_START_ADDR), (void*)(&data), flashGetWordSize());
-
-    return __save_to_files();
-}
-
 static uint8_t* flashGetPointer() {
     return (uint8_t*)flash_memory;
 }
@@ -101,8 +91,6 @@ uint16_t flashGetNumberOfPages() {
 uint16_t flashGetPageSize() {
     return PAGE_SIZE_BYTES;
 }
-
-uint8_t flashGetWordSize() { return 8; }
 
 int8_t __save_to_files(){
     return yaml_params.write_to_dir(LIBPARAMS_PARAMS_DIR);

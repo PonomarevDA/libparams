@@ -14,6 +14,7 @@ set(LIBPARAMS_SOURCE_CODE_PATH ${LIBPARAMS_ROOT_DIR}/libparams)
 set(PLATFORM_SPECIFIC_PATH ${LIBPARAMS_ROOT_DIR}/platform_specific/ubuntu)
 set(PARAMS_PATH ${LIBPARAMS_ROOT_DIR}/build/tests/params_generator)
 
+add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 include_directories(
     ${LIBPARAMS_SOURCE_CODE_PATH}
     ${PLATFORM_SPECIFIC_PATH}
@@ -30,6 +31,7 @@ add_executable(${PROJECT_NAME} test.cpp
                ${LIBPARAMS_SOURCE_CODE_PATH}/storage.c
                ${LIBPARAMS_SOURCE_CODE_PATH}/rom.c
                ${GENERATED_PARAMS}
+               ${PLATFORM_SPECIFIC_PATH}/YamlParameters.cpp
                ${PLATFORM_SPECIFIC_PATH}/flash_driver.cpp)
 target_link_libraries(${PROJECT_NAME} GTest::GTest GTest::Main)
 gtest_discover_tests(${PROJECT_NAME})

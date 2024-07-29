@@ -33,12 +33,11 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages);
 
 /**
  * @brief Before writing you must call flashUnlock(), after writing you must call flashLock()
- * @param[in] address - actual address on flash memory
- * @param[in] data - 64 bit of data
- * @return 0 if success, otherwise < 0
+ *        Write chunk of data like memcpy
+ * @return number of written bytes if success, otherwise < 0
  */
 void flashUnlock();
-int8_t flashWriteU64(uint32_t address, uint64_t data);
+int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write);
 void flashLock();
 
 /**
@@ -47,18 +46,12 @@ void flashLock();
  */
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read);
 
-/**
- * @brief Write chunk of data like memcpy
- * @return bytes_to_read if success, otherwise 0
- */
-int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write);
 
 /**
  * @return Info about the flash memory
  */
 uint16_t flashGetNumberOfPages();
 uint16_t flashGetPageSize();
-uint8_t flashGetWordSize();
 
 #ifdef __cplusplus
 }

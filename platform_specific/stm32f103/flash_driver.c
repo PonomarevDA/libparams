@@ -64,34 +64,6 @@ int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
     return status;
 }
 
-/**
- * @brief 16-bit programming time
- * min 40 us
- * typ 52.5 us
- * max 70 us
- * @note from https://www.st.com/resource/en/datasheet/stm32f103c8.pdf
- */
-int8_t flashWriteU64(uint32_t address, uint64_t data) {
-    int8_t status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
-
-    if (status < 0) {
-        return status;
-    }
-
-    for (uint8_t index = 0U; index < 4; index++) {
-        flashProgramHalfWord((address + (2U*index)), (uint16_t)(data >> (16U*index)));
-
-        status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
-
-        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
-        if (status < 0) {
-            break;
-        }
-    }
-
-    return status;
-}
-
 static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
@@ -134,10 +106,6 @@ uint16_t flashGetNumberOfPages() {
 
 uint16_t flashGetPageSize() {
     return FLASH_PAGE_SIZE;
-}
-
-uint8_t flashGetWordSize() {
-    return 8;
 }
 
 static int8_t flashWaitForLastOperation(uint32_t timeout) {

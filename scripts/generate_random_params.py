@@ -9,6 +9,8 @@
 """Parameters generator."""
 
 import os
+import random
+import string
 import sys
 from color_logging import log_err
 import yaml
@@ -18,6 +20,11 @@ LICENSE_HEADER = """// This file was automatically generated. Do not edit it man
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/."""
+
+def gen_random_str(str_len: int, upper: bool = False) -> string:
+    characters = string.ascii_uppercase if upper else string.digits + string.ascii_letters
+    return ''.join(random.choices(characters, k=str_len))
+
 
 class Generator:
     def __init__(self, directory, name) -> None:
@@ -92,41 +99,34 @@ if __name__=="__main__":
     parser.add_argument("--out-dir",        type=str, required=True,    help="")
     parser.add_argument("--out-file-name",  type=str, default='params', help="")
     parser.add_argument("--language",       type=str, default="c++",    help="", choices=["c++"])
-    parser.add_argument('-f','--files',     type=str, required=True,    help='', nargs='+')
     args = parser.parse_args()
 
     print("Parameters generator:")
     print("1. out_dir:", args.out_dir)
     print("2. language:", args.language)
     print("3. out-file-name:", args.out_file_name)
-    print("4. files:", args.files)
-
-    # Check args for basic errors
-    for yaml_file_path in args.files:
-        if not os.path.exists(yaml_file_path):
-            log_err(f"Input file with paths `{yaml_file_path}` is not exist!")
-            sys.exit(1)
 
     gen = Generator(args.out_dir, args.out_file_name)
 
-    for yaml_file_path in args.files:
-        with open(yaml_file_path, "r", encoding="utf-8") as yaml_fd:
-            params = yaml.safe_load(yaml_fd)
-            for param_name in params:
-                data = params[param_name]
-                assert isinstance(data, dict), "Legacy style detected. Abort."
-                if 'type' not in data:
-                    log_err(f"Type is not exist: {param_name}!")
-                    sys.exit(1)
-                elif data['type'].lower() == "port":
-                    gen.add_integer(IntegerParam.create_port_id(param_name, data['enum_base']))
-                    gen.add_string(StringParam.create_port_type(param_name, data['data_type']))
-                elif data['type'].lower() == "integer":
-                    gen.add_integer(IntegerParam.create(param_name, data))
-                elif data['type'].lower() == "string":
-                    gen.add_string(StringParam.create(param_name, data))
-                else:
-                    log_err(f"Unknown type: {param_name}.type={data['type']}!")
-                    sys.exit(1)
+    num_str_params = random.randint(1, 15)
+    num_int_params = random.randint(0, 10)
+    gen.add_integer(IntegerParam.create_port_id("uavcan.node", "PARAM_UAVCAN_NODE"))
+    sys_name_data = {"default": "co.raccoonlab.random", "flags": random.choice(['immutable', 'mutable'])}
+    gen.add_string(StringParam.create("system.name", sys_name_data))
+
+    for str_idx in range(num_str_params):
+        data = {"default": gen_random_str(random.randint(1, 55)), "flags": random.choice(['immutable', 'mutable'])}
+        gen.add_string(StringParam.create(gen_random_str(random.randint(1, 55)), data))
+
+    for int_idx in range(num_int_params):
+        min = random.randint(0, 10000)
+        max = random.randint(min, min+10000)
+        default = random.randrange(min, max, 1)
+        data = {"enum": gen_random_str(random.randint(1, 55), True), 
+                "default": default,
+                "min": min,
+                "max": max,
+                "flags": random.choice(['immutable', 'mutable'])}
+        gen.add_integer(IntegerParam.create(gen_random_str(random.randint(1, 55)), data))
 
     gen.generate()

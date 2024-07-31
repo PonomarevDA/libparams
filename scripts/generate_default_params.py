@@ -57,8 +57,8 @@ class Generator:
         string_iter = iter(self.strings_array)
         num_pages = math.ceil((4 * len(self.integers_array) + 56 * len(self.strings_array)) 
                               / page_size)
-
         for page_idx in range(num_pages):
+            print(page_idx)
             yaml_content = ""
             with open(f"{self.dir}/{self.name}_{page_idx}.yaml", 'w', encoding="utf-8") as yaml_fd:
                 while array_size < page_size - 56:
@@ -74,9 +74,11 @@ class Generator:
                             array_size += 56
                         except:
                             yaml_fd.write(yaml_content)
+                            yaml_fd.close()
                             return
                 array_size = 0
-                if (yaml_fd.write(yaml_content) != 0):
+                if (yaml_fd.write(yaml_content) == 0):
+                    print("No way")
                     sys.exit(1)
                 yaml_fd.close()
 

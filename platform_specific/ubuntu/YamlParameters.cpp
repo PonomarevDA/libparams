@@ -25,7 +25,7 @@ YamlParameters::YamlParameters(FlashMemoryLayout_t flash_desc, ParametersLayout_
     if (flash.flash_size < req_flash_size) {
         char error_mesg[100];
         snprintf(error_mesg, sizeof(error_mesg),
-                 "Not enought flash size, needed: %d, provided: %d\n",
+                 "Not enought flash size, needed: %d, provided: %d",
                  (int)req_flash_size, (int)flash.flash_size);
         logger.error(error_mesg);
     }
@@ -69,7 +69,7 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
                      path.c_str(), init_file_name.c_str(), idx);
             params_storage_file.open(file_name, std::ios_base::in);
             if (!params_storage_file) {
-                logger.info(file_name, " could not be opened for reading!");
+                logger.error(file_name, " could not be opened for reading!");
                 return LIBPARAMS_WRONG_ARGS;
             }
         }
@@ -83,6 +83,15 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
         if (res != LIBPARAMS_OK) {
             return res;
         }
+    }
+
+    if (int_param_idx != params.num_int_params || str_param_idx != params.num_str_params) {
+        logger.error("Number of parameters in the file isn't equal to",
+                     " the one specified in the constructor\n",
+                     "int real: ", (int)int_param_idx, " expected: ", (int)params.num_int_params,
+                     "\n",
+                     "str real: ", (int)str_param_idx, " expected: ", (int)params.num_str_params);
+        return LIBPARAMS_WRONG_ARGS;
     }
     return LIBPARAMS_OK;
 }
@@ -110,7 +119,7 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
     }
     if (int_param_idx != params.num_int_params || str_param_idx != params.num_str_params) {
         logger.error("Number of parameters in the file isn't equal",
-                     " to the one specified in the constructor\n");
+                     " to the one specified in the constructor");
         return LIBPARAMS_WRONG_ARGS;
     }
     return LIBPARAMS_OK;
@@ -129,11 +138,11 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* 
         value = line.substr(delimiter_pos + 1);
         try {
             if (*int_param_idx > params.num_int_params) {
-                logger.error("Got more integer params than defined by num_int_params\n");
+                logger.error("Got more integer params than defined by num_int_params");
                 return LIBPARAMS_WRONG_ARGS;
             }
             if (flash.flash_size < 4 * (*int_param_idx)) {
-                logger.error("Not enought flash size\n");
+                logger.error("Not enought flash size");
                 return LIBPARAMS_WRONG_ARGS;
             }
             int32_t int_value = std::stoi(value);
@@ -152,7 +161,7 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* 
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
             if (offset < *int_param_idx * 4) {
                 logger.error("params overlap last int param addr", *int_param_idx * 4,
-                             ", str param offset ", offset, "\n");
+                             ", str param offset ", offset);
                 return LIBPARAMS_WRONG_ARGS;
             }
 
@@ -163,11 +172,6 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint8_t* 
         }
     }
 
-    if (*int_param_idx != params.num_int_params || *str_param_idx != params.num_str_params) {
-        logger.error("Number of parameters in the file isn't equal to",
-                     " the one specified in the constructor\n");
-        return LIBPARAMS_WRONG_ARGS;
-    }
     return LIBPARAMS_OK;
 }
 
@@ -187,7 +191,7 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t*
         const char* name = params.integer_desc_pool[index].name;
         params_storage_file << std::left << std::setw(32) << name << ": "
                             << int_param_value << "\n";
-        logger.info(std::left, std::setw(32), name, ":\t", int_param_value, "\n");
+        logger.info(std::left, std::setw(32), name, ":\t", int_param_value);
         n_bytes += 4;
         *int_param_idx = *int_param_idx + 1;
         if (n_bytes + 4 > flash.page_size) {
@@ -208,7 +212,7 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t*
         size_t offset = flash.flash_pages_num * flash.page_size -
                         MAX_STRING_LENGTH * (params.num_str_params - index);
 
-        std::string str_param_value(reinterpret_cast<char*>((void*)flash.flash_memory + offset),
+        std::string str_param_value(reinterpret_cast<char*>((void*)(flash.flash_memory + offset)),
                                     MAX_STRING_LENGTH);
         auto str_end = str_param_value.find('\0');
         auto str_param = str_param_value.substr(0, str_end);
@@ -216,7 +220,7 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint8_t*
 
         params_storage_file << std::left << std::setw(32) << name << ": " << '"'
                             << str_param.c_str() << '"' << "\n";
-        logger.info(std::left, std::setw(32), name, ":\t", '"', str_param.c_str(), '"', "\n");
+        logger.info(std::left, std::setw(32), name, ":\t", '"', str_param.c_str(), '"');
 
         n_bytes += MAX_STRING_LENGTH;
 

@@ -20,10 +20,10 @@ typedef struct {
 } ParametersLayout_t;
 
 typedef struct {
-    const uint8_t* flash_memory;
+    const uint8_t* memory_ptr;
     uint16_t page_size;
-    uint8_t flash_pages_num;
-    uint32_t flash_size = page_size * flash_pages_num;
+    uint8_t num_pages;
+    uint32_t flash_size = page_size * num_pages;
 } FlashMemoryLayout_t;
 
 #endif  // LIBPARAM_FLASH_MEMORY_LAYOUT_HPP

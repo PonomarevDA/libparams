@@ -8,6 +8,7 @@
 
 #ifndef LIBPARAM_SIMPLE_LOGGER_HPP_
 #define LIBPARAM_SIMPLE_LOGGER_HPP_
+
 #include <iostream>
 #include <sstream>
 

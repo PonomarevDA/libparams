@@ -26,9 +26,9 @@ extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
 static const FlashMemoryLayout_t mem_layout = {
-    .flash_memory       = flash_memory,
+    .memory_ptr       = flash_memory,
     .page_size          = PAGE_SIZE_BYTES,
-    .flash_pages_num    = n_flash_pages,
+    .num_pages    = n_flash_pages,
 };
 
 static ParametersLayout_t params_layout = {

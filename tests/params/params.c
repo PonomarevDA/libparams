@@ -6,7 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <params.hpp>
 #include <assert.h>
 #include "storage.h"
 #include "flash_driver.h"

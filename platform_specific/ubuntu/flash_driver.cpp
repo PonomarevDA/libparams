@@ -91,7 +91,7 @@ int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
     memcpy(rom, data, bytes_to_write);
     uint8_t redundant = (offset - FLASH_START_ADDR) / PAGE_SIZE_BYTES;
     mem_layout.memory_ptr = &flashGetPointer()
-                                    [offset - FLASH_START_ADDR - redundant * mem_layout.flash_size];
+                                    [offset - redundant * mem_layout.flash_size];
     return __save_to_files();
 }
 

@@ -15,8 +15,8 @@ typedef struct {
     IntegerDesc_t* integer_desc_pool;
     StringDesc_t* string_desc_pool;
 
-    uint8_t num_int_params;
-    uint8_t num_str_params;
+    uint16_t num_int_params;
+    uint16_t num_str_params;
 } ParametersLayout_t;
 
 typedef struct {

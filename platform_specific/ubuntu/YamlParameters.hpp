@@ -30,10 +30,10 @@ public:
     int8_t set_temp_file_name(std::string file_name);
 
 private:
-    int8_t __write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
-                        uint8_t* str_param_idx);
-    int8_t __read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
-                       uint8_t* str_param_idx);
+    int8_t __write_page(std::ofstream& params_storage_file, uint16_t* int_param_idx,
+                        uint16_t* str_param_idx);
+    int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
+                       uint16_t* str_param_idx);
 };
 
 #endif  // LIBPARAM_YAML_PARAMETERS_HPP_

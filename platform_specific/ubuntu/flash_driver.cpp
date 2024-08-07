@@ -51,6 +51,9 @@ void flashInit() {
 #ifdef LIBPARAMS_TEMP_PARAMS_FILE_NAME
     yaml_params.set_temp_file_name(LIBPARAMS_TEMP_PARAMS_FILE_NAME);
 #endif
+    // load parameters to the last suited pages
+    // (such that primary rom at always would be filled after initialization)
+    yaml_params.flash.memory_ptr = &flashGetPointer()[mem_layout.flash_size];
     __read_from_files();
 }
 

@@ -30,12 +30,15 @@ static int8_t _chooseRom();
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
 
 ///< Default values correspond to the last page access only.
-static RomDriverInstance rom = {
+static RomDriverInstance primary_rom = {
     .inited = false,
 };
 static RomDriverInstance redundant_rom = {
     .inited = false,
 };
+
+RomDriverInstance* active_rom;
+RomDriverInstance* standby_rom;
 
 int8_t paramsInit(ParamIndex_t int_num,
                   ParamIndex_t str_num,
@@ -43,26 +46,26 @@ int8_t paramsInit(ParamIndex_t int_num,
                   size_t pages_num) {
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * int_num +\
                                  MAX_STRING_LENGTH * str_num;
-    rom = romInit(first_page_idx, pages_num);
+    primary_rom = romInit(first_page_idx, pages_num);
 
-    if (!rom.inited) {
+    if (!primary_rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
-    if (romGetAvailableMemory(&rom) < need_memory_bytes) {
+    if (romGetAvailableMemory(&primary_rom) < need_memory_bytes) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
-
+    active_rom = &primary_rom;
     return LIBPARAMS_OK;
 }
 
 int8_t paramsInitRedundantPage() {
     redundant_rom =
-        romInit(rom.first_page_idx - rom.pages_amount, rom.pages_amount);
+        romInit(primary_rom.first_page_idx - primary_rom.pages_amount, primary_rom.pages_amount);
     if (!redundant_rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
@@ -71,8 +74,9 @@ int8_t paramsInitRedundantPage() {
 }
 
 int8_t paramsLoad() {
-    romRead(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
-    romRead(&rom, _getStringMemoryPoolAddress(&rom), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+    romRead(active_rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(active_rom, _getStringMemoryPoolAddress(active_rom),
+            (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
     for (uint_fast16_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
@@ -114,25 +118,27 @@ int8_t paramsSave() {
         return LIBPARAMS_NOT_INITIALIZED;
     }
     int8_t res = 0;
-    if (redundant_rom.inited) {
+    if (standby_rom != NULL) {
         // write params to redundant rom
-        romBeginWrite(&redundant_rom);
-        res = _save(&redundant_rom);
-        romEndWrite(&redundant_rom);
+        romBeginWrite(standby_rom);
+        res = _save(standby_rom);
+        romEndWrite(standby_rom);
         // erase rom if save was successful
         if (res == 0) {
-            RomDriverInstance buffer = rom;
-            rom = redundant_rom;
-            redundant_rom = buffer;
-            redundant_rom.erased = true;
-            flashErase(redundant_rom.first_page_idx, redundant_rom.pages_amount);
+            RomDriverInstance* buffer = standby_rom;
+            standby_rom = active_rom;
+            active_rom = buffer;
+            // primary_rom = redundant_rom;
+            // redundant_rom = buffer;
+            standby_rom->erased = true;
+            flashErase(standby_rom->first_page_idx, standby_rom->pages_amount);
         }
         return res;
     }
-    romBeginWrite(&rom);
-    rom.erased = true;
-    res = _save(&rom);
-    romEndWrite(&rom);
+    romBeginWrite(active_rom);
+    active_rom->erased = true;
+    res = _save(active_rom);
+    romEndWrite(active_rom);
     return res;
 }
 
@@ -291,7 +297,7 @@ static int8_t _save(RomDriverInstance* rom_driver) {
             0 == romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
-
+    rom_driver->erased = false;
     return LIBPARAMS_OK;
 }
 
@@ -300,14 +306,14 @@ static int8_t _save(RomDriverInstance* rom_driver) {
  * @brief           Choose a rom which addreses a non-erased part of flash memory
  * **/
 int8_t _chooseRom() {
-    paramsLoadRom(&rom);
+    paramsLoadRom(&primary_rom);
     paramsLoadRom(&redundant_rom);
-    RomDriverInstance buffer;
-    if (rom.erased) {
+    active_rom = &primary_rom;
+    standby_rom = &redundant_rom;
+    if (primary_rom.erased) {
         if (!redundant_rom.erased) {
-            buffer = redundant_rom;
-            redundant_rom = rom;
-            rom = buffer;
+            active_rom = &redundant_rom;
+            standby_rom = &primary_rom;
         }
     }
     return LIBPARAMS_OK;

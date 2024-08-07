@@ -13,7 +13,7 @@
 #include "params.hpp"
 #include "YamlParameters.hpp"
 
-#define PAGE_SIZE_BYTES                     2048
+#define PAGE_SIZE_BYTES                     400
 constexpr uint16_t  str_params_size      = NUM_OF_STR_PARAMS * MAX_STRING_LENGTH;
 constexpr uint16_t  int_parms_size       = IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4;
 constexpr uint32_t  params_size_bytes    = (str_params_size + int_parms_size);
@@ -66,7 +66,7 @@ void flashLock() {
 }
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
-    if (is_locked || start_page_idx + num_of_pages > n_flash_pages || num_of_pages == 0) {
+    if (is_locked || start_page_idx + num_of_pages > 2 * n_flash_pages || num_of_pages == 0) {
         return LIBPARAMS_WRONG_ARGS;
     }
     memset(flash_memory + start_page_idx * PAGE_SIZE_BYTES, 0x00, num_of_pages * PAGE_SIZE_BYTES);

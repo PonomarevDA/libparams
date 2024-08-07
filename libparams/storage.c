@@ -128,10 +128,9 @@ int8_t paramsSave() {
             RomDriverInstance* buffer = standby_rom;
             standby_rom = active_rom;
             active_rom = buffer;
-            // primary_rom = redundant_rom;
-            // redundant_rom = buffer;
             standby_rom->erased = true;
-            flashErase(standby_rom->first_page_idx, standby_rom->pages_amount);
+            romBeginWrite(standby_rom);
+            romEndWrite(standby_rom);
         }
         return res;
     }

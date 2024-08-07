@@ -27,30 +27,9 @@ include_directories(${GTEST_INCLUDE_DIR})
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
-function(generate_random_params)
-    set(LIBPARAMS_PARAMS_INIT_NAME init_params)
-    set(LIBPARAMS_PARAMS_TEMP_NAME temp_params)
-    add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
-    execute_process(
-        COMMAND ${ROOT_DIR}/scripts/generate_random_params.py
-        --out-dir ${CMAKE_CURRENT_BINARY_DIR}
-        RESULT_VARIABLE ret
-    )
-    if(NOT ret EQUAL 0)
-        message( FATAL_ERROR "Random Params Generator has been failed. Abort.")
-    endif()
-    execute_process(
-        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
-        --out-file-name ${LIBPARAMS_PARAMS_INIT_NAME}
-        RESULT_VARIABLE ret
-    )
-    if(NOT ret EQUAL 0)
-        message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
-    endif()
-endfunction()
+add_definitions(-DLIBPARAMS_PARAMS_DIR="${TESTS_DIR}/params")
 
 function(gen_test app_name test_file)
-
     # Create the executable target
     add_executable(${app_name}
     ${test_file}
@@ -59,22 +38,15 @@ function(gen_test app_name test_file)
     target_include_directories(${app_name} PUBLIC ${libparamsHeaders})
 
     # Conditional source file based on app_name
-    if(${app_name} STREQUAL yaml_parameters)
-        message(STATUS "${app_name} params dir ${CMAKE_CURRENT_BINARY_DIR}")
-        generate_random_params()
-        target_sources(${app_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/params.cpp)
-        target_include_directories(${app_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-    else ()
-        message(STATUS "${app_name} params dir ${UNIT_TESTS_DIR}")
-        target_sources(${app_name} PRIVATE ${TESTS_DIR}/params/params.c)
-        target_include_directories(${app_name} PRIVATE ${TESTS_DIR}/params/)
-    endif()
+    message(STATUS "${app_name} params dir ${UNIT_TESTS_DIR}")
+    target_sources(${app_name} PRIVATE ${TESTS_DIR}/params/params.c)
+    target_include_directories(${app_name} PRIVATE ${TESTS_DIR}/params/)
 
     # Link libraries to the target
     target_link_libraries(${app_name} gtest)
 endfunction()
 
-gen_test(flash_driver       ${UNIT_TESTS_DIR}/test_flash_driver.cpp)
-gen_test(rom                ${UNIT_TESTS_DIR}/test_rom.cpp)
-gen_test(storage            ${UNIT_TESTS_DIR}/test_storage.cpp)
-gen_test(yaml_parameters    ${UNIT_TESTS_DIR}/test_yaml_parameters.cpp)
+gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)
+gen_test(rom              ${UNIT_TESTS_DIR}/test_rom.cpp)
+gen_test(storage          ${UNIT_TESTS_DIR}/test_storage.cpp)
+gen_test(yaml_parameters  ${UNIT_TESTS_DIR}/test_yaml_parameters.cpp)

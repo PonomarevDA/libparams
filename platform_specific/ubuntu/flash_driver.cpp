@@ -82,16 +82,16 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
 }
 
 int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
-    if (is_locked || offset < FLASH_START_ADDR || offset >= FLASH_START_ADDR + 2 * PAGE_SIZE_BYTES)
-    {
+    if (is_locked || offset < FLASH_START_ADDR ||
+            offset >= FLASH_START_ADDR + sizeof(flash_memory)) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
-    uint8_t redundant = (offset - FLASH_START_ADDR) / PAGE_SIZE_BYTES;
-    mem_layout.memory_ptr = &flashGetPointer()
-                                    [offset - redundant * mem_layout.flash_size];
+    uint8_t redundant = (offset - FLASH_START_ADDR) / mem_layout.flash_size;
+    yaml_params.flash.memory_ptr = &flashGetPointer()
+                                   [redundant * mem_layout.flash_size];
     return __save_to_files();
 }
 

@@ -22,9 +22,10 @@ static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
-static uint32_t _getStringMemoryPoolAddress();
-static int8_t _save();
-static int8_t _save_redundant(RomDriverInstance* rom_driver);
+static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver);
+static int8_t _save(RomDriverInstance* rom_driver);
+static int8_t _chooseRom();
+static int8_t _redundantRomInit();
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
@@ -56,23 +57,14 @@ int8_t paramsInit(ParamIndex_t int_num,
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
-    paramsInitRedundantPage();
-    paramsChooseRom();
-    return LIBPARAMS_OK;
-}
-
-int8_t paramsInitRedundantPage() {
-    redundant_rom =
-        romInit(rom.first_page_idx -rom.pages_amount, rom.pages_amount);
-    if (!redundant_rom.inited) {
-        return LIBPARAMS_UNKNOWN_ERROR;
-    }
+    _redundantRomInit();
+    _chooseRom();
     return LIBPARAMS_OK;
 }
 
 int8_t paramsLoad() {
     romRead(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
-    romRead(&rom, _getStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+    romRead(&rom, _getStringMemoryPoolAddress(&rom), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
     for (uint_fast16_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
@@ -85,49 +77,29 @@ int8_t paramsLoad() {
         // 255 value is default value for stm32, '\0' for ubuntu
         if (string_values_pool[idx][0] == 255 || string_values_pool[idx][0] == '\0') {
             memcpy(string_values_pool[idx], string_desc_pool[idx].def, MAX_STRING_LENGTH);
+        } else {
+            break;
         }
     }
 
     return LIBPARAMS_OK;
 }
 
-int8_t paramsLoadRom(RomDriverInstance rom_instance) {
-    romRead(&rom_instance, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
-    romRead(&rom_instance, _getStringMemoryPoolAddress(),
+int8_t paramsLoadRom(RomDriverInstance* rom_instance) {
+    romRead(rom_instance, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(rom_instance, _getStringMemoryPoolAddress(rom_instance),
             (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
     for (uint_fast16_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
         if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
-            integer_values_pool[idx] = integer_desc_pool[idx].def;
-            rom_instance.erased = true;
-        }
-    }
-
-    for (uint_fast16_t idx = 0; idx < strings_amount; idx++) {
-        // 255 value is default value for stm32, '\0' for ubuntu
-        if (string_values_pool[idx][0] == 255 || string_values_pool[idx][0] == '\0') {
-            memcpy(string_values_pool[idx], string_desc_pool[idx].def, MAX_STRING_LENGTH);
+            rom_instance->erased = true;
+            return LIBPARAMS_OK;
         }
     }
 
     return LIBPARAMS_OK;
 }
-
-int8_t paramsChooseRom() {
-    paramsLoadRom(rom);
-    paramsLoadRom(redundant_rom);
-    RomDriverInstance buffer;
-    if (rom.erased) {
-        if (!redundant_rom.erased) {
-            buffer = redundant_rom;
-            redundant_rom = rom;
-            rom = buffer;
-        }
-    }
-    return LIBPARAMS_OK;
-}
-
 
 int8_t paramsSave() {
     if (all_params_amount == 0) {
@@ -137,7 +109,7 @@ int8_t paramsSave() {
     if (redundant_rom.inited) {
         // write params to redundant rom
         romBeginWrite(&redundant_rom);
-        res = _save_redundant(&redundant_rom);
+        res = _save(&redundant_rom);
         romEndWrite(&redundant_rom);
         // erase rom if save was successful
         if (res == 0) {
@@ -151,7 +123,7 @@ int8_t paramsSave() {
     }
     romBeginWrite(&rom);
     rom.erased = true;
-    res = _save();
+    res = _save(&rom);
     romEndWrite(&rom);
     return res;
 }
@@ -162,7 +134,7 @@ int8_t paramsResetToDefault() {
     }
 
     for (ParamIndex_t idx = 0; idx < integers_amount; idx++) {
-        if (!integer_desc_pool[idx].is_required) {
+        if (!integer_desc_pool[idx].is_required || integer_desc_pool[idx].is_mutable) {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
@@ -291,8 +263,8 @@ static bool _isCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integers_amount || param_idx >= all_params_amount;
 }
 
-static uint32_t _getStringMemoryPoolAddress() {
-    return romGetAvailableMemory(&rom) - MAX_STRING_LENGTH * strings_amount;
+static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver) {
+    return romGetAvailableMemory(rom_driver) - MAX_STRING_LENGTH * strings_amount;
 }
 
 /**
@@ -300,33 +272,48 @@ static uint32_t _getStringMemoryPoolAddress() {
  * An error means either a library internal error or the provided flash driver is incorrect.
  * If such errir is detected, stop writing immediately to avoid doing something wrong.
  */
-static int8_t _save() {
+static int8_t _save(RomDriverInstance* rom_driver) {
     if (INT_POOL_SIZE != 0 &&
-        0 == romWrite(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+            0 == romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
-    size_t offset = _getStringMemoryPoolAddress();
+    size_t offset = _getStringMemoryPoolAddress(rom_driver);
     if (STR_POOL_SIZE != 0 &&
-        0 == romWrite(&rom, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
+            0 == romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
     return LIBPARAMS_OK;
 }
 
-
-static int8_t _save_redundant(RomDriverInstance* rom_driver) {
-    if (INT_POOL_SIZE != 0 &&
-        0 == romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+/**
+ * @brief           Initialize the redundant parameters pages if the rom page_idx was 256, then the redundant pages will be allocated at (256 - rom.pages_num idx). Call this on paramsSave() to backup parameters.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t _redundantRomInit() {
+    redundant_rom =
+        romInit(rom.first_page_idx - rom.pages_amount, rom.pages_amount);
+    if (!redundant_rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
-
-    size_t offset = _getStringMemoryPoolAddress();
-    if (STR_POOL_SIZE != 0 &&
-        0 == romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
-        return LIBPARAMS_UNKNOWN_ERROR;
-    }
-    rom_driver->erased = false;
     return LIBPARAMS_OK;
 }
+
+/**
+ * @brief           Choose a rom which addreses a non-erased part of flash memory
+ * **/
+int8_t _chooseRom() {
+    paramsLoadRom(&rom);
+    paramsLoadRom(&redundant_rom);
+    RomDriverInstance buffer;
+    if (rom.erased) {
+        if (!redundant_rom.erased) {
+            buffer = redundant_rom;
+            redundant_rom = rom;
+            rom = buffer;
+        }
+    }
+    return LIBPARAMS_OK;
+}
+

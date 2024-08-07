@@ -63,7 +63,7 @@ int8_t YamlParameters::read_from_dir(const std::string& path) {
     uint16_t int_param_idx = 0;
     uint16_t str_param_idx = 0;
     // read params values for each page
-    for (uint8_t idx = 0; idx < flash.num_pages; idx++) {
+    for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         std::ifstream params_storage_file;
 
         // check if temp file for the page already exists, else read from init file
@@ -112,7 +112,7 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
     // remember last written indexes
     uint16_t int_param_idx = 0;
     uint16_t str_param_idx = 0;
-    for (uint8_t idx = 0; idx < flash.num_pages; idx++) {
+    for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         snprintf(file_name, sizeof(file_name), "%s/%s_%d.yaml",
                  path.c_str(), temp_file_name.c_str(), idx);
         std::ofstream params_storage_file;
@@ -148,7 +148,7 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t*
         }
         value = line.substr(delimiter_pos + 1);
         try {
-            if ((*int_param_idx > params.num_int_params) || (*int_param_idx == 512)) {
+            if ((*int_param_idx) > params.num_int_params) {
                 logger.error("Got more integer params than defined by num_int_params");
                 return LIBPARAMS_WRONG_ARGS;
             }
@@ -160,17 +160,18 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t*
             memcpy((void*)(flash.memory_ptr + 4 * (*int_param_idx)), &int_value, 4);
             *int_param_idx = *int_param_idx + 1;
         } catch (std::invalid_argument const& ex) {
-            if ((*str_param_idx == 512) || (*str_param_idx >= params.num_str_params)) {
-                logger.error("Wrong num_str_params\n");
+            uint32_t offset = flash.flash_size - MAX_STRING_LENGTH *
+                              (params.num_str_params - (*str_param_idx ));
+            if ((*str_param_idx) >= params.num_str_params) {
+                logger.error("Wrong num_str_params expected: ", params.num_str_params,
+                             " got: ", (*str_param_idx));
                 return LIBPARAMS_WRONG_ARGS;
             }
-            int offset = flash.flash_size - MAX_STRING_LENGTH *
-                         int(params.num_str_params - (*str_param_idx ));
 
             size_t quote_pos = value.find('"');
             size_t quote_end_pos = value.find('"', quote_pos + 1);
             std::string str_value = value.substr(quote_pos + 1, quote_end_pos - quote_pos - 1);
-            if (offset < int(*int_param_idx) * 4) {
+            if (offset < (*int_param_idx) * 4) {
                 logger.error("params overlap last int param addr", *int_param_idx * 4,
                              ", str param offset ", offset);
                 return LIBPARAMS_WRONG_ARGS;
@@ -194,9 +195,9 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
     }
 
     uint32_t n_bytes = 0;
-    uint8_t param_idx = *int_param_idx;
+    uint16_t param_idx = *int_param_idx;
 
-    for (uint8_t index = param_idx; index < params.num_int_params; index++) {
+    for (uint16_t index = param_idx; index < params.num_int_params; index++) {
         int32_t int_param_value;
         const char* name = params.integer_desc_pool[index].name;
         memcpy(&int_param_value, flash.memory_ptr + index * 4, 4);
@@ -205,7 +206,7 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
         logger.info(std::left, std::setw(32), name, ":\t", int_param_value);
         n_bytes += 4;
         *int_param_idx = *int_param_idx + 1;
-        if (n_bytes +4 > flash.page_size) {
+        if (n_bytes + 4 > flash.page_size) {
             return LIBPARAMS_OK;
         }
     }
@@ -218,7 +219,7 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
     if (available_str_params < str_params_remained) {
         last_str_param_idx = prev_str_idx + available_str_params;
     }
-    for (uint8_t index = prev_str_idx; index < last_str_param_idx; index++) {
+    for (uint16_t index = prev_str_idx; index < last_str_param_idx; index++) {
         const char* name = params.string_desc_pool[index].name;
         if (name == nullptr) {
             return LIBPARAMS_OK;

@@ -25,7 +25,6 @@ static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
 static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver);
 static int8_t _save(RomDriverInstance* rom_driver);
 static int8_t _chooseRom();
-static int8_t _redundantRomInit();
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
@@ -57,7 +56,16 @@ int8_t paramsInit(ParamIndex_t int_num,
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
-    _redundantRomInit();
+
+    return LIBPARAMS_OK;
+}
+
+int8_t paramsInitRedundantPage() {
+    redundant_rom =
+        romInit(rom.first_page_idx - rom.pages_amount, rom.pages_amount);
+    if (!redundant_rom.inited) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
     _chooseRom();
     return LIBPARAMS_OK;
 }
@@ -287,18 +295,6 @@ static int8_t _save(RomDriverInstance* rom_driver) {
     return LIBPARAMS_OK;
 }
 
-/**
- * @brief           Initialize the redundant parameters pages if the rom page_idx was 256, then the redundant pages will be allocated at (256 - rom.pages_num idx). Call this on paramsSave() to backup parameters.
- * @return          LIBPARAMS_OK on success, otherwise < 0.
- */
-int8_t _redundantRomInit() {
-    redundant_rom =
-        romInit(rom.first_page_idx - rom.pages_amount, rom.pages_amount);
-    if (!redundant_rom.inited) {
-        return LIBPARAMS_UNKNOWN_ERROR;
-    }
-    return LIBPARAMS_OK;
-}
 
 /**
  * @brief           Choose a rom which addreses a non-erased part of flash memory

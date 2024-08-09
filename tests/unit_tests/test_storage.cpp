@@ -68,6 +68,12 @@ TEST_F(EmptyStorageDriverTest, initializeWithInvalidaPageIndex) {
     ASSERT_EQ(LIBPARAMS_UNKNOWN_ERROR, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 2));
 }
 
+// Test 1.6: initialize redundant rom
+TEST(RedundantRom, init) {
+    paramsInit(0, 0, -1, 1);  // reset storage
+    ASSERT_EQ(LIBPARAMS_OK, paramsInitRedundantPage());
+}
+
 
 // Test Case 2: Load Parameters
 // Test 2.1: Load Parameters Successfully
@@ -124,6 +130,7 @@ TEST_F(EmptyStorageDriverTest, saveParametersSuccessfully) {
     ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 }
+
 // Test 3.2: Save Parameters with Uninitialized Parameters
 TEST_F(EmptyStorageDriverTest, saveParametersWithUninitializedParameters) {
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsSave());

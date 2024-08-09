@@ -28,6 +28,7 @@ typedef struct {
     size_t total_size;
     size_t pages_amount;
     bool inited;
+    bool erased;
 } RomDriverInstance;
 
 

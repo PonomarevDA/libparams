@@ -113,7 +113,7 @@ TEST_F(RomDriverMultiplePagesTest, writeDataExceedingBounds) {
 
     // 5. Offset and size out of bound
     romBeginWrite(&rom);
-    ASSERT_EQ(romWrite(&rom, 1500, SAMPLE_DATA, 1500), 0);
+    ASSERT_EQ(romWrite(&rom, 3000, SAMPLE_DATA, 3000), 0);
     romEndWrite(&rom);
 
     // 6. Without romBeginWrite() and romEndWrite()

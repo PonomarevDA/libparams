@@ -15,12 +15,12 @@
 
 static SimpleLogger logger("YamlParameters");
 class YamlParameters {
-    FlashMemoryLayout_t flash;
     ParametersLayout_t params;
     std::string init_file_name = "init_params";
     std::string temp_file_name = "temp_params";
 
 public:
+    FlashMemoryLayout_t flash;
     explicit YamlParameters(FlashMemoryLayout_t flash_desc, ParametersLayout_t params_desc);
 
     int8_t read_from_dir(const std::string& path);
@@ -30,10 +30,10 @@ public:
     int8_t set_temp_file_name(std::string file_name);
 
 private:
-    int8_t __write_page(std::ofstream& params_storage_file, uint8_t* int_param_idx,
-                        uint8_t* str_param_idx);
-    int8_t __read_page(std::ifstream& params_storage_file, uint8_t* int_param_idx,
-                       uint8_t* str_param_idx);
+    int8_t __write_page(std::ofstream& params_storage_file, uint16_t* int_param_idx,
+                        uint16_t* str_param_idx);
+    int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
+                       uint16_t* str_param_idx);
 };
 
 #endif  // LIBPARAM_YAML_PARAMETERS_HPP_

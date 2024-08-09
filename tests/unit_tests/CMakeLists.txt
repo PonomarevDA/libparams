@@ -27,9 +27,18 @@ include_directories(${GTEST_INCLUDE_DIR})
 set(LIBPARAMS_PLATFORM ubuntu)
 include(${ROOT_DIR}/CMakeLists.txt)
 
-add_definitions(-DLIBPARAMS_PARAMS_DIR="${TESTS_DIR}/params")
+set(LIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
+add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
 
 function(gen_test app_name test_file)
+    execute_process(
+        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR}/params -f ${TESTS_DIR}/params/params.c
+        --out-file-name "init_params"
+        RESULT_VARIABLE ret
+    )
+    if(NOT ret EQUAL 0)
+        message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
+    endif()
     # Create the executable target
     add_executable(${app_name}
     ${test_file}

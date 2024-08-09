@@ -85,6 +85,12 @@ int8_t paramsInit(ParamIndex_t int_num, ParamIndex_t str_num,
                   int32_t first_page_idx, size_t pages_num);
 
 /**
+ * @brief           Initialize the redundant parameters pages if the rom page_idx was 256, then the redundant pages will be allocated at (256 - rom.pages_num idx). Call this on paramsSave() to backup parameters.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsInitRedundantPage();
+
+/**
  * @brief           Load parameters from a persistent memory: flash for stm32 and file for ubuntu.
  * @return          LIBPARAMS_OK on success, otherwise < 0.
  */

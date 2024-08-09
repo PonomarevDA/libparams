@@ -13,7 +13,7 @@
 #include "params.hpp"
 #include "YamlParameters.hpp"
 
-#define PAGE_SIZE_BYTES                     400
+#define PAGE_SIZE_BYTES                     2048
 constexpr uint16_t  str_params_size      = NUM_OF_STR_PARAMS * MAX_STRING_LENGTH;
 constexpr uint16_t  int_parms_size       = IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4;
 constexpr uint32_t  params_size_bytes    = (str_params_size + int_parms_size);

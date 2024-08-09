@@ -44,6 +44,9 @@ int8_t paramsInit(ParamIndex_t int_num,
                   ParamIndex_t str_num,
                   int32_t first_page_idx,
                   size_t pages_num) {
+    if (int_num > 512 || str_num > 512) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * int_num +\
                                  MAX_STRING_LENGTH * str_num;
     primary_rom = romInit(first_page_idx, pages_num);
@@ -55,7 +58,6 @@ int8_t paramsInit(ParamIndex_t int_num,
     if (romGetAvailableMemory(&primary_rom) < need_memory_bytes) {
         return LIBPARAMS_WRONG_ARGS;
     }
-
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
@@ -74,6 +76,9 @@ int8_t paramsInitRedundantPage() {
 }
 
 int8_t paramsLoad() {
+    if (active_rom == NULL) {
+        return LIBPARAMS_NOT_INITIALIZED;
+    }
     romRead(active_rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
     romRead(active_rom, _getStringMemoryPoolAddress(active_rom),
             (uint8_t*)&string_values_pool, STR_POOL_SIZE);

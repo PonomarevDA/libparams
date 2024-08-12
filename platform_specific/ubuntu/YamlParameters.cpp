@@ -127,9 +127,10 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
     if (int_param_idx != params.num_int_params || str_param_idx != params.num_str_params) {
         logger.error("Number of parameters in the file isn't equal",
                      " to the one specified in the constructor",
-                     "int real: ", (int)int_param_idx, " expected: ", (int)params.num_int_params,
-                     "\n",
-                     "str real: ", (int)str_param_idx, " expected: ", (int)params.num_str_params);
+                     "int real: ", (int)int_param_idx + 1,
+                     " expected: ", (int)params.num_int_params, "\n",
+                     "str real: ", (int)str_param_idx + 1,
+                     " expected: ", (int)params.num_str_params);
         return LIBPARAMS_WRONG_ARGS;
     }
     return LIBPARAMS_OK;
@@ -164,7 +165,7 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t*
                               (params.num_str_params - (*str_param_idx ));
             if ((*str_param_idx) >= params.num_str_params) {
                 logger.error("Wrong num_str_params expected: ", params.num_str_params,
-                             " got: ", (*str_param_idx));
+                             " got: ", (*str_param_idx) + 1);
                 return LIBPARAMS_WRONG_ARGS;
             }
 

@@ -124,11 +124,12 @@ int8_t paramsSave() {
     }
     int8_t res = 0;
     if (standby_rom != NULL) {
-        // write params to redundant rom
+        // write params to standby rom
         romBeginWrite(standby_rom);
         res = _save(standby_rom);
         romEndWrite(standby_rom);
-        // erase rom if save was successful
+        // if save was successful erase active rom
+        // and switch roms
         if (res == 0) {
             RomDriverInstance* buffer = standby_rom;
             standby_rom = active_rom;

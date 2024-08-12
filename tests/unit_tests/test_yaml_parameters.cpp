@@ -93,7 +93,7 @@ public:
 }
 };
 
-// Case 1. Check YamlParameters initialization with different parameters tuples
+// Case 1. Check YamlParameters initialization with different parameters sets
 
 struct InitParameters {
     uint8_t* flash_ptr;

@@ -22,56 +22,96 @@ static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
-static uint32_t _getStringMemoryPoolAddress();
-static int8_t _save();
+static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver);
+static int8_t _save(RomDriverInstance* rom_driver);
+static int8_t _chooseRom();
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
 
-
 ///< Default values correspond to the last page access only.
-static RomDriverInstance rom = {
+static RomDriverInstance primary_rom = {
+    .inited = false,
+};
+static RomDriverInstance redundant_rom = {
     .inited = false,
 };
 
+RomDriverInstance* active_rom;
+RomDriverInstance* standby_rom;
 
 int8_t paramsInit(ParamIndex_t int_num,
                   ParamIndex_t str_num,
                   int32_t first_page_idx,
                   size_t pages_num) {
+    if (int_num > 512 || str_num > 512) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * int_num +\
                                  MAX_STRING_LENGTH * str_num;
-    rom = romInit(first_page_idx, pages_num);
+    primary_rom = romInit(first_page_idx, pages_num);
 
-    if (!rom.inited) {
+    if (!primary_rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
-    if (romGetAvailableMemory(&rom) < need_memory_bytes) {
+    if (romGetAvailableMemory(&primary_rom) < need_memory_bytes) {
         return LIBPARAMS_WRONG_ARGS;
     }
-
     integers_amount = int_num;
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
+    active_rom = &primary_rom;
+    return LIBPARAMS_OK;
+}
+
+int8_t paramsInitRedundantPage() {
+    redundant_rom =
+        romInit(primary_rom.first_page_idx - primary_rom.pages_amount, primary_rom.pages_amount);
+    if (!redundant_rom.inited) {
+        return LIBPARAMS_UNKNOWN_ERROR;
+    }
+    _chooseRom();
     return LIBPARAMS_OK;
 }
 
 int8_t paramsLoad() {
-    romRead(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
-    romRead(&rom, _getStringMemoryPoolAddress(), (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+    if (active_rom == NULL) {
+        return LIBPARAMS_NOT_INITIALIZED;
+    }
+    romRead(active_rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(active_rom, _getStringMemoryPoolAddress(active_rom),
+            (uint8_t*)&string_values_pool, STR_POOL_SIZE);
 
-    for (uint_fast8_t idx = 0; idx < integers_amount; idx++) {
+    for (uint_fast16_t idx = 0; idx < integers_amount; idx++) {
         IntegerParamValue_t val = integer_values_pool[idx];
         if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
 
-    for (uint_fast8_t idx = 0; idx < strings_amount; idx++) {
+    for (uint_fast16_t idx = 0; idx < strings_amount; idx++) {
         // 255 value is default value for stm32, '\0' for ubuntu
         if (string_values_pool[idx][0] == 255 || string_values_pool[idx][0] == '\0') {
             memcpy(string_values_pool[idx], string_desc_pool[idx].def, MAX_STRING_LENGTH);
+        } else {
+            break;
+        }
+    }
+
+    return LIBPARAMS_OK;
+}
+
+int8_t paramsLoadRom(RomDriverInstance* rom_instance) {
+    romRead(rom_instance, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
+    romRead(rom_instance, _getStringMemoryPoolAddress(rom_instance),
+            (uint8_t*)&string_values_pool, STR_POOL_SIZE);
+
+    for (uint_fast16_t idx = 0; idx < integers_amount; idx++) {
+        IntegerParamValue_t val = integer_values_pool[idx];
+        if (val < integer_desc_pool[idx].min || val > integer_desc_pool[idx].max) {
+            rom_instance->erased = true;
+            return LIBPARAMS_OK;
         }
     }
 
@@ -82,10 +122,28 @@ int8_t paramsSave() {
     if (all_params_amount == 0) {
         return LIBPARAMS_NOT_INITIALIZED;
     }
-
-    romBeginWrite(&rom);
-    int8_t res = _save();
-    romEndWrite(&rom);
+    int8_t res = 0;
+    if (standby_rom != NULL) {
+        // write params to standby rom
+        romBeginWrite(standby_rom);
+        res = _save(standby_rom);
+        romEndWrite(standby_rom);
+        // if save was successful erase active rom
+        // and switch roms
+        if (res == 0) {
+            RomDriverInstance* buffer = standby_rom;
+            standby_rom = active_rom;
+            active_rom = buffer;
+            standby_rom->erased = true;
+            romBeginWrite(standby_rom);
+            romEndWrite(standby_rom);
+        }
+        return res;
+    }
+    romBeginWrite(active_rom);
+    active_rom->erased = true;
+    res = _save(active_rom);
+    romEndWrite(active_rom);
     return res;
 }
 
@@ -95,7 +153,7 @@ int8_t paramsResetToDefault() {
     }
 
     for (ParamIndex_t idx = 0; idx < integers_amount; idx++) {
-        if (!integer_desc_pool[idx].is_required) {
+        if (!integer_desc_pool[idx].is_required || integer_desc_pool[idx].is_mutable) {
             integer_values_pool[idx] = integer_desc_pool[idx].def;
         }
     }
@@ -191,8 +249,7 @@ StringParamValue_t* paramsGetStringValue(ParamIndex_t param_idx) {
     return str;
 }
 
-uint8_t paramsSetStringValue(ParamIndex_t param_idx,
-                             uint8_t str_len,
+uint8_t paramsSetStringValue(ParamIndex_t param_idx, uint8_t str_len,
                              const StringParamValue_t param_value) {
     if (str_len > MAX_STRING_LENGTH || _isCorrectStringParamIndex(param_idx)) {
         return 0;
@@ -225,8 +282,8 @@ static bool _isCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integers_amount || param_idx >= all_params_amount;
 }
 
-static uint32_t _getStringMemoryPoolAddress() {
-    return romGetAvailableMemory(&rom) - MAX_STRING_LENGTH * strings_amount;
+static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver) {
+    return romGetAvailableMemory(rom_driver) - MAX_STRING_LENGTH * strings_amount;
 }
 
 /**
@@ -234,17 +291,36 @@ static uint32_t _getStringMemoryPoolAddress() {
  * An error means either a library internal error or the provided flash driver is incorrect.
  * If such errir is detected, stop writing immediately to avoid doing something wrong.
  */
-static int8_t _save() {
+static int8_t _save(RomDriverInstance* rom_driver) {
     if (INT_POOL_SIZE != 0 &&
-            0 == romWrite(&rom, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+            0 == romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
-    size_t offset = _getStringMemoryPoolAddress();
+    size_t offset = _getStringMemoryPoolAddress(rom_driver);
     if (STR_POOL_SIZE != 0 &&
-            0 == romWrite(&rom, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
+            0 == romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
-
+    rom_driver->erased = false;
     return LIBPARAMS_OK;
 }
+
+
+/**
+ * @brief           Choose a rom which addreses a non-erased part of flash memory
+ * **/
+int8_t _chooseRom() {
+    paramsLoadRom(&primary_rom);
+    paramsLoadRom(&redundant_rom);
+    active_rom = &primary_rom;
+    standby_rom = &redundant_rom;
+    if (primary_rom.erased) {
+        if (!redundant_rom.erased) {
+            active_rom = &redundant_rom;
+            standby_rom = &primary_rom;
+        }
+    }
+    return LIBPARAMS_OK;
+}
+

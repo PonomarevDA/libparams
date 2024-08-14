@@ -24,7 +24,30 @@ typedef enum {
 #define STRING_PARAMS_AMOUNT    ((ParamIndex_t)2)
 
 #define NUMBER_OF_PARAMS        (INTEGER_PARAMS_AMOUNT + STRING_PARAMS_AMOUNT)
+extern RomDriverInstance* active_rom;
+extern RomDriverInstance* standby_rom;
+extern IntegerParamValue_t integer_values_pool[];
 
+
+class RedundantRomStorageDriverTest : public ::testing::Test {
+protected:
+    size_t primary_rom_addr;
+    size_t redundant_rom_addr;
+    void SetUp() override {
+        paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 1);
+        EXPECT_NE(active_rom, nullptr);
+        paramsInitRedundantPage();
+        EXPECT_NE(standby_rom, nullptr);
+        primary_rom_addr = active_rom->addr;
+        redundant_rom_addr = standby_rom->addr;
+        paramsLoad();
+    }
+
+    void TearDown() override {
+        active_rom = nullptr;
+        standby_rom = nullptr;
+    }
+};
 
 class SinglePageStorageDriverTest : public ::testing::Test {
 protected:
@@ -67,7 +90,6 @@ TEST_F(EmptyStorageDriverTest, initializeZeroPages) {
 TEST_F(EmptyStorageDriverTest, initializeWithInvalidaPageIndex) {
     ASSERT_EQ(LIBPARAMS_UNKNOWN_ERROR, paramsInit(INTEGER_PARAMS_AMOUNT, STRING_PARAMS_AMOUNT, -1, 2));
 }
-
 
 // Test Case 2: Load Parameters
 // Test 2.1: Load Parameters Successfully
@@ -124,6 +146,7 @@ TEST_F(EmptyStorageDriverTest, saveParametersSuccessfully) {
     ASSERT_EQ(LIBPARAMS_OK, paramsInit((ParamIndex_t)512, 0, -1, 1));
     ASSERT_EQ(LIBPARAMS_OK, paramsSave());
 }
+
 // Test 3.2: Save Parameters with Uninitialized Parameters
 TEST_F(EmptyStorageDriverTest, saveParametersWithUninitializedParameters) {
     ASSERT_EQ(LIBPARAMS_NOT_INITIALIZED, paramsSave());
@@ -295,6 +318,34 @@ TEST_F(SinglePageStorageDriverTest, test_paramsSetStringValue) {
 
     // Writing nullptr
     ASSERT_EQ(0, paramsSetStringValue(NODE_NAME, MAX_STRING_LENGTH + 1, nullptr));
+}
+
+TEST_F(RedundantRomStorageDriverTest, pageSwitchAfterSave) {
+    ASSERT_EQ(active_rom->addr, primary_rom_addr);
+    ASSERT_EQ(standby_rom->addr, redundant_rom_addr);
+
+    paramsSave();
+    ASSERT_EQ(active_rom->addr, redundant_rom_addr);
+    ASSERT_EQ(standby_rom->addr, primary_rom_addr);
+
+    ASSERT_TRUE(standby_rom->erased);
+}
+
+
+TEST_F(RedundantRomStorageDriverTest, pageEraseAfterSave) {
+    ASSERT_EQ(active_rom->addr, primary_rom_addr);
+    ASSERT_EQ(standby_rom->addr, redundant_rom_addr);
+
+    paramsSave();
+    ASSERT_EQ(active_rom->addr, redundant_rom_addr);
+    ASSERT_EQ(standby_rom->addr, primary_rom_addr);
+    // standby rom has to be erased
+    ASSERT_TRUE(standby_rom->erased);
+    romRead(standby_rom, 0, (uint8_t*)integer_values_pool, 4);
+    ASSERT_EQ(integer_values_pool[0], 0);
+
+    romRead(active_rom, 0, (uint8_t*)integer_values_pool, 4);
+    ASSERT_NE(integer_values_pool[0], 0);
 }
 
 int main(int argc, char *argv[]) {

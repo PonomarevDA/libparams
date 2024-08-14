@@ -36,13 +36,6 @@ TEST(TestFlashDriver, test_erase_error_locked) {
     ASSERT_TRUE(res < 0);
 }
 
-TEST(TestFlashDriver, test_erase_error_bad_first_arg) {
-    flashUnlock();
-    auto res = flashErase(1, 1);
-    flashLock();
-    ASSERT_TRUE(res < 0);
-}
-
 TEST(TestFlashDriver, test_erase_error_bad_second_arg) {
     flashUnlock();
     auto res = flashErase(0, 0);

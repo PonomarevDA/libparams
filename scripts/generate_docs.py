@@ -11,12 +11,14 @@ Generate README.md based on yaml files with parameters.
 
 import os
 import sys
+import logging
 from argparse import ArgumentParser
 from typing import Tuple
 import yaml
 
-from color_logging import log_err
 from params import IntegerParam, StringParam
+
+logger = logging.getLogger(__name__)
 
 LANGUAGE_C = 0
 LANGUAGE_CPP = 1
@@ -55,16 +57,14 @@ def port_data_type_to_md(origin_data_type : str) -> str:
 def write_cyphal_topics(file, cyphal_topics : dict) -> None:
     assert isinstance(cyphal_topics, dict)
 
-    file.write("| №  | Data type and topic name  | Description |\n")
-    file.write("| -- | ------------------------- | ----------- |\n")
-    counter = 1
+    file.write("| Data type and topic name  | Description |\n")
+    file.write("| ------------------------- | ----------- |\n")
     for port_name, port_info in cyphal_topics.items():
         data_type = port_data_type_to_md(port_info['data_type'])
         topic_name = port_name[11:]
         note = port_info.get('note')
         note = note.replace('\n', '</br>') if note is not None else ""
-        file.write(f"| {counter :> 2} | {data_type} </br> {topic_name} | {note}|\n")
-        counter += 1
+        file.write(f"| {data_type} </br> {topic_name} | {note}|\n")
     file.write("\n")
 
 def write_parameters(file, all_params : list) -> None:
@@ -72,14 +72,12 @@ def write_parameters(file, all_params : list) -> None:
 
     if len(all_params) >= 1:
         file.write("The node has the following registers:\n\n")
-        file.write("| №  | Register name           | Description |\n")
-        file.write("| -- | ----------------------- | ----------- |\n")
+        file.write("| Register name           | Description |\n")
+        file.write("| ----------------------- | ----------- |\n")
 
-        counter = 1
         for param in all_params:
             param.name = param.name.replace('"', '')
-            file.write(f"| {counter :> 2} | {param.name.ljust(23)} | {param.note} |\n")
-            counter += 1
+            file.write(f"| {param.name.ljust(23)} | {param.note} |\n")
         file.write("\n")
     else:
         file.write("The node doesn't have registers:\n\n")
@@ -87,7 +85,7 @@ def write_parameters(file, all_params : list) -> None:
 def generate_markdown_doc(cyphal_pubs : dict,
                           cyphal_subs : dict,
                           all_params : list,
-                          output_markdown_filename : str = 'README.md') -> None:
+                          output_markdown_filename : str) -> None:
     assert isinstance(cyphal_pubs, dict)
     assert isinstance(cyphal_subs, dict)
     assert isinstance(all_params, list)
@@ -135,21 +133,30 @@ def parse_yaml_files(input_yaml_files : list) -> Tuple[dict, dict, list]:
 
     return cyphal_pubs, cyphal_subs, all_params
 
-def main(input_yaml_files : list, output_markdown_filename = 'README.md'):
+def parse_yaml_files_and_generate_doc(input_yaml_files : list, output_markdown_path: str):
     assert isinstance(input_yaml_files, list) and len(input_yaml_files) != 0
-    assert isinstance(output_markdown_filename, str)
+    assert isinstance(output_markdown_path, str)
 
     for yaml_file in input_yaml_files:
         if not os.path.exists(yaml_file):
-            log_err(f"Input file with paths `{yaml_file}` is not exist!")
-            sys.exit()
+            logger.error("Input file with paths %s is not exist!", yaml_file)
+            sys.exit(1)
+
+    directory = os.path.dirname(output_markdown_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     cyphal_pubs, cyphal_subs, all_params = parse_yaml_files(input_yaml_files)
-    generate_markdown_doc(cyphal_pubs, cyphal_subs, all_params, output_markdown_filename)
+    generate_markdown_doc(cyphal_pubs, cyphal_subs, all_params, output_markdown_path)
 
 if __name__=="__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
+
     parser = ArgumentParser(description=__doc__)
     parser.add_argument('files', nargs='+', help='YAML files to process')
+    parser.add_argument("--output", type=str, required=False, default='README.md')
     args = parser.parse_args()
 
-    main(input_yaml_files=sys.argv[1:])
+    print("Params docs generator:")
+    parse_yaml_files_and_generate_doc(args.files, args.output)

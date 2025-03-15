@@ -30,12 +30,14 @@ static void flashProgramHalfWord(uint32_t address, uint16_t data);
 void flashInit() {
 }
 
-void flashUnlock() {
+int8_t flashUnlock() {
     WRITE_REG(FLASH->KEYR, FLASH_KEYR_KEY1);
     WRITE_REG(FLASH->KEYR, FLASH_KEYR_KEY2);
+    return 0;
 }
-void flashLock() {
+int8_t flashLock() {
     SET_BIT(FLASH->CR, FLASH_CR_LOCK);
+    return 0;
 }
 
 /**
@@ -68,8 +70,8 @@ static uint8_t* flashGetPointer() {
     return (uint8_t*) FLASH_START_ADDR;
 }
 
-int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
-    int8_t status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
+int32_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
+    int32_t status = flashWaitForLastOperation(FLASH_TIMEOUT_VALUE);
 
     if (status < 0) {
         return status;

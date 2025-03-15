@@ -289,17 +289,17 @@ static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver) {
 /**
  * @note From romWrite() it is always expected to be successfully executed withing this file.
  * An error means either a library internal error or the provided flash driver is incorrect.
- * If such errir is detected, stop writing immediately to avoid doing something wrong.
+ * If such error is detected, stop writing immediately to avoid doing something wrong.
  */
 static int8_t _save(RomDriverInstance* rom_driver) {
     if (INT_POOL_SIZE != 0 &&
-            0 == romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE)) {
+            romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE) <= 0) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
     size_t offset = _getStringMemoryPoolAddress(rom_driver);
     if (STR_POOL_SIZE != 0 &&
-            0 == romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE)) {
+            romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE) <= 0) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
     rom_driver->erased = false;

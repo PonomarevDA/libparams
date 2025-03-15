@@ -95,33 +95,33 @@ TEST_F(RomDriverMultiplePagesTest, writeDataExceedingBounds) {
 
     // 1. ROM nullptr
     romBeginWrite(&rom);
-    ASSERT_EQ(romWrite(nullptr, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), 0);
+    ASSERT_EQ(romWrite(nullptr, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR);
     romEndWrite(&rom);
 
     // 2. Offset out of bound
-    ASSERT_EQ(romWrite(&rom, rom.total_size, SAMPLE_DATA, sizeof(SAMPLE_DATA)), 0);
+    ASSERT_EQ(romWrite(&rom, rom.total_size, SAMPLE_DATA, sizeof(SAMPLE_DATA)), LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR);
 
     // 3. Data nullptr
     romBeginWrite(&rom);
-    ASSERT_EQ(romWrite(&rom, 0, nullptr, sizeof(SAMPLE_DATA)), 0);
+    ASSERT_EQ(romWrite(&rom, 0, nullptr, sizeof(SAMPLE_DATA)), LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR);
     romEndWrite(&rom);
 
     // 4. Zero wring size
     romBeginWrite(&rom);
-    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, 0), 0);
+    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, 0), LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR);
     romEndWrite(&rom);
 
     // 5. Offset and size out of bound
     romBeginWrite(&rom);
-    ASSERT_EQ(romWrite(&rom, 3000, SAMPLE_DATA, 3000), 0);
+    ASSERT_EQ(romWrite(&rom, 3000, SAMPLE_DATA, 3000), LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR);
     romEndWrite(&rom);
 
     // 6. Without romBeginWrite() and romEndWrite()
-    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), 0);
+    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), LIBPARAMS_ROM_WRITE_PROTECTED_ERROR);
 
     // 7. romBeginWrite() and romEndWrite() nullptr
     romBeginWrite(nullptr);
-    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), 0);
+    ASSERT_EQ(romWrite(&rom, 0, SAMPLE_DATA, sizeof(SAMPLE_DATA)), LIBPARAMS_ROM_WRITE_PROTECTED_ERROR);
     romEndWrite(nullptr);
 }
 

@@ -29,6 +29,7 @@ typedef struct {
     size_t pages_amount;
     bool inited;
     bool erased;
+    bool write_protected;
 } RomDriverInstance;
 
 
@@ -53,16 +54,21 @@ size_t romRead(const RomDriverInstance* rom,
                size_t                   requested_size);
 
 /**
- * @brief Return the number of bytes wrote (0 in case of error).
+ * @return the number of bytes wrote on success. On failure returns a negative error code:
+ * - LIBPARAMS_ROM_WRITE_BAD_ARGS_ERROR if arguments are incorrect
+ * - LIBPARAMS_ROM_WRITE_PROTECTED_ERROR if romBeginWrite has not been called
+ * - Any flash driver or HAL related errors
  */
-void romBeginWrite(const RomDriverInstance* rom);
-size_t romWrite(const RomDriverInstance*    rom,
-                size_t                      offset,
-                const uint8_t*              data,
-                size_t                      size);
-void romEndWrite(const RomDriverInstance*   rom);
+void romBeginWrite(RomDriverInstance* rom);
+int32_t romWrite(const RomDriverInstance*    rom,
+                 size_t                      offset,
+                 const uint8_t*              data,
+                 size_t                      size);
+void romEndWrite(RomDriverInstance*   rom);
 
 uint32_t romGetAvailableMemory(const RomDriverInstance* rom);
+
+int32_t romGetErrorCode();
 
 #ifdef __cplusplus
 }

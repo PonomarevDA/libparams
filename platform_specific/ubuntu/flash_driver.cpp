@@ -41,7 +41,7 @@ static ParametersLayout_t params_layout = {
 static YamlParameters yaml_params = YamlParameters(mem_layout, params_layout);
 
 static uint8_t* flashGetPointer();
-static int8_t __save_to_files();
+static int32_t __save_to_files();
 static int8_t __read_from_files();
 
 void flashInit() {
@@ -57,12 +57,14 @@ void flashInit() {
     __read_from_files();
 }
 
-void flashUnlock() {
+int8_t flashUnlock() {
     is_locked = false;
+    return 0;
 }
 
-void flashLock() {
+int8_t flashLock() {
     is_locked = true;
+    return 0;
 }
 
 int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
@@ -84,7 +86,7 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     return bytes_to_read;
 }
 
-int8_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
+int32_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
     if (is_locked || offset < FLASH_START_ADDR ||
             offset >= FLASH_START_ADDR + sizeof(flash_memory)) {
         return LIBPARAMS_WRONG_ARGS;
@@ -106,7 +108,7 @@ uint16_t flashGetPageSize() {
     return PAGE_SIZE_BYTES;
 }
 
-int8_t __save_to_files() {
+int32_t __save_to_files() {
     return yaml_params.write_to_dir(LIBPARAMS_PARAMS_DIR);
 }
 

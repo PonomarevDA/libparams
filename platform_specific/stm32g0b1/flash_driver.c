@@ -23,11 +23,11 @@ static const size_t FLASH_WORD_SIZE = 8;
 void flashInit() {
 }
 
-void flashUnlock() {
-    HAL_FLASH_Unlock();
+int8_t flashUnlock() {
+    return -HAL_FLASH_Unlock();
 }
-void flashLock() {
-    HAL_FLASH_Lock();
+int8_t flashLock() {
+    return -HAL_FLASH_Lock();
 }
 
 /**
@@ -57,8 +57,8 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
 }
 
 
-int8_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
-    int8_t status;
+int32_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
+    int32_t status = 0;
     for (size_t idx = 0U; idx < (size + FLASH_WORD_SIZE - 1)/ FLASH_WORD_SIZE; idx++) {
         uint64_t word = ((const uint64_t*)(const void*)data)[idx];
         size_t addr = offset + FLASH_WORD_SIZE * idx;

@@ -11,7 +11,7 @@ cppcheck --enable=all \
          --suppress=missingIncludeSystem \
          --suppress=unusedFunction \
          --suppress=toomanyconfigs \
-         -I ${REPO_DIR}/libparams \
+         -I ${REPO_DIR}/include/libparams \
          -I ${REPO_DIR}/platform_specific/ubuntu/ \
          -I /usr/include/ \
-         ${REPO_DIR}/libparams/
+         ${REPO_DIR}/src/

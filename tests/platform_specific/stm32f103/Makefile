@@ -8,16 +8,16 @@ BUILD_DIR = ${ROOT_DIR}/build/tests/stm32f103_build
 # source
 ######################################
 C_SOURCES =                     	\
-${ROOT_DIR}/libparams/rom.c             	\
+${ROOT_DIR}/src/rom.c             	\
 ${ROOT_DIR}/platform_specific/stm32f103/flash_driver.c       \
-${ROOT_DIR}/libparams/storage.c           \
+${ROOT_DIR}/src/storage.c           \
 ../../params/params.c                         \
 main.c               				\
 application.c
 
 # C includes
 C_INCLUDES =    \
--I${ROOT_DIR}/libparams/	\
+-I${ROOT_DIR}/include/libparams/	\
 -I${ROOT_DIR}/platform_specific/stm32f103/ \
 -I./ \
 -I../../ 

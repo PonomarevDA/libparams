@@ -59,9 +59,9 @@ ubuntu: clean
 
 code_style: astyle cpplint crlf cppcheck
 astyle:
-	./scripts/code_style/check_astyle.py libparams platform_specific --astylerc scripts/code_style/astylerc
+	./scripts/code_style/check_astyle.py src/ include/ platform_specific/ --astylerc scripts/code_style/astylerc
 cpplint:
-	cpplint libparams/* platform_specific/*/*
+	cpplint src/*.c include/libparams/* platform_specific/*/*.c platform_specific/*/*.h
 crlf:
 	./scripts/code_style/check_crlf.py
 cppcheck:

@@ -75,7 +75,7 @@ Access to a parameter can be done by index. Since paramters are stored as an arr
 
 Writing or reading from the external application should be done by name of the parameter. These operations have O(n) complexity, where n - is the total number of the parameters.
 
-Look at [libparams/storage.h](libparams/storage.h) to get full API and [libparams/storage.c](libparams/storage.c) for the implementation details.
+Look at [libparams/storage.h](libparams/storage.h) to get full API and [src/storage.c](src/storage.c) for the implementation details.
 
 ### 1.2. Middle level interface. Abstract ROM driver
 

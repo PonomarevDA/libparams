@@ -23,10 +23,10 @@ coverage: create_build_dir
 	cd ${BUILD_DIR} && ./yaml_parameters
 
 	echo "\n1. Storage:"
-	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/storage.dir${REPO_DIR}/libparams/storage.c.gcda
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/storage.dir${REPO_DIR}/src/storage.c.gcda
 
 	echo "\n2. ROM:"
-	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/libparams/rom.c.gcda
+	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/rom.dir${REPO_DIR}/src/rom.c.gcda
 
 	echo "\n3. Ubuntu flash driver:"
 	cd ${BUILD_DIR} && gcov ${BUILD_DIR}/CMakeFiles/flash_driver.dir${REPO_DIR}/platform_specific/ubuntu/flash_driver.cpp.gcda

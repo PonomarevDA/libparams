@@ -22,7 +22,7 @@ static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
-static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver);
+static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver);
 static int8_t _save(RomDriverInstance* rom_driver);
 static int8_t _chooseRom();
 
@@ -66,8 +66,9 @@ int8_t paramsInit(ParamIndex_t int_num,
 }
 
 int8_t paramsInitRedundantPage() {
-    redundant_rom =
-        romInit(primary_rom.first_page_idx - primary_rom.pages_amount, primary_rom.pages_amount);
+    size_t pages_amount = primary_rom.pages_amount;
+    int32_t redundant_rom_first_page_idx = (int32_t)(primary_rom.first_page_idx - pages_amount);
+    redundant_rom = romInit(redundant_rom_first_page_idx, pages_amount);
     if (!redundant_rom.inited) {
         return LIBPARAMS_UNKNOWN_ERROR;
     }
@@ -282,7 +283,7 @@ static bool _isCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integers_amount || param_idx >= all_params_amount;
 }
 
-static uint32_t _getStringMemoryPoolAddress(RomDriverInstance* rom_driver) {
+static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver) {
     return romGetAvailableMemory(rom_driver) - MAX_STRING_LENGTH * strings_amount;
 }
 
@@ -308,19 +309,18 @@ static int8_t _save(RomDriverInstance* rom_driver) {
 
 
 /**
- * @brief           Choose a rom which addreses a non-erased part of flash memory
+ * @brief Choose a rom which addreses a non-erased part of flash memory
  * **/
-int8_t _chooseRom() {
+static int8_t _chooseRom() {
     paramsLoadRom(&primary_rom);
     paramsLoadRom(&redundant_rom);
     active_rom = &primary_rom;
     standby_rom = &redundant_rom;
-    if (primary_rom.erased) {
-        if (!redundant_rom.erased) {
-            active_rom = &redundant_rom;
-            standby_rom = &primary_rom;
-        }
+    if (primary_rom.erased && !redundant_rom.erased) {
+        active_rom = &redundant_rom;
+        standby_rom = &primary_rom;
     }
+
     return LIBPARAMS_OK;
 }
 

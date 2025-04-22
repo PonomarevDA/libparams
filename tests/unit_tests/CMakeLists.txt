@@ -25,7 +25,7 @@ include_directories(${GTEST_INCLUDE_DIR})
 
 # include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/CMakeLists.txt)
+include(${ROOT_DIR}/libparams.cmake)
 
 set(LIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
 add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")

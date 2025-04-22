@@ -105,7 +105,7 @@ New drivers might be added in future.
 
 It is expected either to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
 
-You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [CMakeLists.txt](CMakeLists.txt).
+You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [libparams.cmake](libparams.cmake).
 
 If it is SITL mode, you need additionally to specify path to yaml files with parameters values `LIBPARAMS_PARAMS_DIR`. The flash memory is divided to pages, therefore the base name of file with initial parameters `LIBPARAMS_PARAMS_BASE_NAME`  needs to be specified. The file named `<LIBPARAMS_PARAMS_BASE_NAME>_0.yaml` will be read as a default parameters values container. 
 

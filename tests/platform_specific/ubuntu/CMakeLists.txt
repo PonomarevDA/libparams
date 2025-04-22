@@ -20,7 +20,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # Libraries
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/CMakeLists.txt)
+include(${ROOT_DIR}/libparams.cmake)
 
 set(LIBPARAMS_INIT_PARAMS_BASE_NAME initial_params)
 add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")

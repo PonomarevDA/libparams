@@ -9,7 +9,7 @@
 #ifndef LIBPARAM_FLASH_MEMORY_LAYOUT_HPP_
 #define LIBPARAM_FLASH_MEMORY_LAYOUT_HPP_
 
-#include "storage.h"
+#include "libparams/storage.h"
 
 typedef struct {
     IntegerDesc_t* integer_desc_pool;

@@ -8,9 +8,9 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "rom.h"
-#include "libparams_error_codes.h"
-#include "flash_driver.h"
+#include "libparams/rom.h"
+#include "libparams/libparams_error_codes.h"
+#include "libparams/flash_driver.h"
 
 class RomDriverMultiplePagesTest : public ::testing::Test {
 protected:

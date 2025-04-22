@@ -1,19 +1,12 @@
 name: build
-
-on:
-  push:
-    branches:
-    - 'main'
-  pull_request:
-    branches:
-    - 'main'
+on: push
 
 jobs:
   build:
     strategy:
       matrix:
         target: [stm32f103, stm32g0b1, ubuntu]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
         with:

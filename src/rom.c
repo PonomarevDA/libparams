@@ -87,7 +87,7 @@ int32_t romWrite(const RomDriverInstance* rom, size_t offset, const uint8_t* dat
 
     if (status < 0) {
         libparams_rom_error_code = -1000 + status;
-        return (int32_t)status;
+        return status;
     }
 
     return (int32_t)size;

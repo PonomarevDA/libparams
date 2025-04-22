@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "storage.h"
+#include "libparams/storage.h"
 #ifndef LIBPARAM_PARAMETERS_HPP_
 #define LIBPARAM_PARAMETERS_HPP_
 

@@ -6,11 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "rom.h"
+#include "libparams/rom.h"
 #include <stddef.h>
 #include <string.h>
-#include "flash_driver.h"
-#include "libparams_error_codes.h"
+#include "libparams/flash_driver.h"
+#include "libparams/libparams_error_codes.h"
 
 int32_t libparams_rom_error_code = 0;
 

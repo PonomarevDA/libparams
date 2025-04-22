@@ -8,7 +8,7 @@
 
 class CppHeader:
     INTEGER_HEAD = """#pragma once
-#include "storage.h"
+#include "libparams/storage.h"
 #include "string_params.hpp"
 enum IntParamsIndexes : ParamIndex_t {
 """
@@ -39,7 +39,7 @@ typedef enum {
 
 class CSource:
     INTEGER_HEAD="""#include "params.h"
-#include "storage.h"
+#include "libparams/storage.h"
 IntegerDesc_t integer_desc_pool[] = {
 """
 
@@ -49,7 +49,7 @@ IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(Integ
 """
 
     STRING_HEAD="""#include "string_params.h"
-#include "storage.h"
+#include "libparams/storage.h"
 StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {
 """
     STRING_TAIL="""
@@ -68,7 +68,7 @@ IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(Integ
 """
 
     STRING_HEAD="""#include "string_params.hpp"
-#include "storage.h"
+#include "libparams/storage.h"
 StringDesc_t __attribute__((weak)) string_desc_pool[NUM_OF_STR_PARAMS] = {
 """
     STRING_TAIL="""

@@ -8,8 +8,8 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "flash_driver.h"
-#include "libparams_error_codes.h"
+#include "libparams/flash_driver.h"
+#include "libparams/libparams_error_codes.h"
 #include "common/algorithms.hpp"
 
 // Test Case 1. Initialize flash driver

@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "rom.h"
-#include "flash_driver.h"
+#include "libparams/rom.h"
+#include "libparams/flash_driver.h"
 
 void test_flash_wr() {
     RomDriverInstance rom = romInit(127, 1);

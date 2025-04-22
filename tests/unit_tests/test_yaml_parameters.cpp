@@ -15,11 +15,13 @@
 #include <stdexcept>
 #include <fstream>
 
-#include "YamlParameters.hpp"
 #include "common/algorithms.hpp"
-#include "flash_driver.h"
+#include "../platform_specific/ubuntu/YamlParameters.hpp"
+#include "libparams/flash_driver.h"
 
-std::string dir(LIBPARAMS_PARAMS_DIR);
+const char* get_libparams_params_dir();
+
+std::string dir(get_libparams_params_dir());
 uint8_t flash_memory[100];
 
 int8_t delete_file_from_dir(const char* path) {

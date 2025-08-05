@@ -15,9 +15,10 @@ from color_logging import log_warn, log_err
 @dataclass
 class BaseParam:
     name: str = ""
-    default: int = 0
+    default: int | str = 0
     note: str = ""
     mutability: str = "MUTABLE"
+    enum_name: str = ""
 
 @dataclass
 class IntegerParam(BaseParam):
@@ -26,7 +27,6 @@ class IntegerParam(BaseParam):
     - Cyphal    uavcan.register.Value.1.0.integer32
     - DroneCAN  uavcan.param.Value.integer_value
     """
-    enum_name: str = ""
     flags: str = ""
     min: int = 0
     max: int = 0
@@ -128,6 +128,7 @@ class StringParam(BaseParam):
         string_param = StringParam(
             name=f"\"{param_name}\"",
             default=f"\"{data['default']}\"",
+            enum_name=data['enum'],
             mutability=is_mutable(param_name, str(data['flags']))
         )
         if 'note' in data:
@@ -141,6 +142,7 @@ class StringParam(BaseParam):
         """Input example: param_name : ["data_type",  "ENUM_NAME"]"""
         string_param = StringParam(
             name=f"\"{param_name}\"",
+            enum_name=data[1],
             default=f"\"{data[3]}\"",
             mutability=is_mutable(param_name, str(data[2]))
         )

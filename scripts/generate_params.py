@@ -26,6 +26,7 @@ class Generator:
         self.integers_array = ""
         self.integers_enums = ""
         self.strings_array = ""
+        self.strings_enums = ""
         self.strings_amount = 0
 
     def add_integer(self, param : IntegerParam):
@@ -47,8 +48,9 @@ class Generator:
     def add_string(self, param : StringParam):
         assert isinstance(param, StringParam)
         c_string = f"    {{{param.name :<32}, {param.default}, {param.mutability}}},\n"
-
+        h_string = f"    {param.enum_name},\n" if self.strings_amount > 0 else f"    {param.enum_name} = INTEGER_PARAMS_AMOUNT,\n"
         self.strings_array += c_string
+        self.strings_enums += h_string
         self.strings_amount += 1
 
     def generate(self):
@@ -81,6 +83,9 @@ class Generator:
                 "enum IntParamsIndexes {\n"
                 f"{self.integers_enums}\n"
                 "    INTEGER_PARAMS_AMOUNT\n"
+                "};\n"
+                "enum StrParamsIndexes {\n"
+                f"{self.strings_enums}\n"
                 "};\n"
                 f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
             )

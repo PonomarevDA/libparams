@@ -93,7 +93,6 @@ class Generator:
                 hpp_content += (
                     "enum StrParamsIndexes {\n"
                     f"{self.strings_enums}\n"
-                    "    STRING_PARAMS_AMOUNT\n"
                     "};\n"
                 )
 

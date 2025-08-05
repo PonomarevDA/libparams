@@ -115,10 +115,11 @@ class StringParam(BaseParam):
         return string_param
 
     @staticmethod
-    def create_port_type(param_name, data_type : str):
+    def create_port_type(param_name, data_type : str, enum_base : str):
         type_register = StringParam(
             name=f"\"{param_name}.type\"",
             default=f"\"{data_type}\"",
+            enum_name=f"{enum_base}_TYPE",
             mutability="IMMUTABLE"
         )
         return type_register

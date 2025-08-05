@@ -52,6 +52,9 @@ class Generator:
         self.strings_array += c_string
         self.strings_enums += h_string
         self.strings_amount += 1
+        print(f"String: {param.name}")
+        print(f"Enum: {param.enum_name}")
+        print(f"Amount: {self.strings_amount}")
 
     def generate(self):
         if not os.path.exists(self.dir):
@@ -84,11 +87,17 @@ class Generator:
                 f"{self.integers_enums}\n"
                 "    INTEGER_PARAMS_AMOUNT\n"
                 "};\n"
-                "enum StrParamsIndexes {\n"
-                f"{self.strings_enums}\n"
-                "};\n"
-                f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
+
             )
+            if self.strings_amount > 0:
+                hpp_content += (
+                    "enum StrParamsIndexes {\n"
+                    f"{self.strings_enums}\n"
+                    "    STRING_PARAMS_AMOUNT\n"
+                    "};\n"
+                )
+
+            hpp_content += f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
             hpp_file.write(hpp_content)
 
 if __name__=="__main__":
@@ -120,12 +129,15 @@ if __name__=="__main__":
             for param_name in params:
                 data = params[param_name]
                 assert isinstance(data, dict), "Legacy style detected. Abort."
+                print(param_name)
+                print(data)
                 if 'type' not in data:
                     log_err(f"Type is not exist: {param_name}!")
                     sys.exit(1)
                 elif data['type'].lower() == "port":
                     gen.add_integer(IntegerParam.create_port_id(param_name, data['enum_base']))
-                    gen.add_string(StringParam.create_port_type(param_name, data['data_type']))
+                    gen.add_string(StringParam.create_port_type(param_name, data['data_type'],
+                                                                            data['enum_base']))
                 elif data['type'].lower() == "integer":
                     gen.add_integer(IntegerParam.create(param_name, data))
                 elif data['type'].lower() == "string":

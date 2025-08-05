@@ -52,9 +52,6 @@ class Generator:
         self.strings_array += c_string
         self.strings_enums += h_string
         self.strings_amount += 1
-        print(f"String: {param.name}")
-        print(f"Enum: {param.enum_name}")
-        print(f"Amount: {self.strings_amount}")
 
     def generate(self):
         if not os.path.exists(self.dir):
@@ -128,8 +125,6 @@ if __name__=="__main__":
             for param_name in params:
                 data = params[param_name]
                 assert isinstance(data, dict), "Legacy style detected. Abort."
-                print(param_name)
-                print(data)
                 if 'type' not in data:
                     log_err(f"Type is not exist: {param_name}!")
                     sys.exit(1)

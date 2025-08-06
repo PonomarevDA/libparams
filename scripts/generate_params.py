@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Copyright (c) 2023 Dmitry Ponomarev <ponomarevda96@gmail.com>
-#
+#                    Anastasiia Stepanova <asiiapine@gmail.com>
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -26,6 +26,7 @@ class Generator:
         self.integers_array = ""
         self.integers_enums = ""
         self.strings_array = ""
+        self.strings_enums = ""
         self.strings_amount = 0
 
     def add_integer(self, param : IntegerParam):
@@ -47,8 +48,9 @@ class Generator:
     def add_string(self, param : StringParam):
         assert isinstance(param, StringParam)
         c_string = f"    {{{param.name :<32}, {param.default}, {param.mutability}}},\n"
-
+        h_string = f"    {param.enum_name},\n" if self.strings_amount > 0 else f"    {param.enum_name} = INTEGER_PARAMS_AMOUNT,\n"
         self.strings_array += c_string
+        self.strings_enums += h_string
         self.strings_amount += 1
 
     def generate(self):
@@ -82,8 +84,16 @@ class Generator:
                 f"{self.integers_enums}\n"
                 "    INTEGER_PARAMS_AMOUNT\n"
                 "};\n"
-                f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
+
             )
+            if self.strings_amount > 0:
+                hpp_content += (
+                    "enum StrParamsIndexes {\n"
+                    f"{self.strings_enums}\n"
+                    "};\n"
+                )
+
+            hpp_content += f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
             hpp_file.write(hpp_content)
 
 if __name__=="__main__":
@@ -120,7 +130,8 @@ if __name__=="__main__":
                     sys.exit(1)
                 elif data['type'].lower() == "port":
                     gen.add_integer(IntegerParam.create_port_id(param_name, data['enum_base']))
-                    gen.add_string(StringParam.create_port_type(param_name, data['data_type']))
+                    gen.add_string(StringParam.create_port_type(param_name, data['data_type'],
+                                                                            data['enum_base']))
                 elif data['type'].lower() == "integer":
                     gen.add_integer(IntegerParam.create(param_name, data))
                 elif data['type'].lower() == "string":

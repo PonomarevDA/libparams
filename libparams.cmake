@@ -28,7 +28,7 @@ set(libparamsSrc
 )
 
 set(libparamsHeaders
-  ${CMAKE_CURRENT_LIST_DIR}/include/libparams/
+  ${CMAKE_CURRENT_LIST_DIR}/include/
   ${CMAKE_CURRENT_LIST_DIR}/platform_specific/${LIBPARAMS_PLATFORM}/
   ${libparamsPlatformSpecificHeaders}
 )

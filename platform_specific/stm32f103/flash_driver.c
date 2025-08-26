@@ -6,9 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "flash_driver.h"
+#include "libparams/flash_driver.h"
 #include <string.h>
-#include "libparams_error_codes.h"
+#include "libparams/libparams_error_codes.h"
 #include "flash_registers.h"
 
 

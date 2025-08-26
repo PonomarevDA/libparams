@@ -12,9 +12,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "rom.h"
-#include "libparams_error_codes.h"
-#include "_legacy_functions.h"
+#include "libparams/rom.h"
+#include "libparams/libparams_error_codes.h"
+#include "libparams/_legacy_functions.h"
 
 #ifdef __cplusplus
 extern "C" {

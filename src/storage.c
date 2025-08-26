@@ -6,11 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "storage.h"
+#include "libparams/storage.h"
 #include <string.h>
-#include "flash_driver.h"
-#include "rom.h"
-#include "libparams_error_codes.h"
+#include "libparams/flash_driver.h"
+#include "libparams/rom.h"
+#include "libparams/libparams_error_codes.h"
 
 extern IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];

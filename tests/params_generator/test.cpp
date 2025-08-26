@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <gtest/gtest.h>
-#include "storage.h"
+#include "libparams/storage.h"
 #include "params.hpp"
 
 bool strCompareSafe(const char* first, const char* second, size_t len) {

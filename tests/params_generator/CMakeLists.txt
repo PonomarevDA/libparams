@@ -16,7 +16,7 @@ set(PARAMS_PATH ${LIBPARAMS_ROOT_DIR}/build/tests/params_generator)
 
 add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 include_directories(
-    ${LIBPARAMS_ROOT_DIR}/include/libparams
+    ${LIBPARAMS_ROOT_DIR}/include
     ${PLATFORM_SPECIFIC_PATH}
     ${PARAMS_PATH}
 )

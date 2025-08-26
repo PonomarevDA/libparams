@@ -12,7 +12,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "storage.h"
+#include "libparams/storage.h"
 #include "YamlParameters.hpp"
 
 YamlParameters::YamlParameters(FlashMemoryLayout_t flash_desc,

@@ -7,8 +7,8 @@
  */
 
 #include <assert.h>
-#include "storage.h"
-#include "flash_driver.h"
+#include "libparams/storage.h"
+#include "libparams/flash_driver.h"
 
 IntegerDesc_t integer_desc_pool[512] = {
     {"uavcan.node.id",        0,      127,     50,        MUTABLE},

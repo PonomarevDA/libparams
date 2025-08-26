@@ -7,9 +7,9 @@
  */
 
 #include <string.h>
-#include "storage.h"
-#include "flash_driver.h"
-#include "libparams_error_codes.h"
+#include "libparams/storage.h"
+#include "libparams/flash_driver.h"
+#include "libparams/libparams_error_codes.h"
 #include "params.hpp"
 #include "YamlParameters.hpp"
 
@@ -114,4 +114,8 @@ int32_t __save_to_files() {
 
 int8_t __read_from_files() {
     return yaml_params.read_from_dir(LIBPARAMS_PARAMS_DIR);
+}
+
+const char* get_libparams_params_dir() {
+    return LIBPARAMS_PARAMS_DIR;
 }

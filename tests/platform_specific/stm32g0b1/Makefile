@@ -17,7 +17,7 @@ application.c
 
 # C includes
 C_INCLUDES =    \
--I${ROOT_DIR}/include/libparams/	\
+-I${ROOT_DIR}/include/	\
 -I${ROOT_DIR}/platform_specific/stm32g0b1/ \
 -I./ \
 -I../../

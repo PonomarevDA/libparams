@@ -8,8 +8,8 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "storage.h"
-#include "libparams_error_codes.h"
+#include "libparams/storage.h"
+#include "libparams/libparams_error_codes.h"
 #include "common/algorithms.hpp"
 
 typedef enum {

@@ -25,34 +25,17 @@ include_directories(${GTEST_INCLUDE_DIR})
 
 # include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/libparams.cmake)
-
-set(LIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
-add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
+set(LIBPARAMS_GENERATED_PARAMS_DIR ${TESTS_DIR}/params/)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../.. ${CMAKE_BINARY_DIR}/libparams)
 
 function(gen_test app_name test_file)
-    execute_process(
-        COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR}/params -f ${TESTS_DIR}/params/params.c
-        --out-file-name "init_params"
-        RESULT_VARIABLE ret
-    )
-    if(NOT ret EQUAL 0)
-        message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
-    endif()
-    # Create the executable target
     add_executable(${app_name}
-    ${test_file}
-    ${libparamsSrc})
+        ${test_file}
+        ${libparamsSrc}
+    )
 
-    target_include_directories(${app_name} PUBLIC ${libparamsHeaders})
-
-    # Conditional source file based on app_name
     message(STATUS "${app_name} params dir ${UNIT_TESTS_DIR}")
-    target_sources(${app_name} PRIVATE ${TESTS_DIR}/params/params.c)
-    target_include_directories(${app_name} PRIVATE ${TESTS_DIR}/params/)
-
-    # Link libraries to the target
-    target_link_libraries(${app_name} gtest)
+    target_link_libraries(${app_name} gtest libparams::libparams)
 endfunction()
 
 gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)

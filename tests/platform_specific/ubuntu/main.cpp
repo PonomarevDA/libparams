@@ -7,8 +7,8 @@
  */
 
 #include <iostream>
-#include "flash_driver.h"
-#include "libparams_error_codes.h"
+#include "libparams/flash_driver.h"
+#include "libparams/libparams_error_codes.h"
 #include "params.hpp"
 
 extern StringParamValue_t string_values_pool[];

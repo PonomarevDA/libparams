@@ -114,7 +114,7 @@ You can create params.c and params.h files with the following content:
 ```c++
 // params.h
 #pragma once
-#include "storage.h"
+#include "libparams/storage.h"
 
 enum IntParamsIndexes : ParamIndex_t {
     PARAM_NODE_ID,

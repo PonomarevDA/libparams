@@ -178,9 +178,9 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t*
                 return LIBPARAMS_WRONG_ARGS;
             }
 
-            memcpy((void*)(flash.memory_ptr + offset), str_value.c_str(),
-                   strlen(str_value.c_str()));
-            memcpy((void*)(flash.memory_ptr + offset + strlen(str_value.c_str())), "\0", 1);
+            size_t len = str_value.size();
+            memcpy((void*)(flash.memory_ptr + offset), str_value.c_str(), len);
+            memcpy((void*)(flash.memory_ptr + offset + len), "\0", 1);
             *str_param_idx = *str_param_idx + 1;
         }
     }

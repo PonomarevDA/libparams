@@ -11,11 +11,12 @@
 import sys
 from dataclasses import dataclass
 from color_logging import log_warn, log_err
+from typing import Union
 
 @dataclass
 class BaseParam:
     name: str = ""
-    default: int | str = 0
+    default: Union[int, str] = 0
     note: str = ""
     mutability: str = "MUTABLE"
     enum_name: str = ""

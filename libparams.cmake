@@ -8,9 +8,10 @@ cmake_minimum_required(VERSION 3.22)
 
 if(LIBPARAMS_PLATFORM STREQUAL "stm32f103")
 elseif(LIBPARAMS_PLATFORM STREQUAL "stm32g0b1")
+elseif(LIBPARAMS_PLATFORM STREQUAL "stm32h753xx")
 elseif(LIBPARAMS_PLATFORM STREQUAL "ubuntu")
 else()
-  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified! Options: stm32f103, stm32g0b1, ubuntu.")
+  message(SEND_ERROR "LIBPARAMS_PLATFORM is not specified! Options: stm32f103, stm32g0b1, stm32h753xx, ubuntu.")
 endif()
 
 FILE(GLOB libparamsPlatformSpecificSrc

@@ -47,7 +47,9 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
 #if defined(DUAL_BANK)
     const uint32_t bank_sectors = FLASH_SECTOR_TOTAL;
     if (first_page_idx < bank_sectors && last_page_idx > bank_sectors) {
-        res = flashEraseSectorsInSingleBank(first_page_idx, bank_sectors - first_page_idx, FLASH_BANK_1);
+        res = flashEraseSectorsInSingleBank(first_page_idx,
+                                            bank_sectors - first_page_idx,
+                                            FLASH_BANK_1);
         if (res < 0) {
             return res;
         }
@@ -55,7 +57,9 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
     } else if (first_page_idx < bank_sectors) {
         res = flashEraseSectorsInSingleBank(first_page_idx, num_of_pages, FLASH_BANK_1);
     } else {
-        res = flashEraseSectorsInSingleBank(first_page_idx - bank_sectors, num_of_pages, FLASH_BANK_2);
+        res = flashEraseSectorsInSingleBank(first_page_idx - bank_sectors,
+                                            num_of_pages,
+                                            FLASH_BANK_2);
     }
 #else
     res = flashEraseSectorsInSingleBank(first_page_idx, num_of_pages, FLASH_BANK_1);

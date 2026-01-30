@@ -40,6 +40,33 @@ static RomDriverInstance redundant_rom = {
 RomDriverInstance* active_rom;
 RomDriverInstance* standby_rom;
 
+static char params_dir_storage[256] = {0};
+static bool params_dir_set = false;
+
+int8_t paramsSetDir(const char* dir) {
+    if (dir == NULL || dir[0] == '\0') {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    size_t len = strlen(dir);
+    if (len >= sizeof(params_dir_storage)) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    memcpy(params_dir_storage, dir, len + 1);
+    params_dir_set = true;
+    return LIBPARAMS_OK;
+}
+
+const char* paramsGetDir() {
+    if (params_dir_set) {
+        return params_dir_storage;
+    }
+#ifdef LIBPARAMS_PARAMS_DIR
+    return LIBPARAMS_PARAMS_DIR;
+#else
+    return "";
+#endif
+}
+
 int8_t paramsInit(ParamIndex_t int_num,
                   ParamIndex_t str_num,
                   int32_t first_page_idx,
@@ -323,4 +350,3 @@ static int8_t _chooseRom() {
 
     return LIBPARAMS_OK;
 }
-

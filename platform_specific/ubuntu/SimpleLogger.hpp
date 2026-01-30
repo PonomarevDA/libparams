@@ -19,14 +19,14 @@ public:
     void info(Args... args) {
         std::stringstream ss;
         (ss << ... << args);
-        std::cout << module << ": " << ss.str() << std::endl;
+        std::cout << "[" << module << "] [INFO]: " << ss.str() << std::endl;
     }
 
     template <typename... Args>
     void error(Args... args) {
         std::stringstream ss;
         (ss << ... << args);
-        std::cerr << module << ": " << ss.str() << std::endl;
+        std::cerr << "[" << module << "]: [ERROR]: " << ss.str() << std::endl;
     }
 
 private:

@@ -8,6 +8,7 @@
 
 """Parameters generator."""
 
+import logging
 import os
 import sys
 from color_logging import log_err
@@ -56,45 +57,65 @@ class Generator:
     def generate(self):
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
-        with open(f"{self.dir}/{self.name}.cpp", 'w', encoding="utf-8") as cpp_file:
-            cpp_content = (
-                f"{LICENSE_HEADER}\n"
-                "#include \"params.hpp\"\n"
-                "\n"
-                "IntegerDesc_t integer_desc_pool[] = {\n"
-                f"{self.integers_array}"
+        cpp_content = (
+            f"{LICENSE_HEADER}\n"
+            "#include \"params.hpp\"\n"
+            "\n"
+            "IntegerDesc_t integer_desc_pool[] = {\n"
+            f"{self.integers_array}"
+            "};\n"
+            "IntegerParamValue_t "
+            "integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
+            "\n"
+            "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
+            f"{self.strings_array}"
+            "};\n"
+            "StringParamValue_t "
+            "string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
+        )
+        cpp_status = _write_if_changed(f"{self.dir}/{self.name}.cpp", cpp_content)
+
+        hpp_content = (
+            f"{LICENSE_HEADER}\n"
+            "#pragma once\n"
+            "#include \"storage.h\"\n\n"
+            "enum IntParamsIndexes {\n"
+            f"{self.integers_enums}\n"
+            "    INTEGER_PARAMS_AMOUNT\n"
+            "};\n"
+        )
+        if self.strings_amount > 0:
+            hpp_content += (
+                "enum StrParamsIndexes {\n"
+                f"{self.strings_enums}\n"
                 "};\n"
-                "IntegerParamValue_t "
-                "integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
-                "\n"
-                "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
-                f"{self.strings_array}"
-                "};\n"
-                "StringParamValue_t "
-                "string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
             )
-            cpp_file.write(cpp_content)
 
-        with open(f"{self.dir}/{self.name}.hpp", 'w', encoding="utf-8") as hpp_file:
-            hpp_content = (
-                f"{LICENSE_HEADER}\n"
-                "#pragma once\n"
-                "#include \"storage.h\"\n\n"
-                "enum IntParamsIndexes {\n"
-                f"{self.integers_enums}\n"
-                "    INTEGER_PARAMS_AMOUNT\n"
-                "};\n"
+        hpp_content += f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
+        hpp_status = _write_if_changed(f"{self.dir}/{self.name}.hpp", hpp_content)
+        return cpp_status, hpp_status
 
-            )
-            if self.strings_amount > 0:
-                hpp_content += (
-                    "enum StrParamsIndexes {\n"
-                    f"{self.strings_enums}\n"
-                    "};\n"
-                )
+def _write_if_changed(path, content):
+    if os.path.exists(path):
+        with open(path, 'r', encoding="utf-8") as existing_file:
+            if existing_file.read() == content:
+                return "unchanged"
+        status = "updated"
+    else:
+        status = "added"
+    with open(path, 'w', encoding="utf-8") as out_file:
+        out_file.write(content)
+    return status
 
-            hpp_content += f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
-            hpp_file.write(hpp_content)
+def _setup_logger():
+    logger = logging.getLogger("libparams-gen")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter("[libparams-gen] [%(levelname)s] %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return logger
 
 if __name__=="__main__":
     from argparse import ArgumentParser
@@ -105,11 +126,13 @@ if __name__=="__main__":
     parser.add_argument('-f','--files',     type=str, required=True,    help='', nargs='+')
     args = parser.parse_args()
 
-    print("Parameters generator:")
-    print("1. out_dir:", args.out_dir)
-    print("2. language:", args.language)
-    print("3. out-file-name:", args.out_file_name)
-    print("4. files:", args.files)
+    logger = _setup_logger()
+    logger.info(
+        "Generating params: out_dir=%s, out_file=%s, files=%d",
+        args.out_dir,
+        args.out_file_name,
+        len(args.files),
+    )
 
     # Check args for basic errors
     for yaml_file_path in args.files:
@@ -140,4 +163,5 @@ if __name__=="__main__":
                     log_err(f"Unknown type: {param_name}.type={data['type']}!")
                     sys.exit(1)
 
-    gen.generate()
+    cpp_status, hpp_status = gen.generate()
+    logger.info("params.cpp %s / params.hpp %s", cpp_status, hpp_status)

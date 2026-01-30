@@ -109,9 +109,17 @@ uint16_t flashGetPageSize() {
 }
 
 int32_t __save_to_files() {
-    return yaml_params.write_to_dir(LIBPARAMS_PARAMS_DIR);
+    const char* dir = paramsGetDir();
+    if (dir == nullptr || dir[0] == '\0') {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    return yaml_params.write_to_dir(dir);
 }
 
 int8_t __read_from_files() {
-    return yaml_params.read_from_dir(LIBPARAMS_PARAMS_DIR);
+    const char* dir = paramsGetDir();
+    if (dir == nullptr || dir[0] == '\0') {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    return yaml_params.read_from_dir(dir);
 }

@@ -18,6 +18,8 @@ import yaml
 
 from params import IntegerParam, StringParam
 
+LOG_PREFIX = "[libparams-doc]"
+
 logger = logging.getLogger(__name__)
 
 LANGUAGE_C = 0
@@ -82,6 +84,18 @@ def write_parameters(file, all_params : list) -> None:
     else:
         file.write("The node doesn't have registers:\n\n")
 
+def _write_if_changed(path, content: str) -> str:
+    if os.path.exists(path):
+        with open(path, 'r', encoding="utf-8") as existing_file:
+            if existing_file.read() == content:
+                return "unchanged"
+        status = "updated"
+    else:
+        status = "added"
+    with open(path, 'w', encoding="utf-8") as out_file:
+        out_file.write(content)
+    return status
+
 def generate_markdown_doc(cyphal_pubs : dict,
                           cyphal_subs : dict,
                           all_params : list,
@@ -91,21 +105,53 @@ def generate_markdown_doc(cyphal_pubs : dict,
     assert isinstance(all_params, list)
     assert isinstance(output_markdown_filename, str)
 
-    with open(output_markdown_filename, 'w', encoding="utf-8") as file:
-        if len(cyphal_pubs) + len(cyphal_subs) >= 1:
-            file.write("The node has the following interface:\n\n")
+    content = ""
+    if len(cyphal_pubs) + len(cyphal_subs) >= 1:
+        content += "The node has the following interface:\n\n"
 
-        if len(cyphal_pubs) >= 1:
-            file.write("Cyphal Publishers:\n")
-            write_cyphal_topics(file, cyphal_pubs)
+    if len(cyphal_pubs) >= 1:
+        content += "Cyphal Publishers:\n"
+        content += _render_cyphal_topics(cyphal_pubs)
 
-        if len(cyphal_subs) >= 1:
-            file.write("Cyphal Subscribers:\n")
-            write_cyphal_topics(file, cyphal_subs)
+    if len(cyphal_subs) >= 1:
+        content += "Cyphal Subscribers:\n"
+        content += _render_cyphal_topics(cyphal_subs)
 
-        write_parameters(file, all_params)
+    content += _render_parameters(all_params)
 
-        file.write("> This docs was automatically generated. Do not edit it manually.\n\n")
+    content += "> This docs was automatically generated. Do not edit it manually.\n\n"
+    return _write_if_changed(output_markdown_filename, content)
+
+def _render_cyphal_topics(cyphal_topics: dict) -> str:
+    assert isinstance(cyphal_topics, dict)
+
+    content = "| Data type and topic name  | Description |\n"
+    content += "| ------------------------- | ----------- |\n"
+    for port_name, port_info in cyphal_topics.items():
+        data_type = port_data_type_to_md(port_info['data_type'])
+        topic_name = port_name[11:]
+        note = port_info.get('note')
+        note = note.replace('\n', '</br>') if note is not None else ""
+        content += f"| {data_type} </br> {topic_name} | {note}|\n"
+    content += "\n"
+    return content
+
+def _render_parameters(all_params : list) -> str:
+    assert isinstance(all_params, list)
+
+    content = ""
+    if len(all_params) >= 1:
+        content += "The node has the following registers:\n\n"
+        content += "| Register name           | Description |\n"
+        content += "| ----------------------- | ----------- |\n"
+
+        for param in all_params:
+            param.name = param.name.replace('"', '')
+            content += f"| {param.name.ljust(23)} | {param.note} |\n"
+        content += "\n"
+    else:
+        content += "The node doesn't have registers:\n\n"
+    return content
 
 def parse_yaml_files(input_yaml_files : list) -> Tuple[dict, dict, list]:
     assert isinstance(input_yaml_files, list) and len(input_yaml_files) != 0
@@ -147,10 +193,10 @@ def parse_yaml_files_and_generate_doc(input_yaml_files : list, output_markdown_p
         os.makedirs(directory)
 
     cyphal_pubs, cyphal_subs, all_params = parse_yaml_files(input_yaml_files)
-    generate_markdown_doc(cyphal_pubs, cyphal_subs, all_params, output_markdown_path)
+    return generate_markdown_doc(cyphal_pubs, cyphal_subs, all_params, output_markdown_path)
 
 if __name__=="__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format=f"{LOG_PREFIX} [%(levelname)s] %(message)s")
     logger.setLevel(logging.INFO)
 
     parser = ArgumentParser(description=__doc__)
@@ -158,5 +204,6 @@ if __name__=="__main__":
     parser.add_argument("--output", type=str, required=False, default='README.md')
     args = parser.parse_args()
 
-    print("Params docs generator:")
-    parse_yaml_files_and_generate_doc(args.files, args.output)
+    logger.info("Generating docs: output=%s, files=%d", args.output, len(args.files))
+    status = parse_yaml_files_and_generate_doc(args.files, args.output)
+    logger.info("Docs %s", status)

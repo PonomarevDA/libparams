@@ -109,6 +109,18 @@ int8_t paramsSave();
 int8_t paramsResetToDefault();
 
 /**
+ * @brief           Set directory for params files (SITL).
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsSetDir(const char* dir);
+
+/**
+ * @brief           Get directory for params files (SITL).
+ * @return          C-string on success, otherwise empty string.
+ */
+const char* paramsGetDir();
+
+/**
  * @note            Get the parameter name
  * @return          C-string on success, otherwise NULL.
  */

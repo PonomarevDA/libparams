@@ -13,7 +13,7 @@
 #include "SimpleLogger.hpp"
 #include "FlashMemoryLayout.hpp"
 
-static SimpleLogger logger("YamlParameters");
+static SimpleLogger logger("libparams-ubuntu");
 class YamlParameters {
     ParametersLayout_t params;
     std::string init_file_name = "init_params";

@@ -10,6 +10,8 @@
 #define LIBPARAM_YAML_PARAMETERS_HPP_
 
 #include <string.h>
+#include <string>
+#include <vector>
 #include "SimpleLogger.hpp"
 #include "FlashMemoryLayout.hpp"
 
@@ -33,7 +35,7 @@ private:
     int8_t __write_page(std::ofstream& params_storage_file, uint16_t* int_param_idx,
                         uint16_t* str_param_idx);
     int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
-                       uint16_t* str_param_idx);
+                       uint16_t* str_param_idx, std::vector<std::string>* parsed_lines);
 };
 
 #endif  // LIBPARAM_YAML_PARAMETERS_HPP_

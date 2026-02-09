@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <vector>
 
 #include "storage.h"
 #include "YamlParameters.hpp"
@@ -70,6 +71,8 @@ int8_t YamlParameters::read_from_dir(const std::string& path_str) {
     int8_t res;
     uint16_t int_param_idx = 0;
     uint16_t str_param_idx = 0;
+    std::vector<std::string> parsed_lines;
+    parsed_lines.reserve(params.num_int_params + params.num_str_params);
 
     for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         std::ifstream params_storage_file;
@@ -97,18 +100,22 @@ int8_t YamlParameters::read_from_dir(const std::string& path_str) {
             break;
         }
 
-        res = __read_page(params_storage_file, &int_param_idx, &str_param_idx);
+        res = __read_page(params_storage_file, &int_param_idx, &str_param_idx, &parsed_lines);
         params_storage_file.close();
 
         if (res != LIBPARAMS_OK) return res;
     }
 
     if (int_param_idx != params.num_int_params || str_param_idx != params.num_str_params) {
-        logger.error("Number of parameters in the file isn't equal to",
-                     " the one specified in the constructor\n",
-                     "int real: ", (int)int_param_idx, " expected: ", (int)params.num_int_params,
-                     "\n",
-                     "str real: ", (int)str_param_idx, " expected: ", (int)params.num_str_params);
+        if (!parsed_lines.empty()) {
+            logger.error("Parameter count mismatch; dumping parsed entries:");
+            for (const auto& line : parsed_lines) {
+                logger.error(line);
+            }
+        }
+        logger.error("Wrong number of parameters: ",
+                     (int)int_param_idx, "/", (int)params.num_int_params, " integers, ",
+                     (int)str_param_idx, "/", (int)params.num_str_params, " strings.");
         return LIBPARAMS_WRONG_ARGS;
     }
     return LIBPARAMS_OK;
@@ -148,15 +155,18 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
 }
 
 int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
-                                   uint16_t* str_param_idx) {
+                                   uint16_t* str_param_idx,
+                                   std::vector<std::string>* parsed_lines) {
     std::string line;
     std::string value;
 
     while (std::getline(params_storage_file, line)) {
-        logger.info(line);
         size_t delimiter_pos = line.find(':');
         if (delimiter_pos == std::string::npos) {
             continue;
+        }
+        if (parsed_lines != nullptr) {
+            parsed_lines->push_back(line);
         }
         value = line.substr(delimiter_pos + 1);
         try {

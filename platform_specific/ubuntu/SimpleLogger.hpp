@@ -26,7 +26,7 @@ public:
     void error(Args... args) {
         std::stringstream ss;
         (ss << ... << args);
-        std::cerr << "[" << module << "]: [ERROR]: " << ss.str() << std::endl;
+        std::cerr << "[" << module << "] [ERROR]: " << ss.str() << std::endl;
     }
 
 private:

@@ -59,17 +59,31 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
 
 int32_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     int32_t status = 0;
-    for (size_t idx = 0U; idx < (size + FLASH_WORD_SIZE - 1)/ FLASH_WORD_SIZE; idx++) {
-        uint64_t word = ((const uint64_t*)(const void*)data)[idx];
-        size_t addr = offset + FLASH_WORD_SIZE * idx;
+    if ((data == NULL) || (size == 0U)) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
 
+    for (size_t idx = 0U; idx < (size + FLASH_WORD_SIZE - 1U) / FLASH_WORD_SIZE; idx++) {
+        const size_t src_offset = idx * FLASH_WORD_SIZE;
+        const size_t remaining = size - src_offset;
+        const size_t bytes_in_word = (remaining < FLASH_WORD_SIZE) ? remaining : FLASH_WORD_SIZE;
+
+        // The erased flash state is 0xFF, so pad the tail with 0xFF for partial writes.
+        uint8_t word_bytes[FLASH_WORD_SIZE];
+        memset(word_bytes, 0xFF, sizeof(word_bytes));
+        memcpy(word_bytes, data + src_offset, bytes_in_word);
+
+        uint64_t word = 0U;
+        memcpy(&word, word_bytes, sizeof(word));
+
+        const size_t addr = offset + src_offset;
         status = flashWriteU64((uint32_t)addr, word);
         if (status < 0) {
-            break;
+            return status;
         }
     }
 
-    return size;  // Return the total number of bytes written
+    return (int32_t)size;
 }
 size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
     if (data == NULL) {

@@ -20,11 +20,17 @@ extern StringParamValue_t string_values_pool[];
 static ParamIndex_t integers_amount = 0;
 static ParamIndex_t strings_amount = 0;
 static ParamIndex_t all_params_amount = 0;
+static ParamIndex_t crc_param_idx = 0;
+static bool crc_enabled = false;
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
 static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver);
 static int8_t _save(RomDriverInstance* rom_driver);
 static int8_t _chooseRom();
+static uint32_t _crc32AddByte(uint32_t crc, uint8_t byte);
+static IntegerParamValue_t _calculateRomCrc(const RomDriverInstance* rom_driver);
+static IntegerParamValue_t _calculatePoolsCrc(const RomDriverInstance* rom_driver);
+static bool _isRomCrcValid(const RomDriverInstance* rom_driver);
 
 #define INT_POOL_SIZE           integers_amount * sizeof(IntegerParamValue_t)
 #define STR_POOL_SIZE           MAX_STRING_LENGTH * strings_amount
@@ -89,7 +95,26 @@ int8_t paramsInit(ParamIndex_t int_num,
     strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
     active_rom = &primary_rom;
+    standby_rom = NULL;
+    crc_param_idx = 0;
+    crc_enabled = false;
     return LIBPARAMS_OK;
+}
+
+int8_t paramsEnableCrc(ParamIndex_t param_idx) {
+    if (param_idx >= integers_amount) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
+    crc_param_idx = param_idx;
+    crc_enabled = true;
+    return LIBPARAMS_OK;
+}
+
+bool paramsIsCrcValid() {
+    if (!crc_enabled || crc_param_idx >= integers_amount || active_rom == NULL) {
+        return false;
+    }
+    return _isRomCrcValid(active_rom);
 }
 
 int8_t paramsInitRedundantPage() {
@@ -320,16 +345,29 @@ static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver)
  * If such error is detected, stop writing immediately to avoid doing something wrong.
  */
 static int8_t _save(RomDriverInstance* rom_driver) {
+    IntegerParamValue_t stored_crc = 0;
+    if (crc_enabled && crc_param_idx < integers_amount) {
+        stored_crc = integer_values_pool[crc_param_idx];
+        integer_values_pool[crc_param_idx] = _calculatePoolsCrc(rom_driver);
+    }
+
     if (INT_POOL_SIZE != 0 &&
             romWrite(rom_driver, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE) <= 0) {
+        if (crc_enabled && crc_param_idx < integers_amount) {
+            integer_values_pool[crc_param_idx] = stored_crc;
+        }
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
     size_t offset = _getStringMemoryPoolAddress(rom_driver);
     if (STR_POOL_SIZE != 0 &&
             romWrite(rom_driver, offset, (uint8_t*)string_values_pool, STR_POOL_SIZE) <= 0) {
+        if (crc_enabled && crc_param_idx < integers_amount) {
+            integer_values_pool[crc_param_idx] = stored_crc;
+        }
         return LIBPARAMS_UNKNOWN_ERROR;
     }
+
     rom_driver->erased = false;
     return LIBPARAMS_OK;
 }
@@ -343,10 +381,87 @@ static int8_t _chooseRom() {
     paramsLoadRom(&redundant_rom);
     active_rom = &primary_rom;
     standby_rom = &redundant_rom;
-    if (primary_rom.erased && !redundant_rom.erased) {
+    if (crc_enabled && _isRomCrcValid(&redundant_rom) && !_isRomCrcValid(&primary_rom)) {
+        active_rom = &redundant_rom;
+        standby_rom = &primary_rom;
+    } else if (primary_rom.erased && !redundant_rom.erased) {
         active_rom = &redundant_rom;
         standby_rom = &primary_rom;
     }
 
     return LIBPARAMS_OK;
+}
+
+static uint32_t _crc32AddByte(uint32_t crc, uint8_t byte) {
+    crc ^= byte;
+    for (uint8_t bit = 0; bit < 8; bit++) {
+        if ((crc & 1U) != 0U) {
+            crc = (crc >> 1U) ^ 0xEDB88320UL;
+        } else {
+            crc >>= 1U;
+        }
+    }
+    return crc;
+}
+
+static IntegerParamValue_t _calculateRomCrc(const RomDriverInstance* rom_driver) {
+    if (rom_driver == NULL || !rom_driver->inited) {
+        return 0;
+    }
+
+    uint32_t crc = 0xFFFFFFFFUL;
+    const size_t crc_offset = crc_param_idx * sizeof(IntegerParamValue_t);
+    const size_t crc_end = crc_offset + sizeof(IntegerParamValue_t);
+    for (size_t offset = 0; offset < romGetAvailableMemory(rom_driver); offset++) {
+        uint8_t byte = 0;
+        if (offset < crc_offset || offset >= crc_end) {
+            (void)romRead(rom_driver, offset, &byte, sizeof(byte));
+        }
+        crc = _crc32AddByte(crc, byte);
+    }
+
+    return (IntegerParamValue_t)((crc ^ 0xFFFFFFFFUL) & 0x7FFFFFFFUL);
+}
+
+static IntegerParamValue_t _calculatePoolsCrc(const RomDriverInstance* rom_driver) {
+    if (rom_driver == NULL || !rom_driver->inited) {
+        return 0;
+    }
+
+    uint32_t crc = 0xFFFFFFFFUL;
+    const size_t string_offset = _getStringMemoryPoolAddress(rom_driver);
+    const size_t crc_offset = crc_param_idx * sizeof(IntegerParamValue_t);
+    const size_t crc_end = crc_offset + sizeof(IntegerParamValue_t);
+
+    for (size_t offset = 0; offset < romGetAvailableMemory(rom_driver); offset++) {
+        uint8_t byte = 0xFFU;
+        if (offset < INT_POOL_SIZE) {
+            byte = ((uint8_t*)integer_values_pool)[offset];
+        } else if (offset >= string_offset) {
+            byte = ((uint8_t*)string_values_pool)[offset - string_offset];
+        }
+
+        if (offset >= crc_offset && offset < crc_end) {
+            byte = 0U;
+        }
+        crc = _crc32AddByte(crc, byte);
+    }
+
+    return (IntegerParamValue_t)((crc ^ 0xFFFFFFFFUL) & 0x7FFFFFFFUL);
+}
+
+static bool _isRomCrcValid(const RomDriverInstance* rom_driver) {
+    if (!crc_enabled || rom_driver == NULL || !rom_driver->inited) {
+        return false;
+    }
+
+    IntegerParamValue_t stored_crc = 0;
+    if (romRead(rom_driver,
+                crc_param_idx * sizeof(IntegerParamValue_t),
+                (uint8_t*)&stored_crc,
+                sizeof(stored_crc)) != sizeof(stored_crc)) {
+        return false;
+    }
+
+    return stored_crc == _calculateRomCrc(rom_driver);
 }

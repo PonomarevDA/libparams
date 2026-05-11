@@ -91,6 +91,19 @@ int8_t paramsInit(ParamIndex_t int_num, ParamIndex_t str_num,
 int8_t paramsInitRedundantPage();
 
 /**
+ * @brief           Enable parameter-storage CRC support.
+ * @param param_idx Integer parameter index used to store the CRC.
+ * @return          LIBPARAMS_OK on success, otherwise < 0.
+ */
+int8_t paramsEnableCrc(ParamIndex_t param_idx);
+
+/**
+ * @brief           Check whether the active persistent storage matches the configured CRC.
+ * @return          true if CRC support is enabled and the active storage CRC matches.
+ */
+bool paramsIsCrcValid();
+
+/**
  * @brief           Load parameters from a persistent memory: flash for stm32 and file for ubuntu.
  * @return          LIBPARAMS_OK on success, otherwise < 0.
  */

@@ -34,7 +34,7 @@ add_executable(application
 )
 
 execute_process(
-    COMMAND ${ROOT_DIR}/scripts/generate_params.py --out-dir . -f ${CMAKE_CURRENT_LIST_DIR}/params.yaml
+    COMMAND ${ROOT_DIR}/scripts/generate_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_LIST_DIR}/params.yaml
     RESULT_VARIABLE ret
 )
 if(NOT ret EQUAL 0)

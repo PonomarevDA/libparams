@@ -18,4 +18,4 @@ It will generate generate C-parameters from [baro.yaml](baro.yaml) and [mag.yaml
 ## Notes
 
 - Since Ubuntu flash memory drover emulates only a single 2 Kbyte page, we call `romInit(&rom, 0, 1)`.
-- Related workflow: [![build](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml)
+- Related workflow: [![CI](https://github.com/PonomarevDA/libparams/actions/workflows/ci.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/ci.yml)

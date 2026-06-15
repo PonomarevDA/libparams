@@ -20,7 +20,9 @@ def is_crlf(file_path: str) -> bool:
                 return True
     return False
 
-def check_files_in_directory(directory: str, exclude_directories=('.git', 'build')) -> list:
+def check_files_in_directory(
+        directory: str,
+        exclude_directories=('.git', 'build', '__pycache__')) -> list:
     assert isinstance(directory, str)
     assert isinstance(exclude_directories, tuple)
 

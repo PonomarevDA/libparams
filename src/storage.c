@@ -155,7 +155,7 @@ int8_t paramsLoad() {
     return LIBPARAMS_OK;
 }
 
-int8_t paramsLoadRom(RomDriverInstance* rom_instance) {
+static int8_t paramsLoadRom(RomDriverInstance* rom_instance) {
     romRead(rom_instance, 0, (uint8_t*)integer_values_pool, INT_POOL_SIZE);
     romRead(rom_instance, _getStringMemoryPoolAddress(rom_instance),
             (uint8_t*)&string_values_pool, STR_POOL_SIZE);

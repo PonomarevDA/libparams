@@ -15,12 +15,12 @@ jobs:
     env:
       BUILD_WRAPPER_OUT_DIR: bw-output
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
+      - name: Install build-wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v8.2.0
 
       - name: Install gtest
         run: wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh && chmod +x install_gtest_ubuntu.sh && ./install_gtest_ubuntu.sh
@@ -29,8 +29,11 @@ jobs:
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make coverage
 
-      - name: Run sonar-scanner
+      - name: Run SonarQube Scan
         if: github.event.repository.fork == false
+        uses: SonarSource/sonarqube-scan-action@v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: sonar-scanner
+        with:
+          args: >
+            --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"

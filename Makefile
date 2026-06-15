@@ -43,21 +43,25 @@ cpp_generator: clean
 	cd ${BUILD_CPP_GENERATOR} && ctest --verbose
 
 stm32f103: clean
-	mkdir -p build/tests/platform_specific/stm32f103
-	cd tests/platform_specific/stm32f103 && make
+	cmake -S tests/platform_specific/stm32f103 -B build/tests/platform_specific/stm32f103 \
+		-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/tests/platform_specific/cmake/arm-none-eabi-toolchain.cmake
+	cmake --build build/tests/platform_specific/stm32f103
 
 stm32g0b1: clean
-	mkdir -p build/tests/platform_specific/stm32g0b1
-	cd tests/platform_specific/stm32g0b1 && make
+	cmake -S tests/platform_specific/stm32g0b1 -B build/tests/platform_specific/stm32g0b1 \
+		-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/tests/platform_specific/cmake/arm-none-eabi-toolchain.cmake
+	cmake --build build/tests/platform_specific/stm32g0b1
 
 UBUNTU_BUILD_DIR=${ROOT_DIR}/build/tests/platform_specific/ubuntu
 UBUNTU_CMAKE_DIR=${ROOT_DIR}/tests/platform_specific/ubuntu
 ubuntu: clean
 	mkdir -p ${UBUNTU_BUILD_DIR}
-	cd ${UBUNTU_BUILD_DIR} && cmake -S ${UBUNTU_CMAKE_DIR} -B . && $(MAKE) && ./application
+	cmake -S ${UBUNTU_CMAKE_DIR} -B ${UBUNTU_BUILD_DIR}
+	cmake --build ${UBUNTU_BUILD_DIR}
+	${UBUNTU_BUILD_DIR}/application
 
 
-code_style: astyle cpplint crlf cppcheck
+code_style: astyle cpplint crlf cppcheck pylint
 astyle:
 	./scripts/code_style/check_astyle.py src/ include/ platform_specific/ --astylerc scripts/code_style/astylerc
 cpplint:
@@ -67,7 +71,7 @@ crlf:
 cppcheck:
 	./scripts/code_style/cppcheck.sh
 pylint:
-	pylint scripts/code_style
+	pylint --persistent=n scripts/code_style
 
 clean:
 	rm -rf ${BUILD_PATH}

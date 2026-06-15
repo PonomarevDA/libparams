@@ -1,6 +1,6 @@
 # stm32g0b1 (512 Kbytes) example
 
-This is the simplest stm32g0b1 example with Makefile.
+This is the simplest stm32g0b1 CMake example.
 
 ## Purpose
 
@@ -19,4 +19,4 @@ It will generate .bin file in `libparams/build` folder.
 ## Notes
 
 - Since we want to utilize the last page of flash memory, we call `romInit(&rom, 255, 1)`.
-- Related workflow: [![build](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/build.yml)
+- Related workflow: [![CI](https://github.com/PonomarevDA/libparams/actions/workflows/ci.yml/badge.svg)](https://github.com/PonomarevDA/libparams/actions/workflows/ci.yml)

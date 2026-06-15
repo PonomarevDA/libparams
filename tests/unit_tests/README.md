@@ -15,7 +15,7 @@ make
 
 in this folder.
 
-This tests are part of [the build CI](.github/workflows/build.yml).
+This tests are part of [the CI](../../.github/workflows/ci.yml).
 
 # Storage driver
 

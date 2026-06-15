@@ -1,0 +1,57 @@
+name: CI
+
+on: push
+
+jobs:
+  code_style:
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y astyle cppcheck dos2unix python3-pip
+          python3 -m pip install --break-system-packages cpplint pylint
+
+      - name: Run code style checks
+        run: make code_style
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc-arm-none-eabi make
+
+      - name: Build all platform examples
+        run: |
+          make -s stm32f103
+          make -s stm32g0b1
+          make -s ubuntu
+
+  test_params_generator:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh
+          chmod +x install_gtest_ubuntu.sh
+          ./install_gtest_ubuntu.sh
+          sudo apt-get update
+          sudo apt-get install -y cmake make
+
+      - name: Test params generators
+        run: |
+          make -s c_generator
+          make -s cpp_generator

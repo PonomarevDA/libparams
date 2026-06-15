@@ -53,10 +53,11 @@ int8_t paramsSetDir(const char* dir) {
     if (dir == NULL || dir[0] == '\0') {
         return LIBPARAMS_WRONG_ARGS;
     }
-    size_t len = strlen(dir);
-    if (len >= sizeof(params_dir_storage)) {
+    const char* end = memchr(dir, '\0', sizeof(params_dir_storage));
+    if (end == NULL) {
         return LIBPARAMS_WRONG_ARGS;
     }
+    size_t len = (size_t)(end - dir);
     memcpy(params_dir_storage, dir, len + 1);
     params_dir_set = true;
     return LIBPARAMS_OK;
@@ -381,10 +382,11 @@ static int8_t _chooseRom() {
     paramsLoadRom(&redundant_rom);
     active_rom = &primary_rom;
     standby_rom = &redundant_rom;
-    if (crc_enabled && _isRomCrcValid(&redundant_rom) && !_isRomCrcValid(&primary_rom)) {
-        active_rom = &redundant_rom;
-        standby_rom = &primary_rom;
-    } else if (primary_rom.erased && !redundant_rom.erased) {
+    bool use_redundant_rom = (primary_rom.erased && !redundant_rom.erased);
+    use_redundant_rom |= crc_enabled &&
+                         _isRomCrcValid(&redundant_rom) &&
+                         !_isRomCrcValid(&primary_rom);
+    if (use_redundant_rom) {
         active_rom = &redundant_rom;
         standby_rom = &primary_rom;
     }

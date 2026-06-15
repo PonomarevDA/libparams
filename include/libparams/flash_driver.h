@@ -51,7 +51,7 @@ size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read);
  * @return Info about the flash memory
  */
 uint16_t flashGetNumberOfPages();
-uint16_t flashGetPageSize();
+uint32_t flashGetPageSize();
 
 #ifdef __cplusplus
 }

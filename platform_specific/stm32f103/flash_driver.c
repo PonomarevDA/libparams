@@ -106,7 +106,7 @@ uint16_t flashGetNumberOfPages() {
     return 128;
 }
 
-uint16_t flashGetPageSize() {
+uint32_t flashGetPageSize() {
     return FLASH_PAGE_SIZE;
 }
 

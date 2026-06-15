@@ -70,18 +70,23 @@ int8_t flashErase(uint32_t first_page_idx, uint32_t num_of_pages) {
 
 int32_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
     int32_t status = 0;
-    const size_t words = (size + FLASH_WORD_SIZE - 1U) / FLASH_WORD_SIZE;
+    if (data == NULL || size == 0U) {
+        return LIBPARAMS_WRONG_ARGS;
+    }
 
-    for (size_t idx = 0U; idx < words; idx++) {
-        uint8_t word[FLASH_NB_32BITWORD_IN_FLASHWORD * 4U];
-        const size_t addr = offset + FLASH_WORD_SIZE * idx;
-        const size_t remaining = size - (idx * FLASH_WORD_SIZE);
-        const size_t chunk = (remaining > FLASH_WORD_SIZE) ? FLASH_WORD_SIZE : remaining;
+    const size_t first_addr = offset - (offset % FLASH_WORD_SIZE);
+    const size_t last_addr = offset + size;
 
+    for (size_t addr = first_addr; addr < last_addr; addr += FLASH_WORD_SIZE) {
+        uint32_t word[FLASH_NB_32BITWORD_IN_FLASHWORD];
         memset(word, 0xFF, sizeof(word));
-        memcpy(word, &data[idx * FLASH_WORD_SIZE], chunk);
 
-        status = flashWriteFlashword((uint32_t)addr, word);
+        const size_t chunk_begin = (offset > addr) ? offset : addr;
+        const size_t chunk_end = (last_addr < addr + FLASH_WORD_SIZE) ? last_addr : addr + FLASH_WORD_SIZE;
+        const size_t chunk_size = chunk_end - chunk_begin;
+        memcpy(&((uint8_t*)word)[chunk_begin - addr], &data[chunk_begin - offset], chunk_size);
+
+        status = flashWriteFlashword((uint32_t)addr, (const uint8_t*)word);
         if (status < 0) {
             break;
         }
@@ -108,8 +113,8 @@ uint16_t flashGetNumberOfPages() {
 #endif
 }
 
-uint16_t flashGetPageSize() {
-    return (uint16_t)FLASH_SECTOR_SIZE;
+uint32_t flashGetPageSize() {
+    return FLASH_SECTOR_SIZE;
 }
 
 static uint8_t* flashGetPointer() {

@@ -104,7 +104,7 @@ uint16_t flashGetNumberOfPages() {
     return 2 * n_flash_pages;
 }
 
-uint16_t flashGetPageSize() {
+uint32_t flashGetPageSize() {
     return PAGE_SIZE_BYTES;
 }
 

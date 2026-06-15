@@ -82,9 +82,11 @@ int32_t flashWrite(const uint8_t* data, size_t offset, size_t size) {
         memset(word, 0xFF, sizeof(word));
 
         const size_t chunk_begin = (offset > addr) ? offset : addr;
-        const size_t chunk_end = (last_addr < addr + FLASH_WORD_SIZE) ? last_addr : addr + FLASH_WORD_SIZE;
+        const size_t flash_word_end = addr + FLASH_WORD_SIZE;
+        const size_t chunk_end = (last_addr < flash_word_end) ? last_addr : flash_word_end;
         const size_t chunk_size = chunk_end - chunk_begin;
-        memcpy(&((uint8_t*)word)[chunk_begin - addr], &data[chunk_begin - offset], chunk_size);
+        uint8_t* word_bytes = (uint8_t*)word;
+        memcpy(&word_bytes[chunk_begin - addr], &data[chunk_begin - offset], chunk_size);
 
         status = flashWriteFlashword((uint32_t)addr, (const uint8_t*)word);
         if (status < 0) {

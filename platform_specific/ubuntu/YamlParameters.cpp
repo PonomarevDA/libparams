@@ -38,19 +38,19 @@ YamlParameters::YamlParameters(FlashMemoryLayout_t flash_desc,
     }
 }
 
-int8_t YamlParameters::set_init_file_name(std::string file_name) {
+int8_t YamlParameters::set_default_file_name(std::string file_name) {
     if (file_name.empty()) {
         return LIBPARAMS_WRONG_ARGS;
     }
-    init_file_name = file_name;
+    default_file_name = file_name;
     return LIBPARAMS_OK;
 }
 
-int8_t YamlParameters::set_temp_file_name(std::string file_name) {
+int8_t YamlParameters::set_nvm_file_name(std::string file_name) {
     if (file_name.empty()) {
         return LIBPARAMS_WRONG_ARGS;
     }
-    temp_file_name = file_name;
+    nvm_file_name = file_name;
     return LIBPARAMS_OK;
 }
 
@@ -74,13 +74,13 @@ int8_t YamlParameters::read_from_dir(const std::string& path_str) {
     for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         std::ifstream params_storage_file;
 
-        fs::path temp = base / (temp_file_name + "_" + std::to_string(idx) + ".yaml");
+        fs::path temp = base / (nvm_file_name + "_" + std::to_string(idx) + ".yaml");
         params_storage_file.open(temp, std::ios_base::in);
 
         if (!params_storage_file) {
             logger.info(temp.string(), " could not be opened for reading!");
 
-            fs::path init = base / (init_file_name + "_" + std::to_string(idx) + ".yaml");
+            fs::path init = base / (default_file_name + "_" + std::to_string(idx) + ".yaml");
             params_storage_file.open(init, std::ios_base::in);
 
             if (!params_storage_file) {
@@ -125,7 +125,7 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
     uint16_t str_param_idx = 0;
     for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         snprintf(file_name, sizeof(file_name), "%s/%s_%d.yaml",
-                 path.c_str(), temp_file_name.c_str(), idx);
+                 path.c_str(), nvm_file_name.c_str(), idx);
         std::ofstream params_storage_file;
         params_storage_file.open(file_name, std::ios_base::out);
         logger.info("save data to ", file_name);

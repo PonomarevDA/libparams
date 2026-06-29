@@ -184,7 +184,7 @@ void application_example() {
 You can create yaml file to specify initial parameters:
 
 ```yaml
-# init_params.yaml
+# default_params.yaml
 uavcan.node.id: 50
 
 system.name: ""

@@ -45,13 +45,25 @@ static int32_t __save_to_files();
 static int8_t __read_from_files();
 
 void flashInit() {
+    // Deprecated since v0.15.0, kept for backward compatibility.
+    // Can be removed once the supported version is above v0.15.x.
 #ifdef LIBPARAMS_INIT_PARAMS_FILE_NAME
-    yaml_params.set_init_file_name(LIBPARAMS_INIT_PARAMS_FILE_NAME);
+#pragma message("LIBPARAMS_INIT_PARAMS_FILE_NAME is deprecated, use LIBPARAMS_DEFAULT_PARAMS_FILE_NAME instead")
+    yaml_params.set_default_file_name(LIBPARAMS_INIT_PARAMS_FILE_NAME);
 #endif
 #ifdef LIBPARAMS_TEMP_PARAMS_FILE_NAME
-    yaml_params.set_temp_file_name(LIBPARAMS_TEMP_PARAMS_FILE_NAME);
+#pragma message("LIBPARAMS_TEMP_PARAMS_FILE_NAME is deprecated, use LIBPARAMS_NVM_PARAMS_FILE_NAME instead")
+    yaml_params.set_nvm_file_name(LIBPARAMS_TEMP_PARAMS_FILE_NAME);
 #endif
-    // load parameters to the last suited pages
+
+#ifdef LIBPARAMS_DEFAULT_PARAMS_FILE_NAME
+    yaml_params.set_default_file_name(LIBPARAMS_DEFAULT_PARAMS_FILE_NAME);
+#endif
+#ifdef LIBPARAMS_NVM_PARAMS_FILE_NAME
+    yaml_params.set_nvm_file_name(LIBPARAMS_NVM_PARAMS_FILE_NAME);
+#endif
+
+    // Load parameters to the last suited pages
     // (such that primary rom at always would be filled after initialization)
     yaml_params.flash.memory_ptr = &flashGetPointer()[mem_layout.flash_size];
     __read_from_files();

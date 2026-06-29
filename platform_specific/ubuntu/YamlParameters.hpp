@@ -16,8 +16,8 @@
 static SimpleLogger logger("libparams-ubuntu");
 class YamlParameters {
     ParametersLayout_t params;
-    std::string init_file_name = "init_params";
-    std::string temp_file_name = "temp_params";
+    std::string default_file_name = "default_params";  // read-only factory defaults
+    std::string nvm_file_name = "nvm_params";           // persistent storage (emulated NVM)
 
 public:
     FlashMemoryLayout_t flash;
@@ -26,8 +26,8 @@ public:
     int8_t read_from_dir(const std::string& path);
     int8_t write_to_dir(const std::string& path);
 
-    int8_t set_init_file_name(std::string file_name);
-    int8_t set_temp_file_name(std::string file_name);
+    int8_t set_default_file_name(std::string file_name);
+    int8_t set_nvm_file_name(std::string file_name);
 
 private:
     int8_t __write_page(std::ofstream& params_storage_file, uint16_t* int_param_idx,

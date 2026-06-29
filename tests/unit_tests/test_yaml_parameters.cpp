@@ -190,11 +190,11 @@ protected:
 };
 
 TEST_F(YamlParamsStandardPoolTest, FileNamesConsistency) {
-    ASSERT_EQ(yaml_params->set_temp_file_name(""), LIBPARAMS_WRONG_ARGS);
-    ASSERT_EQ(yaml_params->set_init_file_name(""), LIBPARAMS_WRONG_ARGS);
+    ASSERT_EQ(yaml_params->set_nvm_file_name(""), LIBPARAMS_WRONG_ARGS);
+    ASSERT_EQ(yaml_params->set_default_file_name(""), LIBPARAMS_WRONG_ARGS);
 
-    ASSERT_EQ(yaml_params->set_init_file_name("file1"), LIBPARAMS_OK);
-    ASSERT_EQ(yaml_params->set_temp_file_name("file2"), LIBPARAMS_OK);
+    ASSERT_EQ(yaml_params->set_default_file_name("file1"), LIBPARAMS_OK);
+    ASSERT_EQ(yaml_params->set_nvm_file_name("file2"), LIBPARAMS_OK);
 
     delete_file_from_dir("file1_0.yaml");
     delete_file_from_dir("file2_0.yaml");
@@ -219,14 +219,14 @@ TEST_F(YamlParamsStandardPoolTest, ComparePool) {
     fill_flash_with_default();
     compare_flash_with_pool();
     ASSERT_EQ(yaml_params->write_to_dir(dir), LIBPARAMS_OK);
-    ASSERT_TRUE(std::filesystem::exists(dir + "/temp_params_0.yaml"));
+    ASSERT_TRUE(std::filesystem::exists(dir + "/nvm_params_0.yaml"));
 
     // reading the values from the file into flash
-    ASSERT_EQ(yaml_params->set_init_file_name("temp_params"), LIBPARAMS_OK);
+    ASSERT_EQ(yaml_params->set_default_file_name("nvm_params"), LIBPARAMS_OK);
     ASSERT_EQ(yaml_params->read_from_dir(dir), LIBPARAMS_OK);
 
     compare_flash_with_pool();
-    delete_file_from_dir("temp_params_0.yaml");
+    delete_file_from_dir("nvm_params_0.yaml");
 }
 
 int main(int argc, char* argv[]) {

@@ -57,15 +57,16 @@ int8_t YamlParameters::set_nvm_file_name(std::string file_name) {
 
 int8_t YamlParameters::read_from_dir(const std::string& path_str) {
     namespace fs = std::filesystem;
-    if (!path_str.empty()) {
-        logger.info("Initializing with ", "LIBPARAMS_PARAMS_DIR=",
-                    fs::absolute(fs::path(path_str)).lexically_normal());
-    }
-
     if (path_str.empty()) return LIBPARAMS_WRONG_ARGS;
 
     // Make the base directory absolute (no filesystem access needed)
     fs::path base = fs::absolute(fs::path(path_str)).lexically_normal();
+
+    // Log the directory only when it changes, so the rest can use bare file names.
+    if (base.string() != logged_dir) {
+        logger.info("Params dir: ", base.string());
+        logged_dir = base.string();
+    }
 
     int8_t res;
     uint16_t int_param_idx = 0;
@@ -74,23 +75,20 @@ int8_t YamlParameters::read_from_dir(const std::string& path_str) {
     for (uint16_t idx = 0; idx < flash.num_pages; idx++) {
         std::ifstream params_storage_file;
 
-        fs::path temp = base / (nvm_file_name + "_" + std::to_string(idx) + ".yaml");
-        params_storage_file.open(temp, std::ios_base::in);
+        // Prefer the persistent nvm file, fall back to the read-only default file.
+        fs::path nvm = base / (nvm_file_name + "_" + std::to_string(idx) + ".yaml");
+        params_storage_file.open(nvm, std::ios_base::in);
 
-        if (!params_storage_file) {
-            logger.info(temp.string(), " could not be opened for reading!");
-
-            fs::path init = base / (default_file_name + "_" + std::to_string(idx) + ".yaml");
-            params_storage_file.open(init, std::ios_base::in);
-
+        if (params_storage_file) {
+            logger.info("Read params from nvm file: ", nvm.filename().string());
+        } else {
+            fs::path def = base / (default_file_name + "_" + std::to_string(idx) + ".yaml");
+            params_storage_file.open(def, std::ios_base::in);
             if (!params_storage_file) {
-                logger.error(init.string(), " could not be opened for reading!");
+                logger.error("Cannot open ", nvm.string(), " or ", def.string());
                 return LIBPARAMS_WRONG_ARGS;
             }
-
-            logger.info("Reading params from the init file ", init.string(), ":");
-        } else {
-            logger.info("Reading params from the temp file ", temp.string(), ":");
+            logger.info("Read params from default file: ", def.filename().string());
         }
 
         if ((int_param_idx > params.num_int_params) || (str_param_idx > params.num_str_params)) {
@@ -111,6 +109,7 @@ int8_t YamlParameters::read_from_dir(const std::string& path_str) {
                      "str real: ", (int)str_param_idx, " expected: ", (int)params.num_str_params);
         return LIBPARAMS_WRONG_ARGS;
     }
+    log_param_changes();
     return LIBPARAMS_OK;
 }
 
@@ -128,7 +127,6 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
                  path.c_str(), nvm_file_name.c_str(), idx);
         std::ofstream params_storage_file;
         params_storage_file.open(file_name, std::ios_base::out);
-        logger.info("save data to ", file_name);
         res = __write_page(params_storage_file, &int_param_idx, &str_param_idx);
         params_storage_file.close();
         if (res != LIBPARAMS_OK) {
@@ -144,6 +142,7 @@ int8_t YamlParameters::write_to_dir(const std::string& path) {
                      " expected: ", (int)params.num_str_params);
         return LIBPARAMS_WRONG_ARGS;
     }
+    log_param_changes();
     return LIBPARAMS_OK;
 }
 
@@ -153,7 +152,6 @@ int8_t YamlParameters::__read_page(std::ifstream& params_storage_file, uint16_t*
     std::string value;
 
     while (std::getline(params_storage_file, line)) {
-        logger.info(line);
         size_t delimiter_pos = line.find(':');
         if (delimiter_pos == std::string::npos) {
             continue;
@@ -215,7 +213,6 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
         memcpy(&int_param_value, flash.memory_ptr + index * 4, 4);
         params_storage_file << std::left << std::setw(32) << name << ": "
                             << int_param_value << "\n";
-        logger.info(std::left, std::setw(32), name, ":\t", int_param_value);
         n_bytes += 4;
         *int_param_idx = *int_param_idx + 1;
         if (n_bytes + 4 > flash.page_size) {
@@ -244,7 +241,6 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
         auto str_param = str_param_value.substr(0, str_end);
         params_storage_file << std::left << std::setw(32) << name << ": " << '"'
                             << str_param.c_str() << '"' << "\n";
-        logger.info(std::left, std::setw(32), name, ":\t", '"', str_param.c_str(), '"');
 
         n_bytes += MAX_STRING_LENGTH;
 
@@ -254,4 +250,44 @@ int8_t YamlParameters::__write_page(std::ofstream& params_storage_file, uint16_t
         }
     }
     return LIBPARAMS_OK;
+}
+
+void YamlParameters::log_param_changes() {
+    bool first = !snapshot_taken;
+    if (first) {
+        snapshot_int.assign(params.num_int_params, 0);
+        snapshot_str.assign(params.num_str_params, std::string());
+    }
+
+    for (uint16_t i = 0; i < params.num_int_params; i++) {
+        int32_t value;
+        memcpy(&value, flash.memory_ptr + i * 4, 4);
+        const char* name = params.integer_desc_pool[i].name;
+        if (first) {
+            logger.info(std::left, std::setw(32), name, ": ", value);
+        } else if (value != snapshot_int[i]) {
+            logger.info(std::left, std::setw(32), name, ": ", snapshot_int[i], " -> ", value);
+        }
+        snapshot_int[i] = value;
+    }
+
+    for (uint16_t i = 0; i < params.num_str_params; i++) {
+        const char* name = params.string_desc_pool[i].name;
+        if (name == nullptr) {
+            continue;
+        }
+        size_t offset = flash.flash_size - MAX_STRING_LENGTH * (params.num_str_params - i);
+        std::string raw(reinterpret_cast<char*>((void*)(flash.memory_ptr + offset)),
+                        MAX_STRING_LENGTH);
+        std::string value = raw.substr(0, raw.find('\0'));
+        if (first) {
+            logger.info(std::left, std::setw(32), name, ": \"", value.c_str(), "\"");
+        } else if (value != snapshot_str[i]) {
+            logger.info(std::left, std::setw(32), name, ": \"", snapshot_str[i].c_str(),
+                        "\" -> \"", value.c_str(), "\"");
+        }
+        snapshot_str[i] = value;
+    }
+
+    snapshot_taken = true;
 }

@@ -10,6 +10,8 @@
 #define LIBPARAM_YAML_PARAMETERS_HPP_
 
 #include <string.h>
+#include <string>
+#include <vector>
 #include "SimpleLogger.hpp"
 #include "FlashMemoryLayout.hpp"
 
@@ -18,6 +20,10 @@ class YamlParameters {
     ParametersLayout_t params;
     std::string default_file_name = "default_params";  // read-only factory defaults
     std::string nvm_file_name = "nvm_params";           // persistent storage (emulated NVM)
+    std::string logged_dir;                             // last dir logged, to print it only on change
+    std::vector<int32_t> snapshot_int;                  // last logged integer values
+    std::vector<std::string> snapshot_str;              // last logged string values
+    bool snapshot_taken = false;
 
 public:
     FlashMemoryLayout_t flash;
@@ -34,6 +40,8 @@ private:
                         uint16_t* str_param_idx);
     int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
                        uint16_t* str_param_idx);
+    // Log the full table on the first call, then only changed params.
+    void log_param_changes();
 };
 
 #endif  // LIBPARAM_YAML_PARAMETERS_HPP_

@@ -262,11 +262,11 @@ static size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
 }
 
 static uint16_t flashGetNumberOfPages(void) {
-    // Only one page since whole memory can be accessed sequentially
-    return 1;
+    // Two logical regions reuse the parameter store's redundant-page recovery.
+    return 2;
 }
 static uint32_t flashGetPageSize(void) {
-    return FM25V02_SIZE_BYTES;
+    return FM25V02_SIZE_BYTES / 2U;
 }
 
 const FlashDriverOps* stm32h753xxSpiFramGetOps(void) {

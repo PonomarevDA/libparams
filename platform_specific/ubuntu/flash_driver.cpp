@@ -93,7 +93,7 @@ static int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
         return LIBPARAMS_WRONG_ARGS;
     }
     memset(flash_memory + start_page_idx * PAGE_SIZE_BYTES, 0x00, num_of_pages * PAGE_SIZE_BYTES);
-    logger.info("flashErase: page=", start_page_idx, ", count=", num_of_pages);
+    logger.debug("flashErase: page=", start_page_idx, ", count=", num_of_pages);
     return LIBPARAMS_OK;
 }
 
@@ -116,7 +116,7 @@ static int32_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_wr
 
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
-    logger.info("flashWrite: offset=", offset, ", bytes=", bytes_to_write);
+    logger.debug("flashWrite: offset=", offset, ", bytes=", bytes_to_write);
     uint8_t redundant = (offset - FLASH_START_ADDR) / mem_layout.flash_size;
     yaml_params.flash.memory_ptr = &flashGetPointer()
                                    [redundant * mem_layout.flash_size];
@@ -144,6 +144,14 @@ const FlashDriverOps* ubuntuFlashGetOps() {
         FLASH_START_ADDR,
     };
     return &ops;
+}
+
+void ubuntuFlashSetLogLevel(LibparamsLogLevel level) {
+    SimpleLogger::level = level;
+}
+
+void ubuntuFlashSetLogHandler(LibparamsLogHandler handler) {
+    SimpleLogger::handler = handler;
 }
 
 int32_t __save_to_files() {

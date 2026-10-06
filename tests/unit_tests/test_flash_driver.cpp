@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <vector>
 #include "flash_driver.h"
 #include "platform_flash_driver.h"
 #include "libparams_error_codes.h"
@@ -108,6 +109,35 @@ TEST(TestFlashDriver, test_flash_check_string_ok) {
     res = flash->read(read_val, 0, 56);
     ASSERT_EQ(res, 56);
     ASSERT_STREQ(val, (char*)read_val);
+}
+
+
+// Test case 6. Logging
+static std::vector<LibparamsLogLevel> captured_levels;
+static void captureLog(LibparamsLogLevel level, const char*) {
+    captured_levels.push_back(level);
+}
+
+TEST(TestFlashDriver, test_log_level_filters_handler) {
+    const FlashDriverOps* flash = ubuntuFlashGetOps();
+    ubuntuFlashSetLogHandler(captureLog);
+
+    captured_levels.clear();
+    ubuntuFlashSetLogLevel(LIBPARAMS_LOG_INFO);
+    flash->unlock();
+    flash->erase(0, 1);
+    flash->lock();
+    EXPECT_TRUE(captured_levels.empty());
+
+    ubuntuFlashSetLogLevel(LIBPARAMS_LOG_DEBUG);
+    flash->unlock();
+    flash->erase(0, 1);
+    flash->lock();
+    ASSERT_EQ(captured_levels.size(), 1U);
+    EXPECT_EQ(captured_levels[0], LIBPARAMS_LOG_DEBUG);
+
+    ubuntuFlashSetLogHandler(nullptr);
+    ubuntuFlashSetLogLevel(LIBPARAMS_LOG_INFO);
 }
 
 int main (int argc, char *argv[]) {

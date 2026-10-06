@@ -87,8 +87,7 @@ system.name:
   default: "libparams"
 ```
 
-[scripts/generate_params.py](scripts/generate_params.py) turns one or more YAML files into `params.cpp` (descriptor and value arrays) and `params.hpp` (`IntParamsIndexes`, `StrParamsIndexes`, `NUM_OF_STR_PARAMS`).
-`--language c` writes `params.c` and `params.h` instead.
+The generator turns one or more YAML files into `params.cpp` (descriptor and value arrays) and `params.hpp` (`IntParamsIndexes`, `StrParamsIndexes`, `NUM_OF_STR_PARAMS`), or `params.c` and `params.h` for C.
 
 ### 2.2. Build
 
@@ -98,15 +97,15 @@ Add the repository as a submodule and include [libparams.cmake](libparams.cmake)
 set(LIBPARAMS_PLATFORM stm32g0b1)  # stm32f103, stm32g0b1, stm32h753xx, ubuntu
 include(${LIBPARAMS_PATH}/libparams.cmake)
 
-execute_process(
-    COMMAND ${LIBPARAMS_PATH}/scripts/generate_params.py --out-dir ${CMAKE_BINARY_DIR}
-            -f ${CMAKE_CURRENT_SOURCE_DIR}/params.yaml
-    COMMAND_ERROR_IS_FATAL ANY
-)
+libparams_generate_params(OUT_DIR ${CMAKE_BINARY_DIR} YAML params.yaml)
 
 add_executable(app main.cpp ${CMAKE_BINARY_DIR}/params.cpp ${libparamsSrc})
 target_include_directories(app PRIVATE ${libparamsHeaders} ${CMAKE_BINARY_DIR})
 ```
+
+`libparams_generate_params()` runs the generator at configure time and re-configures when a YAML file changes.
+It also takes `LANGUAGE c`, `DEFAULT_PARAMS_DIR` for SITL default values and `DOCS` for a markdown table, see [libparams.cmake](libparams.cmake).
+Prefer it over calling the scripts directly: the scripts are an implementation detail.
 
 ### 2.3. Application
 

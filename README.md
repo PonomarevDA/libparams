@@ -132,6 +132,7 @@ For SITL builds (`LIBPARAMS_PLATFORM=ubuntu`), set the YAML directory and the lo
 | ------- | ----------- | ------- |
 | [tests/params_generator/c](tests/params_generator/c/README.md) | Generate C parameters | `make c_generator` |
 | [tests/params_generator/cpp](tests/params_generator/cpp/README.md) | Generate C++ parameters | `make cpp_generator` |
+| [tests/params_generator/smoke](tests/params_generator/smoke) | `libparams_generate_params()` in C and C++: load SITL defaults, save, load again | `make generator_smoke` |
 | [tests/platform_specific](tests/platform_specific) | Build for a platform without warnings | `make stm32f103`, `make stm32g0b1`, `make stm32h753xx`, `make ubuntu` |
 | [tests/unit_tests](tests/unit_tests/README.md) | Unit tests, requires GoogleTest | `make unit_tests` |
 

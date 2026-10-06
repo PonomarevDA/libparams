@@ -339,6 +339,17 @@ TEST_F(SinglePageStorageDriverTest, findParameterByValidName) {
 TEST_F(SinglePageStorageDriverTest, findParameterByInvalidName) {
     ASSERT_EQ(NUMBER_OF_PARAMS, paramsFind((const uint8_t*)"none", 4));
 }
+// Test 6.3: Find Parameter by exact length, without the terminating null
+TEST_F(SinglePageStorageDriverTest, findParameterByNameWithoutNull) {
+    ASSERT_EQ(MAGNETOMETER_ID, paramsFind((const uint8_t*)"uavcan.pub.mag.id", 17));
+    ASSERT_EQ(INTEGER_PARAMS_AMOUNT + NODE_ID, paramsFind((const uint8_t*)"name", 4));
+}
+// Test 6.4: A prefix of a parameter name is not a match
+TEST_F(SinglePageStorageDriverTest, findParameterByNamePrefix) {
+    ASSERT_EQ(NUMBER_OF_PARAMS, paramsFind((const uint8_t*)"uavcan.pub.mag", 14));
+    ASSERT_EQ(NUMBER_OF_PARAMS, paramsFind((const uint8_t*)"nam", 3));
+    ASSERT_EQ(NUMBER_OF_PARAMS, paramsFind(nullptr, 4));
+}
 
 
 // Test Case 7: Access Parameter Types

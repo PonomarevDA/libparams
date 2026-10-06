@@ -66,6 +66,19 @@ ubuntu: clean
 	${UBUNTU_BUILD_DIR}/application
 
 
+FOOTPRINT_DIR=${BUILD_PATH}/footprint
+footprint:
+	mkdir -p ${FOOTPRINT_DIR}
+	@for cpu in cortex-m0plus cortex-m3 cortex-m7; do \
+		for src in rom storage; do \
+			arm-none-eabi-gcc -std=c11 -mcpu=$$cpu -mthumb -Os -ffunction-sections -fdata-sections \
+				-Iinclude/libparams -c src/$$src.c -o ${FOOTPRINT_DIR}/$$src-$$cpu.o || exit 1; \
+		done; \
+		echo "$$cpu:"; \
+		arm-none-eabi-size -t ${FOOTPRINT_DIR}/rom-$$cpu.o ${FOOTPRINT_DIR}/storage-$$cpu.o; \
+	done
+
+
 code_style: astyle cpplint crlf cppcheck pylint
 astyle:
 	./scripts/code_style/check_astyle.py src/ include/ platform_specific/ --astylerc scripts/code_style/astylerc

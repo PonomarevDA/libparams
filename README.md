@@ -2,155 +2,77 @@
 
 # libparams
 
-libparams is a C-written hardware abstract library that consist of 2 things:
+libparams is a C library for persistent parameter storage in real-time embedded applications.
+It keeps integer and string parameters in RAM with O(1) access by index and stores them in flash through a small driver interface.
 
-- Parameters Storage - an interface under ROM that allows to store integers and strings with O(1) access complexity.
-- Abstract ROM Driver - an interface under your flash memory that allows to write and read sequence of bytes.
+- The core is C11 with no heap and no external dependencies.
+- Parameters are declared in YAML; the C/C++ tables are generated at build time.
+- Optional redundant flash pages, CRC check and erased-flash detection.
+- Runs on STM32 microcontrollers and on Linux/macOS, where flash is emulated by YAML files (SITL).
 
-It also has an example of flash memory driver implementation for stm32f103 (128 KBytes of flash memory), stm32f103g0 (512 KBytes) based on Stm32CubeIDE HAL and simple Ubuntu flash memory emulation (for SITL usege).
-
-**Purpose**
-
-The library is intended for real-time embedded applications with small memory such as stm32f103 where persistent storage is required. It is suitable for Cyphal, DroneCAN and other applications as [Register interface](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl).
-
-**Minimum technical requirements**
-
-The codebase is implemented in C99/C11.
-
-The library was tested on stm32f103 (128 Kbytes) and stm32g0 (512 Kbytes). These hardware can be considered as minimum required.
-
-## 1. DESIGN
-
-The design of the library can be illustrated as shown below:
+## 1. Design
 
 ```
-+-------+----------------+---------------+-------+
-|       Parameters (storage.c, storage.h)        |
-+-------+----------------+---------------+-------+
-                         |
-+-------+----------------+---------------+-------+
-|       Abstract ROM driver (rom.c, rom.h)       |
-+-------+----------------+-----------------------+
-        |                |                |
-+-------+------+ +-------+------+ +-------+------+
-|    STM32f1   | |    STM32g0   | |    Ubuntu    |
-| Flash Driver | | Flash Driver | | SITL Driver  |
-+--------------+ +--------------+ +--------------+
++------------------------------------------------+
+|        Parameters (storage.h, storage.c)       |
++------------------------------------------------+
+                        |
++------------------------------------------------+
+|         Abstract ROM driver (rom.h, rom.c)     |
++------------------------------------------------+
+                        | FlashDriverOps
++-----------+-----------+-------------+----------+
+| STM32F103 | STM32G0B1 | STM32H753xx |  Ubuntu  |
+|   flash   |   flash   | flash, FRAM |  (SITL)  |
++-----------+-----------+-------------+----------+
 ```
 
+### 1.1. Parameters
 
-### 1.1. High level interface. Parameters
+Two parameter types are implemented:
 
-There are 4 types of parameters that we may want to store (they are defined in [ParamType_t](https://github.com/PonomarevDA/libparams/blob/585dd09fdd3267675acdf890978c1a266b38c39a/libparams/storage.h#L29) enum):
-- PARAM_TYPE_INTEGER (int32)
-- PARAM_TYPE_REAL (float32)
-- PARAM_TYPE_BOOLEAN (uint8)
-- PARAM_TYPE_STRING (uint8[56])
+| Type | Value | Descriptor fields |
+| ---- | ----- | ----------------- |
+| Integer | `int32_t` | name, min, max, default, mutability, required |
+| String | `uint8_t[56]` | name, default, mutability |
 
-Each parameter has at least the following fields:
-- value
-- default value (immutable, that means in can't be changed in real time)
-- flags: mutability, required, persistence, visability.
+| Property | Meaning |
+| -------- | ------- |
+| Mutability | An immutable parameter can't be changed through `paramsSet*()`. A string parameter that is immutable always reads its default. |
+| Required | `paramsResetToDefault()` keeps the value of a required immutable integer parameter. |
 
-The parameter properties were inspired by the register properties in [Cyphal specification](https://github.com/OpenCyphal/public_regulated_data_types/blob/master/uavcan/register/384.Access.1.0.dsdl). The following properties can be configured by the design of the library:
+Values and descriptors are arrays defined by the application (usually generated, see [2.1](#21-parameters-from-yaml)): `integer_values_pool`, `integer_desc_pool`, `string_values_pool`, `string_desc_pool`.
+Integers come first, so a string parameter index starts at `INTEGER_PARAMS_AMOUNT`.
 
-| Property    | Meaning |
-| ----------- | ------- |
-| Mutability  | Mutability defines the write access. If the parameter is mutable, it can be written by a user for example via Cyphal register interface. Immutable paramters are not allowed to be written by such services, but that doesn't imply that their values are constant (unchanging), because internally the application still can do it. |
-| Required  | Required means that the parameter's default value is not essential. Practically, it means that the paramter will not be reset during the paramsResetToDefault(). |
-| Persistence </br> (not yet*) | Persistence means that the parameter retains its value permanently across power cycles or any other changes in the state of the server, until it is explicitly overwritten. |
-| Visability </br> (not yet*) | If the parameter is visable, it means it can be accesed from the outside of the application. If the parameter is hidden, it is expected to use it for interal purposes only. The library itself doesn't rely on this property. It is reserved for higher level purposes. |
+Access by index is O(1).
+Lookup by name (`paramsFind()`) is O(n), where n is the number of parameters.
 
-> At the moment, all parameters are always persistent and visible. The only property you can configure is mutability and required.
+The full API is documented in [include/libparams/storage.h](include/libparams/storage.h).
 
-Beside the properties above the Integer and Real parameters have the following additional fields:
-- min (const)
-- max (const)
+### 1.2. Abstract ROM driver
 
-A parameter of any type is divided into 2 arrays: `*ParamValue_t` (actual values) and `*Desc_t` (auxillary information such as parameter name, default, min and max values) for each parameter type. These arrays expected to be allocated by a user outside the library.
+The ROM driver reads and writes a byte sequence within a range of flash pages: `romInit()`, `romRead()`, then `romBeginWrite()`, `romWrite()`, `romEndWrite()`.
+The storage layer calls it for you.
+See [include/libparams/rom.h](include/libparams/rom.h).
 
-The library allows to have a read/write access to these parameters by their index or name, reset them to default values and other features.
+### 1.3. Flash drivers
 
-Access to a parameter can be done by index. Since paramters are stored as an array, the access complexity is O(1).
+A flash driver is a `FlashDriverOps` table ([flash_driver.h](include/libparams/flash_driver.h)) returned by `<platform>GetOps()`.
 
-Writing or reading from the external application should be done by name of the parameter. These operations have O(n) complexity, where n - is the total number of the parameters.
+| Platform | Ops | Notes |
+| -------- | --- | ----- |
+| [stm32f103](platform_specific/stm32f103/README.md) | `stm32f103InternalFlashGetOps()` | 128 KB internal flash, HAL |
+| [stm32g0b1](platform_specific/stm32g0b1/README.md) | `stm32g0b1InternalFlashGetOps()` | 512 KB internal flash, HAL |
+| [stm32h753xx](platform_specific/stm32h753xx/README.md) | `stm32h753xxInternalFlashGetOps()`, `stm32h753xxSpiFramGetOps()` | 2 MB internal flash or external SPI FRAM |
+| [ubuntu](platform_specific/ubuntu/README.md) | `ubuntuFlashGetOps()` | Flash emulated in RAM, persisted to YAML files |
 
-Look at [libparams/storage.h](libparams/storage.h) to get full API and [src/storage.c](src/storage.c) for the implementation details.
+## 2. Usage
 
-### 1.2. Middle level interface. Abstract ROM driver
-
-ROM driver simply allows you to write and read sequence of bytes. Mainly, it consist of 3 operations.
-
-1. Initialization. It is necessary to call `romInit()` with flash driver ops to configure the driver. Storage driver do it automatically.
-
-2. Read operation. You just need to call `romRead` with corresponded arguments.
-
-3. Write operation. Writing requires to unlock and lock ROM, so it might be done by calling `romBeginWrite()`, `romWrite` and `romEndWrite()` one by one.
-
-Look at [rom.h](rom.h) to get full API and [rom.c](rom.c) for the implementation details.
-
-### 1.3. Low level interface. Hardware specific flash driver
-
-Although storage and rom drivers are hardware abstract, they still need a hardware related flash driver. Just for an example, here are a few hardware specific flash driver implementations:
-
-1. [STM32F103 (128 Kbytes) flash driver](platform_specific/stm32f103/README.md)
-2. [STM32G0B1xx (512 Kbytes flash driver)](platform_specific/stm32g0b1/README.md)
-3. [Ubuntu flash memory emulation (using a file)](platform_specific/ubuntu/README.md)
-
-For implementation details please refer to the corresponded folder.
-
-New drivers might be added in future.
-
-## 2. USAGE
-
-It is expected either to add the library into your project as submodule or just copy the required folders. The library doesn't have external dependencies.
-
-You can add pathes to [libparams](libparams) folder, the folder with parameters and to platform specific flash driver. The application examples in [tests](tests) folder are based on [libparams.cmake](libparams.cmake).
-
-If it is SITL mode, you need additionally to specify path to yaml files with parameters values `LIBPARAMS_PARAMS_DIR`. The flash memory is divided to pages, therefore the base name of file with initial parameters `LIBPARAMS_PARAMS_BASE_NAME`  needs to be specified. The file named `<LIBPARAMS_PARAMS_BASE_NAME>_0.yaml` will be read as a default parameters values container. 
-
-You can create params.c and params.h files with the following content:
-
-```c++
-// params.h
-#pragma once
-#include "storage.h"
-
-enum IntParamsIndexes : ParamIndex_t {
-    PARAM_NODE_ID,
-    PARAM_MAGNETOMETER_ID,
-    INTEGER_PARAMS_AMOUNT
-};
-
-#define NUM_OF_STR_PARAMS 2
-enum class StrParamsIndexes {
-    PARAM_SYSTEM_NAME,
-    PARAM_MAGNETOMETER_TYPE,
-    STRING_PARAMS_AMOUNT
-};
-```
-
-```c++
-// params.c
-IntegerDesc_t integer_desc_pool[] = {
-    {"uavcan.node.id",      0, 127,     50,     MUTABLE},
-    {"uavcan.pub.mag.id",   0, 65535,   65535,  MUTABLE},
-};
-IntegerParamValue_t integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];
-
-StringDesc_t string_desc_pool[] = {
-    {"system.name", "", MUTABLE},
-    {"uavcan.pub.mag.type", "uavcan.si.sample.magnetic_field_strength.Vector3", IMMUTABLE},
-
-};
-StringParamValue_t string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];
-```
-
-Alternatively, you can define your parameters in yaml file and call transpiler script to generate the files above:
+### 2.1. Parameters from YAML
 
 ```yaml
 # params.yaml
-uavcan.node.id:
+node.id:
   type: Integer
   enum: PARAM_NODE_ID
   flags: mutable
@@ -162,79 +84,79 @@ system.name:
   type: String
   enum: PARAM_SYSTEM_NAME
   flags: mutable
-  default: ""
-
-uavcan.pub.mag:
-  type: Port
-  data_type: uavcan.si.sample.magnetic_field_strength.Vector3
-  enum_base: PARAM_MAGNETOMETER
+  default: "libparams"
 ```
 
-The initialization of the application can be as shown below:
+[scripts/generate_params.py](scripts/generate_params.py) turns one or more YAML files into `params.cpp` (descriptor and value arrays) and `params.hpp` (`IntParamsIndexes`, `StrParamsIndexes`, `NUM_OF_STR_PARAMS`).
+
+### 2.2. Build
+
+Add the repository as a submodule and include [libparams.cmake](libparams.cmake):
+
+```cmake
+set(LIBPARAMS_PLATFORM stm32g0b1)  # stm32f103, stm32g0b1, stm32h753xx, ubuntu
+include(${LIBPARAMS_PATH}/libparams.cmake)
+
+execute_process(
+    COMMAND ${LIBPARAMS_PATH}/scripts/generate_params.py --out-dir ${CMAKE_BINARY_DIR}
+            -f ${CMAKE_CURRENT_SOURCE_DIR}/params.yaml
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
+add_executable(app main.cpp ${CMAKE_BINARY_DIR}/params.cpp ${libparamsSrc})
+target_include_directories(app PRIVATE ${libparamsHeaders} ${CMAKE_BINARY_DIR})
+```
+
+### 2.3. Application
 
 ```c++
-#include "params.h"
-#include "flash_driver.h"
+#include "storage.h"
 #include "platform_flash_driver.h"
+#include "params.hpp"
 
-void application_example() {
-    paramsInit(stm32h753xxInternalFlashGetOps(),
-               IntParamsIndexes::INTEGER_PARAMS_AMOUNT,
-               StrParamsIndexes::STRING_PARAMS_AMOUNT,
-               -1,
-               1);
+int main() {
+    // Use the last flash page.
+    paramsInit(stm32g0b1InternalFlashGetOps(), INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, -1, 1);
     paramsLoad();
+
+    paramsSetIntegerValue(PARAM_NODE_ID, 42);
+    paramsSave();
 }
 ```
 
-You can create yaml file to specify initial parameters:
+For SITL builds (`LIBPARAMS_PLATFORM=ubuntu`), set the YAML directory and the log level as described in [platform_specific/ubuntu](platform_specific/ubuntu/README.md).
 
-```yaml
-# default_params.yaml
-uavcan.node.id: 50
+## 3. Examples and tests
 
-system.name: ""
-```
+| Example | Description | Command |
+| ------- | ----------- | ------- |
+| [tests/params_generator/c](tests/params_generator/c/README.md) | Generate C parameters | `make c_generator` |
+| [tests/params_generator/cpp](tests/params_generator/cpp/README.md) | Generate C++ parameters | `make cpp_generator` |
+| [tests/platform_specific](tests/platform_specific) | Build for a platform without warnings | `make stm32f103`, `make stm32g0b1`, `make stm32h753xx`, `make ubuntu` |
+| [tests/unit_tests](tests/unit_tests/README.md) | Unit tests, requires GoogleTest | `make unit_tests` |
 
+Firmware based on this library: [node-core](https://github.com/RaccoonlabDev/mini_v2_node).
 
-Please, refer to the [libparams/storage.h](libparams/storage.h) for the high level usage details because it is self-documented.
+## 4. Footprint
 
-## 3. USAGE EXAMPLES
+Core library (`src/rom.c`, `src/storage.c`), `arm-none-eabi-gcc` 15.3, `-Os -mthumb`:
 
-In [tests](tests) folder you can find a few examples about how to use the library:
+| Core | Flash | RAM |
+| ---- | ----- | --- |
+| Cortex-M0+ | 2607 B | 326 B |
+| Cortex-M3 | 2629 B | 326 B |
+| Cortex-M7 | 2625 B | 326 B |
 
-| Example | Brief descrtiption | How to try |
-| ------- | ------------------ | ---------- |
-| [params_generator/c](tests/params_generator/c/README.md) | An example how to generate C-parameters with python script | `make c_generator` |
-| [params_generator/cpp](tests/params_generator/cpp/README.md) | An example how to generate C++ parameters with python script | `make cpp_generator` |
-| [platform_specific/stm32f103](tests/platform_specific/stm32f103/README.md) | Just to test that the library can be build without Warnings and Errors | `make stm32f103` |
-| [platform_specific/stm32g0b1](tests/platform_specific/stm32g0b1/README.md) | Just to test that the library can be build without Warnings and Errors | `make stm32g0b1` |
-| [platform_specific/ubuntu](tests/platform_specific/ubuntu/README.md) | Just to test that the library can be build without Warnings and Errors | `make ubuntu` |
+256 B of RAM is the SITL directory buffer.
+Flash drivers and the generated tables are not included.
 
-A few real external applications based on this library:
+Cost per parameter:
 
-- [DroneCAN RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/dronecan_application)
-- [Cyphal RL mini v2 example](https://github.com/RaccoonlabDev/mini_v2_node/tree/main/Src/cyphal_application)
-- [Cyphal ubuntu minimal example](https://github.com/RaccoonlabDev/cyphal_application/tree/devel/examples/ubuntu_minimal)
-- [Cyphal ubuntu publisher example](https://github.com/RaccoonlabDev/cyphal_application/tree/devel/examples/ubuntu_publisher_example)
-- [Cyphal UAV HITL communicator ubuntu](https://github.com/RaccoonlabDev/cyphal_communicator/tree/master/src)
+| Type | RAM | Flash storage |
+| ---- | --- | ------------- |
+| Integer | 24 B: 4 B value, 20 B descriptor | 4 B |
+| String | 120 B: 56 B value, 64 B descriptor | 56 B |
 
-## 4. CONTRIBUTING
+For example, 100 integers and 10 strings take 960 B of flash storage and fit in a single 2 KB page.
 
-Please, follow the [CONTRIBUTING.md](CONTRIBUTING.md) guide.
-
-**How to run SonarCloud Analysis manually**
-
-```bash
-export SONAR_TOKEN=<...>
-~/Downloads/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make coverage
-~/Downloads/sonar-scanner-cli-5.0.1.3006-linux/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
-```
-
-## 5. LICENSE
-
-The project is distributed under term of MPL v2.0 license.
-
-## 6. ACKNOWLEDGEMENTS
-
-This project has been supported by funds from The Foundation for Assistance to Small Innovative Enterprises (FASIE). Moreover, we are honored to be distinguished as laureates of the "Digital Technologies Code" competition, under the federal project "Digital Technologies". We express our profound gratitude for their invaluable support and endorsement.
+Reproduce with `make footprint`.

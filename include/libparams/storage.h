@@ -137,6 +137,14 @@ int8_t paramsSetDir(const char* dir);
 const char* paramsGetDir();
 
 /**
+ * @brief           Number of integer and string parameters passed to paramsInit().
+ * @note            They are already set when paramsInit() calls the flash driver init,
+ *                  so a driver can size itself from them (the SITL one does).
+ */
+ParamIndex_t paramsGetIntegersAmount();
+ParamIndex_t paramsGetStringsAmount();
+
+/**
  * @note            Get the parameter name
  * @return          C-string on success, otherwise NULL.
  */

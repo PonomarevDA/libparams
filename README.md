@@ -144,9 +144,9 @@ Core library (`src/rom.c`, `src/storage.c`), `arm-none-eabi-gcc` 15.3, `-Os -mth
 
 | Core | Flash | RAM |
 | ---- | ----- | --- |
-| Cortex-M0+ | 2607 B | 326 B |
-| Cortex-M3 | 2629 B | 326 B |
-| Cortex-M7 | 2625 B | 326 B |
+| Cortex-M0+ | 2731 B | 326 B |
+| Cortex-M3 | 2741 B | 326 B |
+| Cortex-M7 | 2741 B | 326 B |
 
 256 B of RAM is the SITL directory buffer.
 Flash drivers and the generated tables are not included.

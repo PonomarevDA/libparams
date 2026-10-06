@@ -75,6 +75,14 @@ const char* paramsGetDir() {
 #endif
 }
 
+ParamIndex_t paramsGetIntegersAmount() {
+    return integers_amount;
+}
+
+ParamIndex_t paramsGetStringsAmount() {
+    return strings_amount;
+}
+
 int8_t paramsInit(const FlashDriverOps* flash,
                   ParamIndex_t int_num,
                   ParamIndex_t str_num,
@@ -85,17 +93,25 @@ int8_t paramsInit(const FlashDriverOps* flash,
     }
     uint32_t need_memory_bytes = sizeof(IntegerParamValue_t) * int_num +\
                                  MAX_STRING_LENGTH * str_num;
+
+    // The flash driver may size itself from the amounts in romInit(), so set them first.
+    ParamIndex_t prev_integers_amount = integers_amount;
+    ParamIndex_t prev_strings_amount = strings_amount;
+    integers_amount = int_num;
+    strings_amount = str_num;
     primary_rom = romInit(flash, first_page_idx, pages_num);
 
     if (!primary_rom.inited) {
+        integers_amount = prev_integers_amount;
+        strings_amount = prev_strings_amount;
         return LIBPARAMS_UNKNOWN_ERROR;
     }
 
     if (romGetAvailableMemory(&primary_rom) < need_memory_bytes) {
+        integers_amount = prev_integers_amount;
+        strings_amount = prev_strings_amount;
         return LIBPARAMS_WRONG_ARGS;
     }
-    integers_amount = int_num;
-    strings_amount = str_num;
     all_params_amount = integers_amount + strings_amount;
     active_rom = &primary_rom;
     standby_rom = NULL;

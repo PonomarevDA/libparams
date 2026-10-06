@@ -15,7 +15,34 @@
 extern "C" {
 #endif
 
+typedef enum {
+    LIBPARAMS_LOG_NONE = 0,
+    LIBPARAMS_LOG_ERROR = 1,
+    LIBPARAMS_LOG_INFO = 2,     ///< Params dir, files read, changed values.
+    LIBPARAMS_LOG_DEBUG = 3,    ///< Full parameter table, every flash erase/write.
+} LibparamsLogLevel;
+
+/**
+ * @brief Build-time default log level, e.g. -DLIBPARAMS_LOG_LEVEL=1 to keep only errors.
+ */
+#ifndef LIBPARAMS_LOG_LEVEL
+#define LIBPARAMS_LOG_LEVEL LIBPARAMS_LOG_INFO
+#endif
+
+typedef void (*LibparamsLogHandler)(LibparamsLogLevel level, const char* message);
+
 const FlashDriverOps* ubuntuFlashGetOps(void);
+
+/**
+ * @brief Drop messages above the level. Call it before paramsInit() to quiet the initial load.
+ */
+void ubuntuFlashSetLogLevel(LibparamsLogLevel level);
+
+/**
+ * @brief Route messages to the handler instead of stdout/stderr. NULL restores the default.
+ * The level filter is applied before the handler is called.
+ */
+void ubuntuFlashSetLogHandler(LibparamsLogHandler handler);
 
 #ifdef __cplusplus
 }

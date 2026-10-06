@@ -264,7 +264,7 @@ void YamlParameters::log_param_changes() {
         memcpy(&value, flash.memory_ptr + i * 4, 4);
         const char* name = params.integer_desc_pool[i].name;
         if (first) {
-            logger.info(std::left, std::setw(32), name, ": ", value);
+            logger.debug(std::left, std::setw(32), name, ": ", value);
         } else if (value != snapshot_int[i]) {
             logger.info(std::left, std::setw(32), name, ": ", snapshot_int[i], " -> ", value);
         }
@@ -281,7 +281,7 @@ void YamlParameters::log_param_changes() {
                         MAX_STRING_LENGTH);
         std::string value = raw.substr(0, raw.find('\0'));
         if (first) {
-            logger.info(std::left, std::setw(32), name, ": \"", value.c_str(), "\"");
+            logger.debug(std::left, std::setw(32), name, ": \"", value.c_str(), "\"");
         } else if (value != snapshot_str[i]) {
             logger.info(std::left, std::setw(32), name, ": \"", snapshot_str[i].c_str(),
                         "\" -> \"", value.c_str(), "\"");

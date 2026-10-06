@@ -40,7 +40,7 @@ private:
                         uint16_t* str_param_idx);
     int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,
                        uint16_t* str_param_idx);
-    // Log the full table on the first call, then only changed params.
+    // Log the full table on the first call (debug), then only changed params (info).
     void log_param_changes();
 };
 

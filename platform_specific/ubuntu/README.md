@@ -18,8 +18,8 @@ On init the driver reads `<dir>/nvm_params_<page>.yaml` and falls back to `<dir>
 
 Generate the default files together with the parameters:
 
-```bash
-./scripts/generate_params.py --out-dir <dir> -f params.yaml --default-params-dir <dir>
+```cmake
+libparams_generate_params(OUT_DIR ${CMAKE_BINARY_DIR} YAML params.yaml DEFAULT_PARAMS_DIR <dir>)
 ```
 
 `LIBPARAMS_INIT_PARAMS_FILE_NAME` and `LIBPARAMS_TEMP_PARAMS_FILE_NAME` are deprecated aliases of the two file names.

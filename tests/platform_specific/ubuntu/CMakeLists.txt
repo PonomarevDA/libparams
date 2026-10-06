@@ -33,22 +33,12 @@ add_executable(application
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
 
-execute_process(
-    COMMAND ${ROOT_DIR}/scripts/generate_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_LIST_DIR}/params.yaml
-    RESULT_VARIABLE ret
+libparams_generate_params(
+    OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    YAML params.yaml
+    DEFAULT_PARAMS_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    DEFAULT_PARAMS_NAME ${LIBPARAMS_INIT_PARAMS_BASE_NAME}
 )
-if(NOT ret EQUAL 0)
-    message( FATAL_ERROR "Params Generator has been failed. Abort.")
-endif()
-
-execute_process(
-    COMMAND ${ROOT_DIR}/scripts/generate_default_params.py --out-dir ${CMAKE_CURRENT_BINARY_DIR} -f ${CMAKE_CURRENT_BINARY_DIR}/params.cpp
-    --out-file-name ${LIBPARAMS_INIT_PARAMS_BASE_NAME}
-    RESULT_VARIABLE ret
-)
-if(NOT ret EQUAL 0)
-    message( FATAL_ERROR "Default Params Generator has been failed. Abort.")
-endif()
 
 include_directories(
     ${libparamsHeaders}

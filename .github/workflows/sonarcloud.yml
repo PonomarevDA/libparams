@@ -11,11 +11,13 @@ on:
 jobs:
   build:
     name: Build and analyze
+    # Pull requests from forks get no SONAR_TOKEN. Their tests run in ci.yml.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       BUILD_WRAPPER_OUT_DIR: bw-output
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -23,14 +25,15 @@ jobs:
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v8.2.0
 
       - name: Install gtest
-        run: wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh && chmod +x install_gtest_ubuntu.sh && ./install_gtest_ubuntu.sh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y googletest libgtest-dev
 
       - name: Run build-wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make coverage
 
       - name: Run SonarQube Scan
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: SonarSource/sonarqube-scan-action@v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

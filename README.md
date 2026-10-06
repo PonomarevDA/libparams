@@ -88,6 +88,7 @@ system.name:
 ```
 
 [scripts/generate_params.py](scripts/generate_params.py) turns one or more YAML files into `params.cpp` (descriptor and value arrays) and `params.hpp` (`IntParamsIndexes`, `StrParamsIndexes`, `NUM_OF_STR_PARAMS`).
+`--language c` writes `params.c` and `params.h` instead.
 
 ### 2.2. Build
 

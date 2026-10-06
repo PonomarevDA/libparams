@@ -17,13 +17,11 @@ from typing import Tuple
 import yaml
 
 from params import IntegerParam, StringParam
+from generate_params import write_if_changed
 
 LOG_PREFIX = "[libparams-doc]"
 
 logger = logging.getLogger(__name__)
-
-LANGUAGE_C = 0
-LANGUAGE_CPP = 1
 
 def port_data_type_to_md(origin_data_type : str) -> str:
     """
@@ -56,46 +54,6 @@ def port_data_type_to_md(origin_data_type : str) -> str:
 
     return markdown_data_type
 
-def write_cyphal_topics(file, cyphal_topics : dict) -> None:
-    assert isinstance(cyphal_topics, dict)
-
-    file.write("| Data type and topic name  | Description |\n")
-    file.write("| ------------------------- | ----------- |\n")
-    for port_name, port_info in cyphal_topics.items():
-        data_type = port_data_type_to_md(port_info['data_type'])
-        topic_name = port_name[11:]
-        note = port_info.get('note')
-        note = note.replace('\n', '</br>') if note is not None else ""
-        file.write(f"| {data_type} </br> {topic_name} | {note}|\n")
-    file.write("\n")
-
-def write_parameters(file, all_params : list) -> None:
-    assert isinstance(all_params, list)
-
-    if len(all_params) >= 1:
-        file.write("The node has the following registers:\n\n")
-        file.write("| Register name           | Description |\n")
-        file.write("| ----------------------- | ----------- |\n")
-
-        for param in all_params:
-            param.name = param.name.replace('"', '')
-            file.write(f"| {param.name.ljust(23)} | {param.note} |\n")
-        file.write("\n")
-    else:
-        file.write("The node doesn't have registers:\n\n")
-
-def _write_if_changed(path, content: str) -> str:
-    if os.path.exists(path):
-        with open(path, 'r', encoding="utf-8") as existing_file:
-            if existing_file.read() == content:
-                return "unchanged"
-        status = "updated"
-    else:
-        status = "added"
-    with open(path, 'w', encoding="utf-8") as out_file:
-        out_file.write(content)
-    return status
-
 def generate_markdown_doc(cyphal_pubs : dict,
                           cyphal_subs : dict,
                           all_params : list,
@@ -120,7 +78,7 @@ def generate_markdown_doc(cyphal_pubs : dict,
     content += _render_parameters(all_params)
 
     content += "> This docs was automatically generated. Do not edit it manually.\n\n"
-    return _write_if_changed(output_markdown_filename, content)
+    return write_if_changed(output_markdown_filename, content)
 
 def _render_cyphal_topics(cyphal_topics: dict) -> str:
     assert isinstance(cyphal_topics, dict)

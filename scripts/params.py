@@ -6,12 +6,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Integer and String parameters."""
+"""Integer and string parameters described in YAML files."""
 
-import sys
+import logging
 from dataclasses import dataclass
-from color_logging import log_warn, log_err
-from typing import Union
+from typing import List, Tuple, Union
+import yaml
+
+logger = logging.getLogger("libparams-gen")
+
+REQUIRED_KEYS = {
+    "integer": ("enum", "flags", "default", "min", "max"),
+    "string": ("enum", "flags", "default"),
+    "port": ("data_type", "enum_base"),
+}
+
+
+class ParamsError(Exception):
+    """A YAML file doesn't describe valid parameters."""
+
 
 @dataclass
 class BaseParam:
@@ -21,149 +34,101 @@ class BaseParam:
     mutability: str = "MUTABLE"
     enum_name: str = ""
 
+
 @dataclass
 class IntegerParam(BaseParam):
-    """
-    Suitable for:
-    - Cyphal    uavcan.register.Value.1.0.integer32
-    - DroneCAN  uavcan.param.Value.integer_value
-    """
-    flags: str = ""
     min: int = 0
     max: int = 0
     is_required: str = "false"
 
     @staticmethod
-    def create(param_name, data):
-        if isinstance(data, dict):
-            integer_parameter = IntegerParam._create_from_dict(param_name, data)
-        elif isinstance(data, list):
-            integer_parameter = IntegerParam._create_from_list_legacy(param_name, data)
-        else:
-            integer_parameter = None
-
-        if not hasattr(integer_parameter, "note"):
-            integer_parameter.note = ""
-
-        return integer_parameter
+    def create(param_name: str, data: dict) -> "IntegerParam":
+        return IntegerParam(
+            name=param_name,
+            enum_name=data['enum'],
+            default=data['default'],
+            min=data['min'],
+            max=data['max'],
+            mutability=is_mutable(param_name, str(data['flags'])),
+            note=data.get('note', ""),
+            is_required="true" if data.get('is_required') else "false",
+        )
 
     @staticmethod
-    def create_port_id(param_name, enum_base : str):
-        id_register = IntegerParam(
-            name=f"\"{param_name}.id\"",
-            flags="",
+    def create_port_id(param_name: str, enum_base: str) -> "IntegerParam":
+        return IntegerParam(
+            name=f"{param_name}.id",
             enum_name=f"{enum_base}_ID",
             default=65535,
             min=0,
             max=65535,
         )
-        return id_register
 
-    @staticmethod
-    def _create_from_dict(param_name, data : dict):
-        integer_parameter = IntegerParam(
-            name=f"\"{param_name}\"",
-            flags="",
-            enum_name=data['enum'],
-            default=data['default'],
-            min=data['min'],
-            max=data['max'],
-            mutability=is_mutable(param_name, str(data['flags']))
-        )
-
-        integer_parameter.note = data['note'] if 'note' in data else ""
-
-        if 'is_required' in data and data['is_required']:
-            integer_parameter.is_required = "true"
-        else:
-            integer_parameter.is_required = "false"
-
-        return integer_parameter
-
-    @staticmethod
-    def _create_from_list_legacy(param_name, data : list):
-        """Input example: param_name : ["Integer", "ENUM_NAME", "mutable", -1, -1, 31]"""
-        is_mutable(param_name, str(data[2]))
-        integer_parameter = IntegerParam(
-            name=f"\"{param_name}\"",
-            flags="",
-            enum_name=data[1],
-            default=data[3],
-            min=data[4],
-            max=data[5],
-        )
-        return integer_parameter
 
 @dataclass
 class StringParam(BaseParam):
-    """
-    Suitable for:
-    - Cyphal    uavcan.register.Value.1.0.string
-    - DroneCAN  uavcan.param.Value.string_value
-    """
     @staticmethod
-    def create(param_name, data):
-        if isinstance(data, dict):
-            string_param = StringParam._create_from_dict(param_name, data)
-        elif isinstance(data, list):
-            string_param = StringParam._create_from_list_legacy(param_name, data)
-        else:
-            string_param = None
-
-        if not hasattr(string_param, "note"):
-            string_param.note = ""
-
-        return string_param
-
-    @staticmethod
-    def create_port_type(param_name, data_type : str, enum_base : str):
-        type_register = StringParam(
-            name=f"\"{param_name}.type\"",
-            default=f"\"{data_type}\"",
-            enum_name=f"{enum_base}_TYPE",
-            mutability="IMMUTABLE"
-        )
-        return type_register
-
-    @staticmethod
-    def _create_from_dict(param_name, data : dict):
-        string_param = StringParam(
-            name=f"\"{param_name}\"",
-            default=f"\"{data['default']}\"",
+    def create(param_name: str, data: dict) -> "StringParam":
+        return StringParam(
+            name=param_name,
+            default=data['default'],
             enum_name=data['enum'],
-            mutability=is_mutable(param_name, str(data['flags']))
+            mutability=is_mutable(param_name, str(data['flags'])),
+            note=data.get('note', ""),
         )
-        if 'note' in data:
-            string_param.note = data['note']
-        else:
-            string_param.note = ""
-        return string_param
 
     @staticmethod
-    def _create_from_list_legacy(param_name, data : list):
-        """Input example: param_name : ["data_type",  "ENUM_NAME"]"""
-        string_param = StringParam(
-            name=f"\"{param_name}\"",
-            enum_name=data[1],
-            default=f"\"{data[3]}\"",
-            mutability=is_mutable(param_name, str(data[2]))
+    def create_port_type(param_name: str, data_type: str, enum_base: str) -> "StringParam":
+        return StringParam(
+            name=f"{param_name}.type",
+            default=data_type,
+            enum_name=f"{enum_base}_TYPE",
+            mutability="IMMUTABLE",
         )
-        return string_param
 
-def is_mutable(param_name : str, mutability_str : str):
-    assert isinstance(param_name, str)
-    assert isinstance(mutability_str, str)
-    name = f"\"{param_name}\""
+
+def is_mutable(param_name: str, mutability_str: str) -> str:
     if mutability_str in ["True", "immutable"]:
         mutability = "IMMUTABLE"
     elif mutability_str in ["False", "mutable"]:
         mutability = "MUTABLE"
     else:
-        log_err((f"Mutability of {name} can't be determined: "
-                 f"{mutability_str} ({type(mutability_str)})"))
-        sys.exit()
+        raise ParamsError(f"{param_name}: flags must be `mutable` or `immutable`, "
+                          f"got `{mutability_str}`")
     if mutability_str in ["True", "False"]:
-        log_warn((f"Mutability of {name} will be deprecated soon: "
-                  f"{mutability_str}. Use `mutable` or `immutable`."))
-
+        logger.warning("%s: flags `%s` is deprecated, use `mutable` or `immutable`",
+                       param_name, mutability_str)
     return mutability
+
+
+def load_params(yaml_files: List[str]) -> Tuple[List[IntegerParam], List[StringParam]]:
+    """Read the parameters in file order. A port adds an integer id and a string type."""
+    integers = []
+    strings = []
+    for yaml_file in yaml_files:
+        with open(yaml_file, "r", encoding="utf-8") as yaml_fd:
+            params = yaml.safe_load(yaml_fd) or {}
+        if not isinstance(params, dict):
+            raise ParamsError(f"{yaml_file}: expected a mapping of parameter names")
+
+        for name, data in params.items():
+            if not isinstance(data, dict):
+                raise ParamsError(f"{yaml_file}: {name}: expected a mapping "
+                                  "(the legacy list format is not supported)")
+            param_type = str(data.get('type', "")).lower()
+            if param_type not in REQUIRED_KEYS:
+                raise ParamsError(f"{yaml_file}: {name}: unknown type `{data.get('type')}`, "
+                                  "expected Integer, String or Port")
+            missing = [key for key in REQUIRED_KEYS[param_type] if key not in data]
+            if missing:
+                raise ParamsError(f"{yaml_file}: {name}: missing {', '.join(missing)}")
+
+            if param_type == "port":
+                integers.append(IntegerParam.create_port_id(name, data['enum_base']))
+                strings.append(StringParam.create_port_type(name, data['data_type'],
+                                                            data['enum_base']))
+            elif param_type == "integer":
+                integers.append(IntegerParam.create(name, data))
+            else:
+                strings.append(StringParam.create(name, data))
+    return integers, strings

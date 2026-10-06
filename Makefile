@@ -23,7 +23,7 @@ unit_tests: clean
 BUILD_C_GENERATOR=${BUILD_PATH}/tests/params_generator/c
 c_generator: clean
 	mkdir -p ${BUILD_C_GENERATOR}
-	./scripts/params_generate_array_from_yaml.py ${BUILD_PARAMS_GENERATOR} c params \
+	./scripts/generate_params.py --out-dir ${BUILD_PARAMS_GENERATOR} --language c -f \
 		tests/params_generator/c/baro.yaml \
 		tests/params_generator/c/mag.yaml
 	cp ${BUILD_PARAMS_GENERATOR}/params.h ${BUILD_PARAMS_GENERATOR}/params.hpp

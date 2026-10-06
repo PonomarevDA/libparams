@@ -1,2 +1,13 @@
-uavcan.pub.mag.id :   ["Integer", "MAGNETOMETER_ID",    "mutable",  65535,  0,  65535]
-uavcan.pub.mag.type : ["String",  "MAGNETOMETER_TYPE",  "immutable", "uavcan.si.sample.magnetic_field_strength.Vector3"]
+uavcan.pub.mag.id:
+  type: Integer
+  enum: MAGNETOMETER_ID
+  flags: mutable
+  default: 65535
+  min: 0
+  max: 65535
+
+uavcan.pub.mag.type:
+  type: String
+  enum: MAGNETOMETER_TYPE
+  flags: immutable
+  default: uavcan.si.sample.magnetic_field_strength.Vector3

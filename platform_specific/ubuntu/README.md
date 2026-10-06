@@ -16,10 +16,10 @@ The emulated page is 2048 bytes; the number of pages follows from the number of 
 On init the driver reads `<dir>/nvm_params_<page>.yaml` and falls back to `<dir>/default_params_<page>.yaml`.
 `paramsSave()` writes `nvm_params_<page>.yaml`.
 
-Generate the default files from the generated `params.cpp`:
+Generate the default files together with the parameters:
 
 ```bash
-./scripts/generate_default_params.py --out-dir <dir> -f params.cpp --out-file-name default_params
+./scripts/generate_params.py --out-dir <dir> -f params.yaml --default-params-dir <dir>
 ```
 
 `LIBPARAMS_INIT_PARAMS_FILE_NAME` and `LIBPARAMS_TEMP_PARAMS_FILE_NAME` are deprecated aliases of the two file names.

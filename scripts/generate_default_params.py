@@ -6,103 +6,60 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Default parameters generator."""
+"""Write SITL default values from a parameters source file.
 
-import math
-import os
+Deprecated for generated parameters: generate_params.py --default-params-dir reads the YAML
+files directly. This script stays for existing builds and for hand-written C parameters.
+"""
+
+import re
 import sys
-from typing import List
-from color_logging import log_err
-import yaml
+from argparse import ArgumentParser
+from typing import List, Tuple
 from params import IntegerParam, StringParam
+from generate_params import logger, setup_logger, write_default_params
 
-# hot-fix for a double quotes replacement 
-double_quotes = '"'
+INTEGER_DESC = re.compile(r'\{\s*"([^"]*)"\s*,\s*([^,]+),\s*([^,]+),\s*([^,}]+)')
+STRING_DESC = re.compile(r'\{\s*"([^"]*)"\s*,\s*"([^"]*)"')
 
-class ParamsLoader:
-    def __init__(self, directory) -> None:
-        self.dir = directory
-        self.integers_array: list[IntegerParam] = []
-        self.strings_array: list[StringParam] = []
 
-    def parse_params(self):
-        with open(self.dir, "r", encoding="utf-8") as cpp_fd:
-            line = None
-            is_integer_desc_pool = True
-            for line in cpp_fd:
-                if "IntegerParamValue_t" in line:
-                    is_integer_desc_pool = False
-                if all(char in line for char in['{', '}', ',']):
-                    line = line.replace('{', '').replace('}', '')
-                    data = line.split(',')
-                    if is_integer_desc_pool:
-                        self.integers_array.append(IntegerParam(data[0].replace('    ', '').replace(double_quotes,''), default=data[3]))
-                    else:
-                        self.strings_array.append(StringParam(name=data[0].replace('    ', '').replace(double_quotes,''), default=data[1][1:]))
+def parse_params_source(path: str) -> Tuple[List[IntegerParam], List[StringParam]]:
+    """Integer descriptors come before the integer values pool, string ones after it."""
+    integers = []
+    strings = []
+    is_integer_desc_pool = True
+    with open(path, "r", encoding="utf-8") as source:
+        for line in source:
+            if "IntegerParamValue_t" in line:
+                is_integer_desc_pool = False
+            if is_integer_desc_pool:
+                match = INTEGER_DESC.search(line)
+                if match:
+                    integers.append(IntegerParam(name=match[1], default=match[4].strip()))
+            else:
+                match = STRING_DESC.search(line)
+                if match:
+                    strings.append(StringParam(name=match[1], default=match[2]))
+    return integers, strings
 
-class Generator:
-    def __init__(self, directory, name,
-                 integers_array: List[IntegerParam] = [], strings_array: List[StringParam] = []) -> None:
-        self.dir = directory
-        self.name = name
-        self.integers_array = integers_array
-        self.strings_array = strings_array
 
-    def generate(self):
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
-        array_size = 0
-        page_size = 2048
-        integer_iter = iter(self.integers_array)
-        string_iter = iter(self.strings_array)
-        num_pages = math.ceil((4 * len(self.integers_array) + 56 * len(self.strings_array)) 
-                              / page_size)
-        for page_idx in range(num_pages):
-            print(page_idx)
-            yaml_content = ""
-            with open(f"{self.dir}/{self.name}_{page_idx}.yaml", 'w', encoding="utf-8") as yaml_fd:
-                while array_size < page_size - 56:
-                    param = None
-                    try:
-                        param = next(integer_iter)
-                        yaml_content += f"{param.name :<32}:{param.default}\n"
-                        array_size += 4
-                    except StopIteration:
-                        try:
-                            param = next(string_iter)
-                            yaml_content += f'{param.name :<32}: {param.default}\n'
-                            array_size += 56
-                        except:
-                            yaml_fd.write(yaml_content)
-                            yaml_fd.close()
-                            return
-                array_size = 0
-                if (yaml_fd.write(yaml_content) == 0):
-                    print("No way")
-                    sys.exit(1)
-                yaml_fd.close()
-
-if __name__=="__main__":
-    from argparse import ArgumentParser
+def main() -> int:
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("--out-dir",        type=str, required=True,    help="")
-    parser.add_argument("--out-file-name",  type=str, default='params', help="")
-    parser.add_argument('-f','--files',     type=str, required=True,    help='', nargs='+')
+    parser.add_argument("--out-dir", type=str, required=True)
+    parser.add_argument("--out-file-name", type=str, default='params')
+    parser.add_argument('-f', '--files', type=str, required=True, nargs='+',
+                        help="params.c or params.cpp; only the last one is used")
     args = parser.parse_args()
 
-    print("Parameters generator:")
-    print("1. out_dir:", args.out_dir)
-    print("2. out-file-name:", args.out_file_name)
-    print("3. cpp geneated param description file:", args.files)
+    setup_logger()
+    try:
+        integers, strings = parse_params_source(args.files[-1])
+    except OSError as err:
+        logger.error("%s", err)
+        return 1
+    write_default_params(args.out_dir, args.out_file_name, integers, strings)
+    return 0
 
-    # Check args for basic errors
-    for cpp_file_path in args.files:
-        if not os.path.exists(cpp_file_path):
-            log_err(f"Input file with paths `{cpp_file_path}` is not exist!")
-            sys.exit(1)
 
-    loader = ParamsLoader(cpp_file_path)
-    loader.parse_params()
-    gen = Generator(args.out_dir, args.out_file_name, loader.integers_array, loader.strings_array)
-
-    gen.generate()
+if __name__ == "__main__":
+    sys.exit(main())

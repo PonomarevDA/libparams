@@ -6,96 +6,110 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Parameters generator."""
+"""Generate the C/C++ parameter tables and the SITL default values from YAML files."""
 
 import logging
+import math
 import os
 import sys
-from color_logging import log_err
+from argparse import ArgumentParser
+from typing import List
 import yaml
-from params import IntegerParam, StringParam
+from params import IntegerParam, StringParam, ParamsError, load_params
 
 LICENSE_HEADER = """// This file was automatically generated. Do not edit it manually.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/."""
 
-class Generator:
-    def __init__(self, directory, name) -> None:
-        self.dir = directory
-        self.name = name
-        self.integers_array = ""
-        self.integers_enums = ""
-        self.strings_array = ""
-        self.strings_enums = ""
-        self.strings_amount = 0
+# Must match the SITL flash driver: platform_specific/ubuntu/flash_driver.cpp, storage.h.
+PAGE_SIZE = 2048
+INTEGER_SIZE = 4
+STRING_SIZE = 56
 
-    def add_integer(self, param : IntegerParam):
-        assert isinstance(param, IntegerParam)
+EXTENSIONS = {"c++": ("cpp", "hpp"), "c": ("c", "h")}
 
-        c_string = (
-            f"    {{{param.name :<32}, "
-            f"{param.min}, "
-            f"{param.max}, "
-            f"{param.default}, "
-            f"{param.mutability}, "
-            f"{param.is_required}}},\n"
-        )
-        h_string = f"    {param.enum_name},\n"
+logger = logging.getLogger("libparams-gen")
 
-        self.integers_array += c_string
-        self.integers_enums += h_string
 
-    def add_string(self, param : StringParam):
-        assert isinstance(param, StringParam)
-        c_string = f"    {{{param.name :<32}, {param.default}, {param.mutability}}},\n"
-        h_string = f"    {param.enum_name},\n" if self.strings_amount > 0 else f"    {param.enum_name} = INTEGER_PARAMS_AMOUNT,\n"
-        self.strings_array += c_string
-        self.strings_enums += h_string
-        self.strings_amount += 1
+def render_source(integers: List[IntegerParam], strings: List[StringParam],
+                  header_name: str) -> str:
+    integers_array = "".join(
+        f"    {{{quote(param.name) :<32}, {param.min}, {param.max}, {param.default}, "
+        f"{param.mutability}, {param.is_required}}},\n" for param in integers)
+    strings_array = "".join(
+        f"    {{{quote(param.name) :<32}, {quote(param.default)}, {param.mutability}}},\n"
+        for param in strings)
+    return (
+        f"{LICENSE_HEADER}\n"
+        f"#include \"{header_name}\"\n"
+        "\n"
+        "IntegerDesc_t integer_desc_pool[] = {\n"
+        f"{integers_array}"
+        "};\n"
+        "IntegerParamValue_t "
+        "integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
+        "\n"
+        "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
+        f"{strings_array}"
+        "};\n"
+        "StringParamValue_t "
+        "string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
+    )
 
-    def generate(self):
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
-        cpp_content = (
-            f"{LICENSE_HEADER}\n"
-            "#include \"params.hpp\"\n"
-            "\n"
-            "IntegerDesc_t integer_desc_pool[] = {\n"
-            f"{self.integers_array}"
-            "};\n"
-            "IntegerParamValue_t "
-            "integer_values_pool[sizeof(integer_desc_pool) / sizeof(IntegerDesc_t)];\n"
-            "\n"
-            "StringDesc_t string_desc_pool[NUM_OF_STR_PARAMS] = {\n"
-            f"{self.strings_array}"
-            "};\n"
-            "StringParamValue_t "
-            "string_values_pool[sizeof(string_desc_pool) / sizeof(StringDesc_t)];\n"
-        )
-        cpp_status = _write_if_changed(f"{self.dir}/{self.name}.cpp", cpp_content)
 
-        hpp_content = (
-            f"{LICENSE_HEADER}\n"
-            "#pragma once\n"
-            "#include \"storage.h\"\n\n"
-            "enum IntParamsIndexes {\n"
-            f"{self.integers_enums}\n"
-            "    INTEGER_PARAMS_AMOUNT\n"
+def render_header(integers: List[IntegerParam], strings: List[StringParam]) -> str:
+    integers_enums = "".join(f"    {param.enum_name},\n" for param in integers)
+    content = (
+        f"{LICENSE_HEADER}\n"
+        "#pragma once\n"
+        "#include \"storage.h\"\n\n"
+        "enum IntParamsIndexes {\n"
+        f"{integers_enums}\n"
+        "    INTEGER_PARAMS_AMOUNT\n"
+        "};\n"
+    )
+    if strings:
+        strings_enums = f"    {strings[0].enum_name} = INTEGER_PARAMS_AMOUNT,\n"
+        strings_enums += "".join(f"    {param.enum_name},\n" for param in strings[1:])
+        content += (
+            "enum StrParamsIndexes {\n"
+            f"{strings_enums}\n"
             "};\n"
         )
-        if self.strings_amount > 0:
-            hpp_content += (
-                "enum StrParamsIndexes {\n"
-                f"{self.strings_enums}\n"
-                "};\n"
-            )
+    content += f"#define NUM_OF_STR_PARAMS {len(strings)}\n"
+    return content
 
-        hpp_content += f"#define NUM_OF_STR_PARAMS {self.strings_amount}\n"
-        hpp_status = _write_if_changed(f"{self.dir}/{self.name}.hpp", hpp_content)
-        return cpp_status, hpp_status
 
-def _write_if_changed(path, content):
+def render_default_params(integers: List[IntegerParam],
+                          strings: List[StringParam]) -> List[str]:
+    """One YAML file per flash page, split the way the SITL driver writes its nvm files."""
+    params_size = INTEGER_SIZE * len(integers) + STRING_SIZE * len(strings)
+    num_pages = max(1, math.ceil(params_size / PAGE_SIZE))
+    pages = []
+    int_idx = 0
+    str_idx = 0
+    for _ in range(num_pages):
+        content = ""
+        used = 0
+        while int_idx < len(integers) and used + INTEGER_SIZE <= PAGE_SIZE:
+            content += f"{integers[int_idx].name :<32}: {integers[int_idx].default}\n"
+            used += INTEGER_SIZE
+            int_idx += 1
+        if int_idx == len(integers):
+            while str_idx < len(strings) and used + STRING_SIZE <= PAGE_SIZE:
+                content += f"{strings[str_idx].name :<32}: {quote(strings[str_idx].default)}\n"
+                used += STRING_SIZE
+                str_idx += 1
+        pages.append(content)
+    return pages
+
+
+def quote(value) -> str:
+    return f"\"{value}\""
+
+
+def write_if_changed(path: str, content: str) -> str:
     if os.path.exists(path):
         with open(path, 'r', encoding="utf-8") as existing_file:
             if existing_file.read() == content:
@@ -107,61 +121,67 @@ def _write_if_changed(path, content):
         out_file.write(content)
     return status
 
-def _setup_logger():
-    logger = logging.getLogger("libparams-gen")
+
+def write_code(out_dir: str, name: str, language: str,
+               integers: List[IntegerParam], strings: List[StringParam]) -> None:
+    os.makedirs(out_dir, exist_ok=True)
+    source_ext, header_ext = EXTENSIONS[language]
+    source = f"{name}.{source_ext}"
+    header = f"{name}.{header_ext}"
+    source_status = write_if_changed(os.path.join(out_dir, source),
+                                     render_source(integers, strings, header))
+    header_status = write_if_changed(os.path.join(out_dir, header),
+                                     render_header(integers, strings))
+    logger.info("%s %s / %s %s", source, source_status, header, header_status)
+
+
+def write_default_params(out_dir: str, name: str,
+                         integers: List[IntegerParam], strings: List[StringParam]) -> None:
+    os.makedirs(out_dir, exist_ok=True)
+    pages = render_default_params(integers, strings)
+    for page_idx, content in enumerate(pages):
+        write_if_changed(os.path.join(out_dir, f"{name}_{page_idx}.yaml"), content)
+    logger.info("%s: %d page(s) in %s", name, len(pages), out_dir)
+
+
+def setup_logger() -> None:
     if not logger.handlers:
         handler = logging.StreamHandler()
-        formatter = logging.Formatter("[libparams-gen] [%(levelname)s] %(message)s")
-        handler.setFormatter(formatter)
+        handler.setFormatter(logging.Formatter("[libparams-gen] [%(levelname)s] %(message)s"))
         logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-    return logger
 
-if __name__=="__main__":
-    from argparse import ArgumentParser
+
+def main() -> int:
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("--out-dir",        type=str, required=True,    help="")
-    parser.add_argument("--out-file-name",  type=str, default='params', help="")
-    parser.add_argument("--language",       type=str, default="c++",    help="", choices=["c++"])
-    parser.add_argument('-f','--files',     type=str, required=True,    help='', nargs='+')
+    parser.add_argument("--out-dir", type=str, required=True,
+                        help="directory for the generated source and header")
+    parser.add_argument("--out-file-name", type=str, default='params',
+                        help="base name of the generated source and header")
+    parser.add_argument("--language", type=str, default="c++", choices=list(EXTENSIONS))
+    parser.add_argument('-f', '--files', type=str, required=True, nargs='+',
+                        help="YAML files with parameters, in index order")
+    parser.add_argument("--default-params-dir", type=str,
+                        help="also write SITL default values <name>_<page>.yaml here")
+    parser.add_argument("--default-params-name", type=str, default="default_params",
+                        help="base name of the SITL default values files")
     args = parser.parse_args()
 
-    logger = _setup_logger()
-    logger.info(
-        "Generating params: out_dir=%s, out_file=%s, files=%d",
-        args.out_dir,
-        args.out_file_name,
-        len(args.files),
-    )
+    setup_logger()
+    logger.info("Generating params: out_dir=%s, out_file=%s, files=%d",
+                args.out_dir, args.out_file_name, len(args.files))
+    try:
+        integers, strings = load_params(args.files)
+    except (OSError, yaml.YAMLError, ParamsError) as err:
+        logger.error("%s", err)
+        return 1
 
-    # Check args for basic errors
-    for yaml_file_path in args.files:
-        if not os.path.exists(yaml_file_path):
-            log_err(f"Input file with paths `{yaml_file_path}` is not exist!")
-            sys.exit(1)
+    write_code(args.out_dir, args.out_file_name, args.language, integers, strings)
+    if args.default_params_dir:
+        write_default_params(args.default_params_dir, args.default_params_name,
+                             integers, strings)
+    return 0
 
-    gen = Generator(args.out_dir, args.out_file_name)
 
-    for yaml_file_path in args.files:
-        with open(yaml_file_path, "r", encoding="utf-8") as yaml_fd:
-            params = yaml.safe_load(yaml_fd)
-            for param_name in params:
-                data = params[param_name]
-                assert isinstance(data, dict), "Legacy style detected. Abort."
-                if 'type' not in data:
-                    log_err(f"Type is not exist: {param_name}!")
-                    sys.exit(1)
-                elif data['type'].lower() == "port":
-                    gen.add_integer(IntegerParam.create_port_id(param_name, data['enum_base']))
-                    gen.add_string(StringParam.create_port_type(param_name, data['data_type'],
-                                                                            data['enum_base']))
-                elif data['type'].lower() == "integer":
-                    gen.add_integer(IntegerParam.create(param_name, data))
-                elif data['type'].lower() == "string":
-                    gen.add_string(StringParam.create(param_name, data))
-                else:
-                    log_err(f"Unknown type: {param_name}.type={data['type']}!")
-                    sys.exit(1)
-
-    cpp_status, hpp_status = gen.generate()
-    logger.info("params.cpp %s / params.hpp %s", cpp_status, hpp_status)
+if __name__ == "__main__":
+    sys.exit(main())

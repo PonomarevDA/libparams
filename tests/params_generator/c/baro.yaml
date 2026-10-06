@@ -1,5 +1,27 @@
-uavcan.pub.baro.press.id : ["Integer", "PARAM_BARO_PRESSURE_ID",      "mutable",   65535,  0,  65535]
-uavcan.pub.baro.temp.id :  ["Integer", "PARAM_BARO_TEMPERATURE_ID",   "mutable",   65535,  0,  65535]
+uavcan.pub.baro.press.id:
+  type: Integer
+  enum: PARAM_BARO_PRESSURE_ID
+  flags: mutable
+  default: 65535
+  min: 0
+  max: 65535
 
-uavcan.pub.baro.press.type: ["String", "PARAM_BARO_PRESSURE_TYPE",    "immutable", "uavcan.si.sample.pressure.Scalar"]
-uavcan.pub.baro.temp.type:  ["String", "PARAM_BARO_TEMPERATURE_TYPE", "immutable", "uavcan.si.sample.temperature.Scalar"]
+uavcan.pub.baro.temp.id:
+  type: Integer
+  enum: PARAM_BARO_TEMPERATURE_ID
+  flags: mutable
+  default: 65535
+  min: 0
+  max: 65535
+
+uavcan.pub.baro.press.type:
+  type: String
+  enum: PARAM_BARO_PRESSURE_TYPE
+  flags: immutable
+  default: uavcan.si.sample.pressure.Scalar
+
+uavcan.pub.baro.temp.type:
+  type: String
+  enum: PARAM_BARO_TEMPERATURE_TYPE
+  flags: immutable
+  default: uavcan.si.sample.temperature.Scalar

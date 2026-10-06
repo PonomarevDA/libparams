@@ -3,7 +3,7 @@
 The driver emulates MCU flash in RAM and persists it to YAML files, so a libparams application runs on Linux or macOS.
 The unit tests use it as a mock flash.
 
-The emulated page is 2048 bytes; the number of pages follows from the number of parameters.
+The emulated page is 2048 bytes. The number of pages follows from the amounts passed to `paramsInit()`, so the driver doesn't depend on the generated `params.hpp`.
 
 ## Parameter files
 

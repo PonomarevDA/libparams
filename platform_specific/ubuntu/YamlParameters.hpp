@@ -27,7 +27,11 @@ class YamlParameters {
 
 public:
     FlashMemoryLayout_t flash;
+    YamlParameters();
     explicit YamlParameters(FlashMemoryLayout_t flash_desc, ParametersLayout_t params_desc);
+
+    // Unlike the constructor, returns LIBPARAMS_WRONG_ARGS instead of throwing.
+    int8_t set_layout(FlashMemoryLayout_t flash_desc, ParametersLayout_t params_desc);
 
     int8_t read_from_dir(const std::string& path);
     int8_t write_to_dir(const std::string& path);
@@ -36,6 +40,9 @@ public:
     int8_t set_nvm_file_name(std::string file_name);
 
 private:
+    // Empty if the layouts are consistent, otherwise the reason.
+    static std::string validate_layout(const FlashMemoryLayout_t& flash_desc,
+                                       const ParametersLayout_t& params_desc);
     int8_t __write_page(std::ofstream& params_storage_file, uint16_t* int_param_idx,
                         uint16_t* str_param_idx);
     int8_t __read_page(std::ifstream& params_storage_file, uint16_t* int_param_idx,

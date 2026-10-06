@@ -15,27 +15,53 @@
 #include "storage.h"
 #include "YamlParameters.hpp"
 
+YamlParameters::YamlParameters() : params{}, flash{} {
+}
+
 YamlParameters::YamlParameters(FlashMemoryLayout_t flash_desc,
                                ParametersLayout_t params_desc) {
-    char error_mesg[100];
+    std::string error = validate_layout(flash_desc, params_desc);
+    if (!error.empty()) {
+        throw std::invalid_argument(error);
+    }
     flash = flash_desc;
     params = params_desc;
-    if (flash.memory_ptr == nullptr || flash.page_size < 4 || flash.num_pages == 0) {
-        throw std::invalid_argument("Invalid arguments for constructor");
+}
+
+int8_t YamlParameters::set_layout(FlashMemoryLayout_t flash_desc,
+                                  ParametersLayout_t params_desc) {
+    std::string error = validate_layout(flash_desc, params_desc);
+    if (!error.empty()) {
+        logger.error(error);
+        return LIBPARAMS_WRONG_ARGS;
     }
-    uint32_t req_flash_size = params.num_int_params * 4 + 56 * params.num_str_params;
-    if (flash.flash_size < req_flash_size) {
-        snprintf(error_mesg, sizeof(error_mesg),
-                 "Not enought flash size, needed: %d, provided: %d",
-                 (int)req_flash_size, (int)flash.flash_size);
-        throw std::invalid_argument(error_mesg);
+    if (params_desc.num_int_params != params.num_int_params ||
+            params_desc.num_str_params != params.num_str_params) {
+        snapshot_taken = false;
     }
-    const char* last_int_name = params.integer_desc_pool[params.num_int_params - 1].name;
-    const char* last_str_name = params.string_desc_pool[params.num_str_params - 1].name;
-    if ((last_int_name == nullptr && params.num_int_params > 0) ||
-            (last_str_name == nullptr && params.num_str_params > 0)) {
-        throw std::invalid_argument("Wrong number of parameters");
+    flash = flash_desc;
+    params = params_desc;
+    return LIBPARAMS_OK;
+}
+
+std::string YamlParameters::validate_layout(const FlashMemoryLayout_t& flash_desc,
+                                            const ParametersLayout_t& params_desc) {
+    if (flash_desc.memory_ptr == nullptr || flash_desc.page_size < 4 ||
+            flash_desc.num_pages == 0) {
+        return "Invalid arguments for constructor";
     }
+    uint32_t req_flash_size = params_desc.num_int_params * 4 + 56 * params_desc.num_str_params;
+    if (flash_desc.flash_size < req_flash_size) {
+        return "Not enought flash size, needed: " + std::to_string(req_flash_size) +
+               ", provided: " + std::to_string(flash_desc.flash_size);
+    }
+    if ((params_desc.num_int_params > 0 &&
+            params_desc.integer_desc_pool[params_desc.num_int_params - 1].name == nullptr) ||
+            (params_desc.num_str_params > 0 &&
+             params_desc.string_desc_pool[params_desc.num_str_params - 1].name == nullptr)) {
+        return "Wrong number of parameters";
+    }
+    return "";
 }
 
 int8_t YamlParameters::set_default_file_name(std::string file_name) {

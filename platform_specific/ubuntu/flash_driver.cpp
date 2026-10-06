@@ -11,35 +11,22 @@
 #include "flash_driver.h"
 #include "platform_flash_driver.h"
 #include "libparams_error_codes.h"
-#include "params.hpp"
 #include "YamlParameters.hpp"
 
 #define PAGE_SIZE_BYTES                     2048
-constexpr uint16_t  str_params_size      = NUM_OF_STR_PARAMS * MAX_STRING_LENGTH;
-constexpr uint16_t  int_parms_size       = IntParamsIndexes::INTEGER_PARAMS_AMOUNT * 4;
-constexpr uint32_t  params_size_bytes    = (str_params_size + int_parms_size);
-constexpr uint8_t   n_flash_pages        = (params_size_bytes / PAGE_SIZE_BYTES) + 1;
-// Extend flash size for redundant pages
-static uint8_t flash_memory[2 * PAGE_SIZE_BYTES * (n_flash_pages)];
+// paramsInit() accepts up to 512 integers and 512 strings.
+constexpr uint32_t  max_params_size_bytes = 512 * 4 + 512 * MAX_STRING_LENGTH;
+constexpr uint16_t  max_region_pages = (max_params_size_bytes + PAGE_SIZE_BYTES - 1) /
+                                       PAGE_SIZE_BYTES;
+// Two regions: the redundant one, then the primary one that is loaded from the YAML files.
+static uint8_t flash_memory[2 * PAGE_SIZE_BYTES * max_region_pages];
+static uint16_t region_pages = 1;
 static bool is_locked = true;
 
 extern IntegerDesc_t integer_desc_pool[];
 extern StringDesc_t string_desc_pool[];
 
-static FlashMemoryLayout_t mem_layout = {
-    .memory_ptr         = flash_memory,
-    .page_size          = PAGE_SIZE_BYTES,
-    .num_pages          = n_flash_pages,
-};
-
-static ParametersLayout_t params_layout = {
-    .integer_desc_pool  = integer_desc_pool,
-    .string_desc_pool   = string_desc_pool,
-    .num_int_params     = IntParamsIndexes::INTEGER_PARAMS_AMOUNT,
-    .num_str_params     = NUM_OF_STR_PARAMS,
-};
-
-static YamlParameters yaml_params = YamlParameters(mem_layout, params_layout);
+static YamlParameters yaml_params;
 
 static void flashInit();
 static int8_t flashUnlock();
@@ -50,6 +37,8 @@ static int32_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_wr
 static uint16_t flashGetNumberOfPages();
 static uint32_t flashGetPageSize();
 static uint8_t* flashGetPointer();
+static void updateRegionPages();
+static bool updateYamlLayout(uint8_t* region);
 static int32_t __save_to_files();
 static int8_t __read_from_files();
 
@@ -74,8 +63,10 @@ static void flashInit() {
 
     // Load parameters to the last suited pages
     // (such that primary rom at always would be filled after initialization)
-    yaml_params.flash.memory_ptr = &flashGetPointer()[mem_layout.flash_size];
-    __read_from_files();
+    updateRegionPages();
+    if (updateYamlLayout(&flashGetPointer()[region_pages * PAGE_SIZE_BYTES])) {
+        __read_from_files();
+    }
 }
 
 static int8_t flashUnlock() {
@@ -89,7 +80,8 @@ static int8_t flashLock() {
 }
 
 static int8_t flashErase(uint32_t start_page_idx, uint32_t num_of_pages) {
-    if (is_locked || start_page_idx + num_of_pages > 2 * n_flash_pages || num_of_pages == 0) {
+    updateRegionPages();
+    if (is_locked || start_page_idx + num_of_pages > 2u * region_pages || num_of_pages == 0) {
         return LIBPARAMS_WRONG_ARGS;
     }
     memset(flash_memory + start_page_idx * PAGE_SIZE_BYTES, 0x00, num_of_pages * PAGE_SIZE_BYTES);
@@ -109,22 +101,27 @@ static size_t flashRead(uint8_t* data, size_t offset, size_t bytes_to_read) {
 }
 
 static int32_t flashWrite(const uint8_t* data, size_t offset, size_t bytes_to_write) {
+    updateRegionPages();
+    const size_t region_size = region_pages * PAGE_SIZE_BYTES;
     if (is_locked || offset < FLASH_START_ADDR ||
-            offset >= FLASH_START_ADDR + sizeof(flash_memory)) {
+            offset >= FLASH_START_ADDR + 2 * region_size ||
+            bytes_to_write > FLASH_START_ADDR + 2 * region_size - offset) {
         return LIBPARAMS_WRONG_ARGS;
     }
 
     uint8_t* rom = &(flashGetPointer()[offset - FLASH_START_ADDR]);
     memcpy(rom, data, bytes_to_write);
     logger.debug("flashWrite: offset=", offset, ", bytes=", bytes_to_write);
-    uint8_t redundant = (offset - FLASH_START_ADDR) / mem_layout.flash_size;
-    yaml_params.flash.memory_ptr = &flashGetPointer()
-                                   [redundant * mem_layout.flash_size];
+    size_t region_idx = (offset - FLASH_START_ADDR) / region_size;
+    if (!updateYamlLayout(&flashGetPointer()[region_idx * region_size])) {
+        return LIBPARAMS_OK;
+    }
     return __save_to_files();
 }
 
 static uint16_t flashGetNumberOfPages() {
-    return 2 * n_flash_pages;
+    updateRegionPages();
+    return 2 * region_pages;
 }
 
 static uint32_t flashGetPageSize() {
@@ -152,6 +149,36 @@ void ubuntuFlashSetLogLevel(LibparamsLogLevel level) {
 
 void ubuntuFlashSetLogHandler(LibparamsLogHandler handler) {
     SimpleLogger::handler = handler;
+}
+
+// The region size follows the amounts passed to paramsInit(), the same way the application
+// picks pages_num, so the primary region matches the last pages_num pages.
+static void updateRegionPages() {
+    uint32_t params_size = paramsGetIntegersAmount() * sizeof(IntegerParamValue_t) +
+                           paramsGetStringsAmount() * MAX_STRING_LENGTH;
+    uint32_t pages = (params_size + PAGE_SIZE_BYTES - 1) / PAGE_SIZE_BYTES;
+    region_pages = (pages == 0) ? 1 : pages;
+}
+
+// False until paramsInit() provides the parameters: there is nothing to read or save yet.
+static bool updateYamlLayout(uint8_t* region) {
+    ParamIndex_t int_num = paramsGetIntegersAmount();
+    ParamIndex_t str_num = paramsGetStringsAmount();
+    if (int_num == 0 && str_num == 0) {
+        return false;
+    }
+    FlashMemoryLayout_t flash_layout = {
+        .memory_ptr         = region,
+        .page_size          = PAGE_SIZE_BYTES,
+        .num_pages          = static_cast<uint8_t>(region_pages),
+    };
+    ParametersLayout_t params_layout = {
+        .integer_desc_pool  = integer_desc_pool,
+        .string_desc_pool   = string_desc_pool,
+        .num_int_params     = int_num,
+        .num_str_params     = str_num,
+    };
+    return yaml_params.set_layout(flash_layout, params_layout) == LIBPARAMS_OK;
 }
 
 int32_t __save_to_files() {

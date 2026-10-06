@@ -1,13 +1,25 @@
 name: CI
 
-on: push
+# pull_request runs every job on pull requests from forks too: no job here needs a secret.
+# Both triggers fire on a branch that has an open pull request, which would run every job
+# twice, so push is limited to main. Any other branch can be run from the Actions tab.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new commit makes the previous pull request run pointless, so cancel it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   code_style:
     timeout-minutes: 5
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -19,11 +31,10 @@ jobs:
         run: make code_style
 
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -37,20 +48,30 @@ jobs:
           make -s stm32h753xx
           make -s ubuntu
 
-  test_params_generator:
+  unit_tests:
+    timeout-minutes: 10
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
-          wget https://gist.githubusercontent.com/Ponomarevda/d970c24de8deab5d6ccfee8f5f719bcc/raw/install_gtest_ubuntu.sh
-          chmod +x install_gtest_ubuntu.sh
-          ./install_gtest_ubuntu.sh
           sudo apt-get update
-          sudo apt-get install -y cmake make
+          sudo apt-get install -y cmake make googletest libgtest-dev
+
+      - name: Run unit tests
+        run: make unit_tests
+
+  test_params_generator:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake make googletest libgtest-dev python3-yaml
 
       - name: Test params generators
         run: |

@@ -45,6 +45,8 @@ This tests are part of [the CI](../../.github/workflows/ci.yml).
 ## Test Case 6: Find Parameter by Name
 - Test 6.1: Find Parameter by Valid Name
 - Test 6.2: Find Parameter by Invalid Name
+- Test 6.3: Find Parameter by Name without the Terminating Null
+- Test 6.4: Find Parameter by a Prefix of its Name
 
 ## Test Case 7: Access Parameter Types
 - Test 7.1: Get Parameter Type Successfully

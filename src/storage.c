@@ -24,6 +24,7 @@ static ParamIndex_t crc_param_idx = 0;
 static bool crc_enabled = false;
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx);
+static bool _isNameEqual(const char* param_name, const uint8_t* name, uint16_t len);
 static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver);
 static int8_t _save(RomDriverInstance* rom_driver);
 static int8_t _chooseRom();
@@ -230,15 +231,18 @@ const char* paramsGetName(ParamIndex_t param_idx) {
 }
 
 ParamIndex_t paramsFind(const uint8_t* name, uint16_t len) {
+    if (name == NULL) {
+        return all_params_amount;
+    }
     ParamIndex_t idx;
     for (idx = 0; idx < integers_amount; idx++) {
-        if (strncmp((const char*)name, integer_desc_pool[idx].name, len) == 0) {
+        if (_isNameEqual(integer_desc_pool[idx].name, name, len)) {
             return idx;
         }
     }
     for (idx = integers_amount; idx < all_params_amount; idx++) {
         size_t str_idx = idx - integers_amount;
-        if (strncmp((const char*)name, string_desc_pool[str_idx].name, len) == 0) {
+        if (_isNameEqual(string_desc_pool[str_idx].name, name, len)) {
             return idx;
         }
     }
@@ -369,6 +373,17 @@ int8_t paramsIsErased(bool* is_erased) {
 
 static bool _isCorrectStringParamIndex(ParamIndex_t param_idx) {
     return param_idx < integers_amount || param_idx >= all_params_amount;
+}
+
+static bool _isNameEqual(const char* param_name, const uint8_t* name, uint16_t len) {
+    if (param_name == NULL || strncmp((const char*)name, param_name, len) != 0) {
+        return false;
+    }
+    // strncmp() alone also accepts a longer param_name that only starts with name.
+    // name ends at len or at its first '\0', callers pass both forms.
+    const uint8_t* name_end = memchr(name, '\0', len);
+    size_t name_len = (name_end == NULL) ? len : (size_t)(name_end - name);
+    return param_name[name_len] == '\0';
 }
 
 static uint32_t _getStringMemoryPoolAddress(const RomDriverInstance* rom_driver) {

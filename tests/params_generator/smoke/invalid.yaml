@@ -1,0 +1,5 @@
+node.id:
+  type: Integer
+  enum: PARAM_NODE_ID
+  flags: mutable
+  default: 42

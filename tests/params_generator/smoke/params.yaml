@@ -1,0 +1,24 @@
+# Smoke test parameters. node.id allows 0, so a missing default file reads 0 instead of 42.
+node.id:
+  type: Integer
+  enum: PARAM_NODE_ID
+  flags: mutable
+  default: 42
+  min: 0
+  max: 127
+  note: Node identifier
+
+system.version:
+  type: Integer
+  enum: PARAM_SYSTEM_VERSION
+  flags: immutable
+  default: 3
+  min: 0
+  max: 255
+  is_required: true
+
+system.name:
+  type: String
+  enum: PARAM_SYSTEM_NAME
+  flags: mutable
+  default: "smoke"

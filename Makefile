@@ -42,6 +42,12 @@ cpp_generator: clean
 	cd tests/params_generator && cmake --build ../../${BUILD_CPP_GENERATOR}
 	cd ${BUILD_CPP_GENERATOR} && ctest --verbose
 
+BUILD_GENERATOR_SMOKE=${BUILD_PATH}/tests/params_generator/smoke
+generator_smoke:
+	cmake -S tests/params_generator/smoke -B ${BUILD_GENERATOR_SMOKE}
+	cmake --build ${BUILD_GENERATOR_SMOKE}
+	cd ${BUILD_GENERATOR_SMOKE} && ctest --output-on-failure
+
 stm32f103: clean
 	cmake -S tests/platform_specific/stm32f103 -B build/tests/platform_specific/stm32f103 \
 		-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/tests/platform_specific/cmake/arm-none-eabi-toolchain.cmake

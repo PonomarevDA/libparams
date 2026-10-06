@@ -77,3 +77,4 @@ jobs:
         run: |
           make -s c_generator
           make -s cpp_generator
+          make -s generator_smoke

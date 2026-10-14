@@ -22,13 +22,14 @@ static void check(int is_ok, const char* what) {
 }
 
 static void init(void) {
+    check(paramsSetDir(SMOKE_PARAMS_DIR) == 0, "paramsSetDir");
     check(paramsInit(ubuntuFlashGetOps(), INTEGER_PARAMS_AMOUNT, NUM_OF_STR_PARAMS, -1, 1) == 0,
           "paramsInit");
     check(paramsLoad() == 0, "paramsLoad");
 }
 
 int main(void) {
-    remove(LIBPARAMS_PARAMS_DIR "/nvm_params_0.yaml");
+    remove(SMOKE_PARAMS_DIR "/nvm_params_0.yaml");
     ubuntuFlashSetLogLevel(LIBPARAMS_LOG_ERROR);
 
     init();

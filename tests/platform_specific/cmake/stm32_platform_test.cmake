@@ -9,28 +9,8 @@ function(add_libparams_stm32_platform_test target platform device_define)
     endif()
 
     set(LIBPARAMS_PLATFORM ${platform})
-    include(${ROOT_DIR}/libparams.cmake)
-
-    add_executable(${target}
-        ${libparamsSrc}
-        ${TESTS_DIR}/params/params.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/main.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/application.c
-    )
-
-    target_include_directories(${target} PRIVATE
-        ${libparamsHeaders}
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${TESTS_DIR}
-        ${TESTS_DIR}/params
-    )
-
-    target_compile_definitions(${target} PRIVATE
-        USE_HAL_DRIVER
-        ${device_define}
-    )
-
-    target_compile_options(${target} PRIVATE
+    # The libparams target is compiled for the same core and with the same strictness.
+    set(compile_options
         -mcpu=${cpu}
         -mthumb
         -Og
@@ -43,6 +23,33 @@ function(add_libparams_stm32_platform_test target platform device_define)
         -g
         -gdwarf-2
     )
+    # One libparams target serves every test application of the project.
+    if(NOT TARGET libparams)
+        add_subdirectory(${ROOT_DIR} ${CMAKE_CURRENT_BINARY_DIR}/libparams)
+        target_compile_options(libparams PRIVATE ${compile_options})
+    endif()
+    include(${ROOT_DIR}/cmake/platform.cmake)
+
+    add_executable(${target}
+        ${LIBPARAMS_PLATFORM_SOURCES}
+        ${TESTS_DIR}/params/params.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/main.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/application.c
+    )
+
+    target_include_directories(${target} PRIVATE
+        ${LIBPARAMS_PLATFORM_HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${TESTS_DIR}
+        ${TESTS_DIR}/params
+    )
+
+    target_compile_definitions(${target} PRIVATE
+        USE_HAL_DRIVER
+        ${device_define}
+    )
+
+    target_compile_options(${target} PRIVATE ${compile_options})
 
     target_link_options(${target} PRIVATE
         -mcpu=${cpu}
@@ -56,7 +63,7 @@ function(add_libparams_stm32_platform_test target platform device_define)
         -Wl,--gc-sections
     )
 
-    target_link_libraries(${target} PRIVATE c m nosys)
+    target_link_libraries(${target} PRIVATE libparams::libparams c m nosys)
 
     add_custom_command(TARGET ${target} POST_BUILD
         COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${target}>

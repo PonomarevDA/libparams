@@ -71,6 +71,19 @@ ubuntu: clean
 	cmake --build ${UBUNTU_BUILD_DIR}
 	${UBUNTU_BUILD_DIR}/application
 
+# The same application through the legacy include(libparams.cmake), until it is removed.
+UBUNTU_LEGACY_BUILD_DIR=${ROOT_DIR}/build/tests/platform_specific/ubuntu_legacy
+ubuntu_legacy: clean
+	mkdir -p ${UBUNTU_LEGACY_BUILD_DIR}
+	cmake -S ${UBUNTU_CMAKE_DIR} -B ${UBUNTU_LEGACY_BUILD_DIR} -DLIBPARAMS_TEST_LEGACY_BUILD=ON
+	cmake --build ${UBUNTU_LEGACY_BUILD_DIR}
+	${UBUNTU_LEGACY_BUILD_DIR}/application
+
+# The core alone, as a downstream project gets it with add_subdirectory().
+library: clean
+	cmake -S ${ROOT_DIR} -B ${BUILD_PATH}/library
+	cmake --build ${BUILD_PATH}/library
+
 
 FOOTPRINT_DIR=${BUILD_PATH}/footprint
 footprint:

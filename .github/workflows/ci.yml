@@ -47,6 +47,8 @@ jobs:
           make -s stm32g0b1
           make -s stm32h753xx
           make -s ubuntu
+          make -s ubuntu_legacy
+          make -s library
 
   unit_tests:
     timeout-minutes: 10

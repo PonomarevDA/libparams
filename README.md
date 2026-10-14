@@ -92,21 +92,34 @@ The generator turns one or more YAML files into `params.cpp` (descriptor and val
 
 ### 2.2. Build
 
-Add the repository as a submodule and include [libparams.cmake](libparams.cmake):
+Add the repository as a submodule and link the `libparams::libparams` target:
 
 ```cmake
+add_subdirectory(${LIBPARAMS_PATH} ${CMAKE_BINARY_DIR}/libparams)
+
 set(LIBPARAMS_PLATFORM stm32g0b1)  # stm32f103, stm32g0b1, stm32h753xx, ubuntu
-include(${LIBPARAMS_PATH}/libparams.cmake)
+include(${LIBPARAMS_PATH}/cmake/platform.cmake)
 
 libparams_generate_params(OUT_DIR ${CMAKE_BINARY_DIR} YAML params.yaml)
 
-add_executable(app main.cpp ${CMAKE_BINARY_DIR}/params.cpp ${libparamsSrc})
-target_include_directories(app PRIVATE ${libparamsHeaders} ${CMAKE_BINARY_DIR})
+add_executable(app main.cpp ${CMAKE_BINARY_DIR}/params.cpp ${LIBPARAMS_PLATFORM_SOURCES})
+target_include_directories(app PRIVATE ${LIBPARAMS_PLATFORM_HEADERS} ${CMAKE_BINARY_DIR})
+target_link_libraries(app PRIVATE libparams::libparams)
 ```
 
+| Part | Where it comes from |
+| ---- | ------------------- |
+| The core: storage and the ROM driver | `libparams::libparams`, a static library |
+| The flash driver | [cmake/platform.cmake](cmake/platform.cmake): `LIBPARAMS_PLATFORM_SOURCES`, compiled by the application because it includes the application's HAL (`main.h`) |
+| The parameter tables | `libparams_generate_params()` |
+
 `libparams_generate_params()` runs the generator at configure time and re-configures when a YAML file changes.
-It also takes `LANGUAGE c`, `DEFAULT_PARAMS_DIR` for SITL default values and `DOCS` for a markdown table, see [libparams.cmake](libparams.cmake).
+It also takes `LANGUAGE c`, `DEFAULT_PARAMS_DIR` for SITL default values and `DOCS` for a markdown table, see [cmake/generate_params.cmake](cmake/generate_params.cmake).
 Prefer it over calling the scripts directly: the scripts are an implementation detail.
+
+Settings of the core, such as `MAX_STRING_LENGTH`, go on the target so the application sees the same values: `target_compile_definitions(libparams PUBLIC MAX_STRING_LENGTH=64)`.
+
+The older `include(libparams.cmake)` with `libparamsSrc` and `libparamsHeaders` still works for existing projects, but it is planned to be deprecated: don't use it in new code.
 
 ### 2.3. Application
 
@@ -135,6 +148,8 @@ For SITL builds (`LIBPARAMS_PLATFORM=ubuntu`), set the YAML directory and the lo
 | [tests/params_generator/cpp](tests/params_generator/cpp/README.md) | Generate C++ parameters | `make cpp_generator` |
 | [tests/params_generator/smoke](tests/params_generator/smoke) | `libparams_generate_params()` in C and C++: load SITL defaults, save, load again | `make generator_smoke` |
 | [tests/platform_specific](tests/platform_specific) | Build for a platform without warnings | `make stm32f103`, `make stm32g0b1`, `make stm32h753xx`, `make ubuntu` |
+| [CMakeLists.txt](CMakeLists.txt) | Build the core alone | `make library` |
+| [tests/platform_specific/ubuntu](tests/platform_specific/ubuntu) | The SITL application through the legacy `include(libparams.cmake)` | `make ubuntu_legacy` |
 | [tests/unit_tests](tests/unit_tests/README.md) | Unit tests, requires GoogleTest | `make unit_tests` |
 
 Firmware based on this library: [node-core](https://github.com/RaccoonlabDev/mini_v2_node).

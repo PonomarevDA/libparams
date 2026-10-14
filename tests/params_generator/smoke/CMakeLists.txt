@@ -13,7 +13,8 @@ cmake_path(GET GENERATOR_TESTS_DIR PARENT_PATH TESTS_DIR)
 cmake_path(GET TESTS_DIR PARENT_PATH ROOT_DIR)
 
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/libparams.cmake)
+add_subdirectory(${ROOT_DIR} libparams)
+include(${ROOT_DIR}/cmake/platform.cmake)
 enable_testing()
 
 # YAML -> generated tables and SITL default values -> load, save and load again.
@@ -26,9 +27,12 @@ function(add_smoke_test target language main source_ext)
     DEFAULT_PARAMS_DIR ${out_dir}/params
     DOCS ${out_dir}/params.md
   )
-  add_executable(${target} ${main} ${out_dir}/params.${source_ext} ${libparamsSrc})
-  target_include_directories(${target} PRIVATE ${libparamsHeaders} ${out_dir})
-  target_compile_definitions(${target} PRIVATE LIBPARAMS_PARAMS_DIR="${out_dir}/params")
+  add_executable(${target} ${main} ${out_dir}/params.${source_ext} ${LIBPARAMS_PLATFORM_SOURCES})
+  target_include_directories(${target} PRIVATE ${LIBPARAMS_PLATFORM_HEADERS} ${out_dir})
+  target_link_libraries(${target} PRIVATE libparams::libparams)
+  # Each test has its own directory, so it calls paramsSetDir() instead of LIBPARAMS_PARAMS_DIR,
+  # which the shared libparams target can hold only once.
+  target_compile_definitions(${target} PRIVATE SMOKE_PARAMS_DIR="${out_dir}/params")
   add_test(NAME ${target} COMMAND ${target})
 endfunction()
 

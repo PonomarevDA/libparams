@@ -46,12 +46,16 @@ public:
     FlashMemoryLayout_t flash;
     ParametersLayout_t params;
 
+    // YamlParameters keeps pointers into these, so they must outlive generate_params_pools()
+    static constexpr int MAX_PARAMS = 512;
+    IntegerDesc_t integer_desc_pool[MAX_PARAMS];
+    StringDesc_t string_desc_pool[MAX_PARAMS];
+    char int_names[MAX_PARAMS][10];
+    char str_names[MAX_PARAMS][10];
+
     void generate_params_pools() {
-        IntegerDesc_t integer_desc_pool[512];
-        StringDesc_t string_desc_pool[512];
-        char int_names[params.num_int_params][10];
-        char str_names[params.num_str_params][10];
-        params.integer_desc_pool = {};
+        ASSERT_LE(params.num_int_params, MAX_PARAMS);
+        ASSERT_LE(params.num_str_params, MAX_PARAMS);
         for (int i = 0; i < params.num_int_params; i++) {
             generateRandomCString(int_names[i], 10);
             integer_desc_pool[i].name = int_names[i];

@@ -23,8 +23,8 @@ static uint8_t flash_memory[2 * PAGE_SIZE_BYTES * max_region_pages];
 static uint16_t region_pages = 1;
 static bool is_locked = true;
 
-extern IntegerDesc_t integer_desc_pool[];
-extern StringDesc_t string_desc_pool[];
+extern const IntegerDesc_t integer_desc_pool[];
+extern const StringDesc_t string_desc_pool[];
 
 static YamlParameters yaml_params;
 

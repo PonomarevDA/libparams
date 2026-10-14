@@ -42,6 +42,7 @@ Two parameter types are implemented:
 | Required | `paramsResetToDefault()` keeps the value of a required immutable integer parameter. |
 
 Values and descriptors are arrays defined by the application (usually generated, see [2.1](#21-parameters-from-yaml)): `integer_values_pool`, `integer_desc_pool`, `string_values_pool`, `string_desc_pool`.
+The descriptors are `const`, so on a microcontroller they stay in flash; a hand-written non-const descriptor array still works but takes RAM.
 Integers come first, so a string parameter index starts at `INTEGER_PARAMS_AMOUNT`.
 
 Access by index is O(1).
@@ -153,10 +154,10 @@ Flash drivers and the generated tables are not included.
 
 Cost per parameter:
 
-| Type | RAM | Flash storage |
-| ---- | --- | ------------- |
-| Integer | 24 B: 4 B value, 20 B descriptor | 4 B |
-| String | 120 B: 56 B value, 64 B descriptor | 56 B |
+| Type | RAM: value | Flash: descriptor | Flash storage |
+| ---- | ---------- | ----------------- | ------------- |
+| Integer | 4 B | 20 B | 4 B |
+| String | 56 B | 64 B | 56 B |
 
 For example, 100 integers and 10 strings take 960 B of flash storage and fit in a single 2 KB page.
 

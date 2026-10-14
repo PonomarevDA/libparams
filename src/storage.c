@@ -12,9 +12,9 @@
 #include "rom.h"
 #include "libparams_error_codes.h"
 
-extern IntegerDesc_t integer_desc_pool[];
+extern const IntegerDesc_t integer_desc_pool[];
 extern IntegerParamValue_t integer_values_pool[];
-extern StringDesc_t string_desc_pool[];
+extern const StringDesc_t string_desc_pool[];
 extern StringParamValue_t string_values_pool[];
 
 static ParamIndex_t integers_amount = 0;

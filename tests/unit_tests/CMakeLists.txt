@@ -23,12 +23,10 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIR})
 
-# include_directories(.)
 set(LIBPARAMS_PLATFORM ubuntu)
-include(${ROOT_DIR}/libparams.cmake)
-
-set(LIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
-add_definitions(-DLIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
+add_subdirectory(${ROOT_DIR} libparams)
+include(${ROOT_DIR}/cmake/platform.cmake)
+target_compile_definitions(libparams PUBLIC LIBPARAMS_PARAMS_DIR="${CMAKE_CURRENT_BINARY_DIR}/params")
 
 function(gen_test app_name test_file)
     execute_process(
@@ -42,9 +40,9 @@ function(gen_test app_name test_file)
     # Create the executable target
     add_executable(${app_name}
     ${test_file}
-    ${libparamsSrc})
+    ${LIBPARAMS_PLATFORM_SOURCES})
 
-    target_include_directories(${app_name} PUBLIC ${libparamsHeaders})
+    target_include_directories(${app_name} PUBLIC ${LIBPARAMS_PLATFORM_HEADERS})
 
     # Conditional source file based on app_name
     message(STATUS "${app_name} params dir ${UNIT_TESTS_DIR}")
@@ -52,7 +50,7 @@ function(gen_test app_name test_file)
     target_include_directories(${app_name} PRIVATE ${TESTS_DIR}/params/)
 
     # Link libraries to the target
-    target_link_libraries(${app_name} gtest)
+    target_link_libraries(${app_name} libparams::libparams gtest)
 endfunction()
 
 gen_test(flash_driver     ${UNIT_TESTS_DIR}/test_flash_driver.cpp)

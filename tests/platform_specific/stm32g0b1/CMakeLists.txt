@@ -6,4 +6,4 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/stm32_platform_test.cmake)
-add_libparams_stm32_platform_test(libparams stm32g0b1 STM32G0B1xx)
+add_libparams_stm32_platform_test(application stm32g0b1 STM32G0B1xx)

@@ -9,9 +9,12 @@ The emulated page is 2048 bytes. The number of pages follows from the amounts pa
 
 | Setting | Runtime | Build time |
 | ------- | ------- | ---------- |
-| Directory | `paramsSetDir(dir)` before `paramsInit()` | `-DLIBPARAMS_PARAMS_DIR="dir"` |
+| Directory | `paramsSetDir(dir)` before `paramsInit()` | `LIBPARAMS_PARAMS_DIR="dir"` on the `libparams` target |
 | Default values, read-only | | `-DLIBPARAMS_DEFAULT_PARAMS_FILE_NAME="default_params"` |
 | Saved values | | `-DLIBPARAMS_NVM_PARAMS_FILE_NAME="nvm_params"` |
+
+The directory is read by the core, so its define goes on the target: `target_compile_definitions(libparams PRIVATE LIBPARAMS_PARAMS_DIR="${CMAKE_BINARY_DIR}")`.
+The file names are read by this driver, which the application compiles, so they go on the application.
 
 On init the driver reads `<dir>/nvm_params_<page>.yaml` and falls back to `<dir>/default_params_<page>.yaml`.
 `paramsSave()` writes `nvm_params_<page>.yaml`.

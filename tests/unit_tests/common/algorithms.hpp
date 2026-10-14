@@ -13,14 +13,15 @@
 extern "C" {
 #endif
 
+// size is the buffer size: size - 1 random characters and the terminating zero
 inline void generateRandomCString(char* str, int size) {
     const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int charsetSize = sizeof(charset) - 1;
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size - 1; ++i) {
         str[i] = charset[rand() % charsetSize];
     }
-    str[size] = '\0';
+    str[size - 1] = '\0';
 }
 
 #ifdef __cplusplus

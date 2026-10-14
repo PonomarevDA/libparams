@@ -20,9 +20,9 @@ typedef struct {
 } ParametersLayout_t;
 
 typedef struct {
-    uint8_t* memory_ptr;
-    uint16_t page_size;
-    uint8_t num_pages;
+    uint8_t* memory_ptr{nullptr};
+    uint16_t page_size{0};
+    uint8_t num_pages{0};
     uint32_t flash_size = page_size * num_pages;
 } FlashMemoryLayout_t;
 
